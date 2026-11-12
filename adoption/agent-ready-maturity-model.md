@@ -1,4 +1,5 @@
 # Agent-Ready Engineering 成熟度分级
+> 文档编号：ARE-A02
 > v0.1｜2026-11-12｜状态：设计建议；分级与门槛未经实证校准，不是行业标准
 > 配套：`agent-ready-implementation-checklist.md`（P0–P8）、`templates/`（交付物）、`templates/maturity-assessment.md`（评估表）
 

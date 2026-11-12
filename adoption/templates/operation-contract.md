@@ -1,4 +1,5 @@
 # 操作契约卡（Operation Contract）— P2–P3
+> 文档编号：ARE-T03
 > 模板 v0.1｜每个首批改造的操作一张｜复制到项目目录后填写
 > 契约写在领域内核层；MCP / REST / Code Mode 只做映射，不改变契约。
 

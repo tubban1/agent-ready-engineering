@@ -1,4 +1,5 @@
 # Agent-Ready Engineering 标准交付物模板
+> 文档编号：ARE-T00
 > v0.2｜2026-11-12｜配套：`../agent-ready-implementation-checklist.md`（P0–P8）、`../agent-ready-maturity-model.md`（L0–L4）
 
 ## 使用规则

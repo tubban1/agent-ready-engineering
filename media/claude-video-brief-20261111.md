@@ -1,4 +1,5 @@
 # Superseded brief — 2026-11-11
+> 文档编号：ARE-M01
 
 用户明确修正：**视频必须由 Claude Code 在独立工程中编写原创渲染代码，不使用 Motion Lab**。之前基于 Motion Lab 的任务书已作废，不得按旧路径执行。
 

@@ -1,4 +1,6 @@
 # Tool Calling / MCP / Code Mode / A2A — 工程区别
+> 文档编号：ARE-R01
+
 状态：参考说明，2026-11-11。
 
 ## 概念定位与生态分工

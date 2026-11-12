@@ -1,4 +1,5 @@
 # Agent-Ready Architecture | 架构师视角的 Agent-Ready
+> 文档编号：ARE-P01
 > v0.4.2｜2026-11-12｜状态：设计观点与工作假设，不是已验证的行业定律
 > 姊妹文档：`agent-native-interface-design.md`（接口原则）、`../references/tool-calling-mcp-code-mode.md`（概念分层）、`../references/agent-ready-industry-landscape.md`（行业参考）、`../adoption/agent-ready-implementation-checklist.md`（实施顺序与验收）
 > 范围：本文的 Agent-Ready 指**业务服务与接口**能被 Agent 安全、可靠地使用；不是指代码仓库能否让编程 Agent 工作（AGENTS.md / 仓库准备度是另一个话题）。

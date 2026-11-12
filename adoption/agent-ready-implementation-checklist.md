@@ -1,4 +1,5 @@
 # Agent-Ready Engineering 实施 Checklist（含价值判断与实施顺序）
+> 文档编号：ARE-A01
 > v0.4｜2026-11-12｜状态：设计建议，不是授权，也不是已验证的行业标准
 > 理念依据：`../principles/agent-ready-architecture.md`（价值前提 + 维度一至七）、`../principles/agent-native-interface-design.md`（原则 1–12）
 > 行业参考：`../references/agent-ready-industry-landscape.md`

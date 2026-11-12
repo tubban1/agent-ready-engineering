@@ -1,4 +1,5 @@
 # Agent-Native Interface Design
+> 文档编号：ARE-P02
 > 面向 Agent 的原生接口设计｜v0.1｜2026-11-11
 
 ## 研究命题
