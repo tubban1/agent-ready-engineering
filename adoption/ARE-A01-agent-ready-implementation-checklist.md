@@ -1,10 +1,10 @@
 # Agent-Ready Engineering 实施 Checklist（含价值判断与实施顺序）
 > 文档编号：ARE-A01
 > v0.4｜2026-11-12｜状态：设计建议，不是授权，也不是已验证的行业标准
-> 理念依据：`../principles/agent-ready-architecture.md`（价值前提 + 维度一至七）、`../principles/agent-native-interface-design.md`（原则 1–12）
-> 行业参考：`../references/agent-ready-industry-landscape.md`
+> 理念依据：`../principles/ARE-P01-agent-ready-architecture.md`（价值前提 + 维度一至七）、`../principles/ARE-P02-agent-native-interface-design.md`（原则 1–12）
+> 行业参考：`../references/ARE-R02-agent-ready-industry-landscape.md`
 > 交付物模板：`templates/`（价值卡片、能力矩阵、操作契约卡、授权矩阵、评测报告、价值复盘、成熟度评估表）
-> 成熟度分级：`agent-ready-maturity-model.md`（L0–L4；只读开放需 ≥ L2，写入开放需 ≥ L3，规模化扩大需 L4）
+> 成熟度分级：`ARE-A02-agent-ready-maturity-model.md`（L0–L4；只读开放需 ≥ L2，写入开放需 ≥ L3，规模化扩大需 L4）
 > 项目自身的 AGENTS.md / CLAUDE.md、生产权限与 Owner 决定优先于本清单。
 
 ## 范围
@@ -48,7 +48,7 @@
 - [ ] **最小验证**：在不改造系统的前提下，用现有接口 + 人工兜底（或只读原型）让真实 Agent / 真实用户跑通一次代表任务，确认 Agent 真的能用、用户真的愿意再用。
 - [ ] **范围决策**：给出 Go（含写入）/ 只读先行 / 暂不做，以及明确的“不做清单”。
 
-**产出**：每个候选场景一张“价值卡片”（场景、用户、频率、基线、目标、风险、最小验证结果、决策）。模板：`templates/value-card.md`。
+**产出**：每个候选场景一张“价值卡片”（场景、用户、频率、基线、目标、风险、最小验证结果、决策）。模板：`templates/ARE-T01-value-card.md`。
 
 **验收**：
 - 每个进入后续阶段的场景都有价值卡片，且基线数据有来源；
@@ -62,12 +62,12 @@
 - [ ] 找出“万能执行器”式接口（一个入口可做多种风险不同的事），列入拆分清单。
 - [ ] 只把优先级靠前的能力放入首批改造；其余进入待定池，等 P8 数据再决定。
 
-**产出**：能力矩阵。模板：`templates/capability-matrix.md`。
+**产出**：能力矩阵。模板：`templates/ARE-T02-capability-matrix.md`。
 
 **验收**：一张能力矩阵，每一行都能回答“价值优先级多高、Agent 能不能直接执行、不能的话需要什么确认”；首批改造范围明确且有上限。
 
 ## P2 领域内核契约（只改内核，先不碰 MCP）
-**产出**：每个首批操作一张操作契约卡，P3 的生命周期与 Draft 部分一并填写。模板：`templates/operation-contract.md`。
+**产出**：每个首批操作一张操作契约卡，P3 的生命周期与 Draft 部分一并填写。模板：`templates/ARE-T03-operation-contract.md`。
 
 - [ ] 用高阶、有边界的业务意图替代页面级 CRUD（例：`prepare_cancellation` 而不是 `PATCH /order/field`）。
 - [ ] 输入 / 输出使用强类型 Schema：枚举、单位、取值范围、时区、来源与更新时间。
@@ -91,7 +91,7 @@
 **验收**：模拟客户端在任务中途断连、超时后重试、并发提交，均不出现重复扣费、重复创建或状态丢失。
 
 ## P4 信任边界与授权
-**产出**：授权矩阵，完成后交给治理层。模板：`templates/authorization-matrix.md`。
+**产出**：授权矩阵，完成后交给治理层。模板：`templates/ARE-T04-authorization-matrix.md`。
 
 - [ ] Agent 身份与人类身份分离；Agent 使用委托凭证，绑定 Owner、Agent、动作、资源、有效期，可随时吊销。
 - [ ] 凭证不进入模型上下文，也不进入 Code Mode 沙箱（由受控代理代为签名 / 转发）。
@@ -130,7 +130,7 @@
 **验收**：新增一种接入方式时，内核代码零改动；同一操作经 MCP、REST、Code Mode 三条路径得到一致的授权结果与业务效果；工具定义的每次变更都有记录。
 
 ## P7 可观测与评测
-**产出**：评测报告（P5 的工具迭代评测也用同一模板）。模板：`templates/eval-report.md`。
+**产出**：评测报告（P5 的工具迭代评测也用同一模板）。模板：`templates/ARE-T05-eval-report.md`。
 
 - [ ] 关联 ID 贯穿：Agent 会话 → 工具调用 → 内核事务 → 外部效果。
 - [ ] Agent 评测集：以 P0 的代表任务为主，注入超时、重复请求、版本冲突、Prompt Injection。
@@ -140,7 +140,7 @@
 **验收**：评测纳入发布流程，关键指标退化时阻止发布。
 
 ## P8 上线运营与价值复盘
-**产出**：每个场景每个复盘周期一份价值复盘，结论回写价值卡片。模板：`templates/value-review.md`。
+**产出**：每个场景每个复盘周期一份价值复盘，结论回写价值卡片。模板：`templates/ARE-T06-value-review.md`。
 
 - [ ] 提供沙箱 / 测试环境与测试凭据，和生产隔离。
 - [ ] 按 Agent 配额与限流；写操作灰度开放。

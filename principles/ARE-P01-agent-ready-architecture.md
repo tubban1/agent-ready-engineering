@@ -1,7 +1,7 @@
 # Agent-Ready Architecture | 架构师视角的 Agent-Ready
 > 文档编号：ARE-P01
 > v0.4.2｜2026-11-12｜状态：设计观点与工作假设，不是已验证的行业定律
-> 姊妹文档：`agent-native-interface-design.md`（接口原则）、`../references/tool-calling-mcp-code-mode.md`（概念分层）、`../references/agent-ready-industry-landscape.md`（行业参考）、`../adoption/agent-ready-implementation-checklist.md`（实施顺序与验收）
+> 姊妹文档：`ARE-P02-agent-native-interface-design.md`（接口原则）、`../references/ARE-R01-tool-calling-mcp-code-mode.md`（概念分层）、`../references/ARE-R02-agent-ready-industry-landscape.md`（行业参考）、`../adoption/ARE-A01-agent-ready-implementation-checklist.md`（实施顺序与验收）
 > 范围：本文的 Agent-Ready 指**业务服务与接口**能被 Agent 安全、可靠地使用；不是指代码仓库能否让编程 Agent 工作（AGENTS.md / 仓库准备度是另一个话题）。
 
 站在系统架构师（System Architect）的视角，**Agent-Ready 的本质绝不是“给系统增加一个 MCP 接口”，也不是“把 API 封装成几个工具”**。
@@ -35,7 +35,7 @@
 * P0 让我们参与转型前期的业务判断，P8 让我们用实测数据证明成果——两头已足够进入核心业务，无需向组织与人效方向扩张；
 * P0 判定“不需要 Agent”的场景，记录理由后交还给对应的线（例如采购现成工具、普通集成），不在本流程内继续处理。
 
-**成为“标准”靠的是可复制、可验收**：阶段与验收标准（已有，见实施 Checklist）、标准交付物模板（已有，见 `../adoption/templates/`：价值卡片、能力矩阵、操作契约卡、授权矩阵、评测报告、价值复盘）、成熟度分级（已有，见 `../adoption/agent-ready-maturity-model.md`：L0 未就绪 → L4 可验证运营）。
+**成为“标准”靠的是可复制、可验收**：阶段与验收标准（已有，见实施 Checklist）、标准交付物模板（已有，见 `../adoption/templates/`：价值卡片、能力矩阵、操作契约卡、授权矩阵、评测报告、价值复盘）、成熟度分级（已有，见 `../adoption/ARE-A02-agent-ready-maturity-model.md`：L0 未就绪 → L4 可验证运营）。
 
 ---
 
@@ -153,7 +153,7 @@
 
 很多团队的架构错误在于：**为了支持 Agent，在业务代码里四处硬编码 MCP**。
 
-需要先分清几个**不同层次**的概念（详见 `../references/tool-calling-mcp-code-mode.md`），它们并不是同一层的“协议方言”：
+需要先分清几个**不同层次**的概念（详见 `../references/ARE-R01-tool-calling-mcp-code-mode.md`），它们并不是同一层的“协议方言”：
 
 | 层次 | 代表 | 在架构中的位置 |
 | :--- | :--- | :--- |
@@ -219,7 +219,7 @@ Agent 在“无人盯盘”时运行，系统必须能事后回答：**谁授权
 
 ## 状态与边界
 - **项目示例（来自本地项目经验，未作为公开基准验证）**：Bloomroom `get_design_schema` 按需读取；Interior `refine_design` 的 `expected_revision`。
-- **设计建议**：价值前提与维度一至七中的架构手段；实施顺序与验收见 `../adoption/agent-ready-implementation-checklist.md`（P0 价值关卡 → P8 价值复盘）。
+- **设计建议**：价值前提与维度一至七中的架构手段；实施顺序与验收见 `../adoption/ARE-A01-agent-ready-implementation-checklist.md`（P0 价值关卡 → P8 价值复盘）。
 - **待验证假设**：Agent-Ready 内核必然降低端到端成本或提高任务成功率；Agent-Ready Engineering 会成为企业 AI 转型中的标准工程环节；以上类比（工作内存 / L1 Cache）只用于理解，不是性能模型。
 - **定位决定（Owner 决定，2026-11-12）**：聚焦企业 AI 转型中的执行层，即 Agent-Ready Engineering；组织与人才、员工提效、内容分析、通用 AI 战略不在范围内，只定义与它们的接口。
 - **v0.4.2 变更**：成熟度分级已建立，更新“定位与边界”中的状态说明。

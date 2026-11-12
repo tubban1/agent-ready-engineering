@@ -6,7 +6,7 @@
 ## 结论
 - 行业里**没有统一的 Agent-Ready 标准**，这个词至少有三种用法：服务/API 设计、代码仓库准备度、安全与授权。
 - 本知识库的 Agent-Ready 指**服务与接口**（第一种），同时吸收第三种的安全做法；第二种只是同名，不在范围内。
-- 价值判断（Value Gate）在公开资料中很少作为 Agent-Ready 的一部分出现，是本知识库的主动选择，见 `../principles/agent-ready-architecture.md`。
+- 价值判断（Value Gate）在公开资料中很少作为 Agent-Ready 的一部分出现，是本知识库的主动选择，见 `../principles/ARE-P01-agent-ready-architecture.md`。
 
 ## 一、服务 / API 侧（与本知识库同一话题）
 | 来源 | 类型 | 要点 |

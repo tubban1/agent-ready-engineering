@@ -1,7 +1,7 @@
 # Agent-Ready Engineering 成熟度分级
 > 文档编号：ARE-A02
 > v0.1｜2026-11-12｜状态：设计建议；分级与门槛未经实证校准，不是行业标准
-> 配套：`agent-ready-implementation-checklist.md`（P0–P8）、`templates/`（交付物）、`templates/maturity-assessment.md`（评估表）
+> 配套：`ARE-A01-agent-ready-implementation-checklist.md`（P0–P8）、`templates/`（交付物）、`templates/ARE-T07-maturity-assessment.md`（评估表）
 
 ## 用途
 - 让企业知道**某个场景**现在处在哪一级、离下一级差什么、下一步做什么。
@@ -111,7 +111,7 @@
 - 哪个维度在多个场景中反复成为短板，说明需要在平台层统一解决（例如统一的委托凭证或审计服务）。
 
 ## 与行业资料的关系
-代码仓库领域已有类似的分级做法（如 Factory Agent Readiness 按多个维度分 5 级）。本分级借鉴“二元检查 + 逐级达成”的表达方式，但对象是**业务服务与接口**，并把价值判断作为第一级。见 `../references/agent-ready-industry-landscape.md`。
+代码仓库领域已有类似的分级做法（如 Factory Agent Readiness 按多个维度分 5 级）。本分级借鉴“二元检查 + 逐级达成”的表达方式，但对象是**业务服务与接口**，并把价值判断作为第一级。见 `../references/ARE-R02-agent-ready-industry-landscape.md`。
 
 ## 待验证
 - 等级划分和检查项是否覆盖了真实项目中的关键风险，需要在实际项目中评估后修订；

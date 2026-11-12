@@ -1,6 +1,6 @@
 # Agent-Ready Engineering 标准交付物模板
 > 文档编号：ARE-T00
-> v0.2｜2026-11-12｜配套：`../agent-ready-implementation-checklist.md`（P0–P8）、`../agent-ready-maturity-model.md`（L0–L4）
+> v0.2｜2026-11-12｜配套：`../ARE-A01-agent-ready-implementation-checklist.md`（P0–P8）、`../ARE-A02-agent-ready-maturity-model.md`（L0–L4）
 
 ## 使用规则
 - 每个项目把需要的模板**复制到自己的项目目录**（如 `docs/agent-ready/`）再填写，不要回写本知识库。
@@ -11,13 +11,13 @@
 ## 模板与阶段
 | 模板 | 阶段 | 回答的问题 | 粒度 |
 | :--- | :--- | :--- | :--- |
-| `value-card.md` 价值卡片 | P0 | 值不值得让 Agent 做？ | 每个场景一张 |
-| `capability-matrix.md` 能力矩阵 | P1 | 涉及哪些操作？先改造哪些？ | 每个项目一张，可按场景分节 |
-| `operation-contract.md` 操作契约卡 | P2–P3 | 这个操作怎样做到可重试、可恢复、可判断？ | 每个首批改造的操作一张 |
-| `authorization-matrix.md` 授权矩阵 | P4 | 谁授权、Agent 能做到哪一步、怎么留证据？ | 每个项目一张 |
-| `eval-report.md` 评测报告 | P5 / P7 | Agent 实际用起来怎样？能不能发布？ | 每次评测一份 |
-| `value-review.md` 价值复盘 | P8 | 上线后价值兑现了吗？下一步扩大、维持还是收缩？ | 每个场景每个复盘周期一份 |
-| `maturity-assessment.md` 成熟度评估表 | 任意阶段 | 现在处在哪一级？差什么？能开放到什么程度？ | 每个场景每次评估一份 |
+| `ARE-T01-value-card.md` 价值卡片 | P0 | 值不值得让 Agent 做？ | 每个场景一张 |
+| `ARE-T02-capability-matrix.md` 能力矩阵 | P1 | 涉及哪些操作？先改造哪些？ | 每个项目一张，可按场景分节 |
+| `ARE-T03-operation-contract.md` 操作契约卡 | P2–P3 | 这个操作怎样做到可重试、可恢复、可判断？ | 每个首批改造的操作一张 |
+| `ARE-T04-authorization-matrix.md` 授权矩阵 | P4 | 谁授权、Agent 能做到哪一步、怎么留证据？ | 每个项目一张 |
+| `ARE-T05-eval-report.md` 评测报告 | P5 / P7 | Agent 实际用起来怎样？能不能发布？ | 每次评测一份 |
+| `ARE-T06-value-review.md` 价值复盘 | P8 | 上线后价值兑现了吗？下一步扩大、维持还是收缩？ | 每个场景每个复盘周期一份 |
+| `ARE-T07-maturity-assessment.md` 成熟度评估表 | 任意阶段 | 现在处在哪一级？差什么？能开放到什么程度？ | 每个场景每次评估一份 |
 
 ## 交付物之间的关系
 ```

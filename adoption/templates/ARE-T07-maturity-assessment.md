@@ -1,7 +1,7 @@
 # 成熟度评估表（Maturity Assessment）
 > 文档编号：ARE-T07
 > 模板 v0.1｜每个场景每次评估一份｜复制到项目目录后填写
-> 检查项的完整定义以 `../agent-ready-maturity-model.md` 为准；本表只列编号和简称。
+> 检查项的完整定义以 `../ARE-A02-agent-ready-maturity-model.md` 为准；本表只列编号和简称。
 
 ## 基本信息
 | 项 | 内容 |
