@@ -1,8 +1,8 @@
 # Agent-Ready Engineering 成熟度分级
 > 文档编号：ARE-A02
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`ARE-A02-agent-ready-maturity-model.md` EN v0.2｜术语见 `ARE-R03` 术语表
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`ARE-A02-agent-ready-maturity-model.md` EN v0.3｜术语见 `ARE-R03` 术语表
 > v0.1｜2026-11-12｜状态：设计建议；分级与门槛未经实证校准，不是行业标准
-> 配套：`ARE-A01-agent-ready-implementation-checklist.zh.md`（P0–P8）、`templates/`（交付物）、`templates/ARE-T07-maturity-assessment.zh.md`（评估表）
+> 配套：`ARE-A01-agent-ready-implementation-checklist.zh.md`（P0–P8）、`templates/`（交付物）、`templates/ARE-T07-maturity-assessment.zh.md`（评估表）、`templates/ARE-T08-scenario-screening.zh.md`（多个候选场景的筛选）、`templates/ARE-T09-portfolio-report.zh.md`（组合报告与路线图）
 
 ## 用途
 - 让企业知道**某个场景**现在处在哪一级、离下一级差什么、下一步做什么。
@@ -12,6 +12,7 @@
 ## 评估规则
 1. **按场景评估，不按企业评估**。评估对象是一个价值卡片对应的场景（及其涉及的系统）。企业层面看各场景的等级分布，**不要把多个场景平均成一个企业分数**——平均分会掩盖高风险场景的短板。
 2. **每一项都是二元检查**：通过 / 不通过 / 不适用。只有口头说明不算通过，必须有证据位置（交付物、代码、测试记录、日志）。
+   每个通过项还要记录**证据类型**：`inspected` 亲自验证（评估人直接检查了代码、配置或日志，或亲自运行了测试）或 `documented` 文档证据（团队提供的材料，如文档、测试报告、日志导出，未独立复核）。`self-reported` 自述永远不足以通过。L3-C1、L3-C2、L3-A2、L3-O2 建议采用亲自验证；这几项若只有文档证据，会在组合报告中标出。
 3. **达到第 N 级 = 第 1 级到第 N 级的全部检查项都通过或不适用**。任何一项未通过，等级停在该项所在级别之下。
 4. **“不适用”需要书面理由并经评审确认**。例：场景中没有长任务，L3-S1 可标为不适用。
 5. **评估结果有有效期**。内核、工具定义或授权规则发生变化后需要重新评估相关检查项。
@@ -99,7 +100,7 @@
 ---
 
 ## 企业层面的视图
-企业不给出单一分数，而是给出**场景等级分布**：
+企业不给出单一分数，而是给出**场景等级分布**。候选场景先用 `templates/ARE-T08-scenario-screening.zh.md` 筛选；每轮评估用 `templates/ARE-T09-portfolio-report.zh.md` 报告，它在下表基础上增加了开放范围一致性、证据质量、路线图与交接。
 
 | 场景 | 当前等级 | 目标等级 | 主要短板（维度） | 下一步 |
 | :--- | :--- | :--- | :--- | :--- |

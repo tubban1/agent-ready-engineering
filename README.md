@@ -1,7 +1,7 @@
 # Agent-Ready Engineering | Agent-Native Interfaces and Trustworthy Execution
 > Language: English (canonical). Chinese reading aid: `README.zh.md`. Terms follow `references/ARE-R03-glossary.md`.
 
-Version: 0.12.0 (2026-11-12: all documents and templates now have English canonical versions; Chinese texts are `.zh.md` reading aids. 0.11.0 English versions of P01, A01, A02. 0.10.0 language policy and glossary ARE-R03. 0.9.0 project renamed from agent-native-knowledge to agent-ready-engineering. 0.8.0 document IDs added as filename prefixes. 0.7.0 document IDs and reading order. 0.6.0 maturity model and assessment form. 0.5.0 standard deliverable templates. 0.4.0 positioned as the execution-layer standard of enterprise AI transformation. 0.3.0 Value Gate made part of Agent-Ready Engineering; industry landscape added. 0.2.0 architecture document index and implementation checklist. 0.1.0 first research draft, 2026-11-11.)
+Version: 0.13.0 (2026-11-12: portfolio assessment for architects and consultants: ARE-T08 Scenario Screening, ARE-T09 Portfolio Report and Roadmap, evidence types, workspace layout. 0.12.0 all documents and templates now have English canonical versions; Chinese texts are `.zh.md` reading aids. 0.11.0 English versions of P01, A01, A02. 0.10.0 language policy and glossary ARE-R03. 0.9.0 project renamed from agent-native-knowledge to agent-ready-engineering. 0.8.0 document IDs added as filename prefixes. 0.7.0 document IDs and reading order. 0.6.0 maturity model and assessment form. 0.5.0 standard deliverable templates. 0.4.0 positioned as the execution-layer standard of enterprise AI transformation. 0.3.0 Value Gate made part of Agent-Ready Engineering; industry landscape added. 0.2.0 architecture document index and implementation checklist. 0.1.0 first research draft, 2026-11-11.)
 
 This is a cross-project knowledge source, not the product specification of OWL LAB, World2, Bloomroom, Interior or any other project.
 
@@ -37,6 +37,8 @@ Every document has an English canonical file `<name>.md` and a Chinese reading a
 | ARE-T05 | `adoption/templates/ARE-T05-eval-report.md` | Eval Report (P5 / P7) |
 | ARE-T06 | `adoption/templates/ARE-T06-value-review.md` | Value Review (P8) |
 | ARE-T07 | `adoption/templates/ARE-T07-maturity-assessment.md` | Maturity Assessment |
+| ARE-T08 | `adoption/templates/ARE-T08-scenario-screening.md` | Scenario Screening (P0, many candidates) |
+| ARE-T09 | `adoption/templates/ARE-T09-portfolio-report.md` | Portfolio Report and Roadmap (each assessment round) |
 | ARE-M01 | `media/ARE-M01-claude-video-brief-20261111.md` | Video brief (superseded, record only, Chinese only; not on the reading path) |
 
 When adding a document, take the next unused ID under the right prefix and update this table and the reading order.
@@ -48,7 +50,7 @@ When adding a document, take the next unused ID under the right prefix and updat
 3. ARE-R01 Concept distinctions: Tool Calling, MCP, Code Mode, A2A
 4. ARE-A01 Implementation checklist: how to work through P0–P8
 5. ARE-A02 Maturity model: how to judge the level reached and how far to expose
-6. ARE-T00 → T01–T07 Templates: what each stage delivers
+6. ARE-T00 → T01–T09 Templates: what each stage delivers
 7. ARE-R02 Industry landscape: which practices have outside corroboration
 
 Look up ARE-R03 Glossary whenever a term is unclear.
@@ -59,6 +61,7 @@ Look up ARE-R03 Glossary whenever a term is unclear.
 | Decision maker | ARE-P01 sections “Positioning and boundaries” and “Premise: value first” → ARE-A02 → ARE-T01 Value Card |
 | Architect | ARE-P01 → ARE-P02 → ARE-R01 → ARE-R02 → ARE-R03 |
 | Implementation team | ARE-A01 → ARE-T00 and T01–T07 → ARE-A02 and ARE-T07 Maturity Assessment |
+| Architect / consultant (portfolio assessment) | ARE-P01 → ARE-A02 → ARE-T00 workspace layout → ARE-T08 → ARE-T01 → ARE-T07 → ARE-T09 |
 | Referencing this repository from a project | ARE-A03 |
 
 ## Language policy

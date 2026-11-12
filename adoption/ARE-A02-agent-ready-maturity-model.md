@@ -1,8 +1,8 @@
 # Agent-Ready Engineering Maturity Model
 > Document ID: ARE-A02
-> v0.2 | 2026-11-12 | Status: design recommendation; levels and thresholds are not empirically calibrated and are not an industry standard
+> v0.3 | 2026-11-12 | Status: design recommendation; levels and thresholds are not empirically calibrated and are not an industry standard
 > Language: English (canonical). Chinese reading aid: `ARE-A02-agent-ready-maturity-model.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
-> Related: `ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `templates/` (deliverables), `templates/ARE-T07-maturity-assessment.md` (assessment form)
+> Related: `ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `templates/` (deliverables), `templates/ARE-T07-maturity-assessment.md` (assessment form), `templates/ARE-T08-scenario-screening.md` (screening many candidates), `templates/ARE-T09-portfolio-report.md` (portfolio report and roadmap)
 
 ## Purpose
 - Show an enterprise which level **a given scenario** has reached, what is missing for the next level and what to do next.
@@ -12,6 +12,7 @@
 ## Assessment rules
 1. **Assess per scenario, not per enterprise.** The unit of assessment is the scenario behind one value card (and the systems it involves). At enterprise level, look at the distribution of levels across scenarios; **do not average several scenarios into one enterprise score**, because an average hides the weaknesses of high-risk scenarios.
 2. **Every item is a binary check**: pass / fail / not applicable. A verbal explanation never counts as a pass; there must be an evidence location (deliverable, code, test record, log).
+   Each pass also records its **evidence type**: `inspected` (the assessor examined the code, configuration or logs directly, or ran the test) or `documented` (an artifact provided by the team, such as a document, test report or log export, not independently re-run). A `self-reported` statement is never enough for a pass. For L3-C1, L3-C2, L3-A2 and L3-O2, `inspected` evidence is recommended; documented-only passes of these checks are flagged in the portfolio report.
 3. **Reaching level N = every check from level 1 to level N passes or is not applicable.** If any check fails, the level stops below the level of that check.
 4. **“Not applicable” needs a written reason confirmed in review.** Example: if the scenario has no long-running tasks, L3-S1 may be marked not applicable.
 5. **Assessments expire.** When the core, tool definitions or authorization rules change, the affected checks must be reassessed.
@@ -99,7 +100,7 @@ Besides the overall level, each dimension can be given its own level to reveal w
 ---
 
 ## Enterprise view
-An enterprise gets no single score; it gets a **distribution of scenario levels**:
+An enterprise gets no single score; it gets a **distribution of scenario levels**. Candidate scenarios are first screened with `templates/ARE-T08-scenario-screening.md`; each assessment round is reported with `templates/ARE-T09-portfolio-report.md`, which extends the table below with exposure consistency, evidence quality, a roadmap and handoffs.
 
 | Scenario | Current level | Target level | Main weak dimensions | Next step |
 | :--- | :--- | :--- | :--- | :--- |
@@ -119,5 +120,6 @@ Repository readiness already has similar models (for example, Factory Agent Read
 - There is currently no data showing that higher levels correspond to higher task completion or fewer incidents; do not claim so.
 
 ## Change log
+- **v0.3 (2026-11-12)**: added evidence types (`inspected` / `documented`; `self-reported` never passes) with inspection recommended for L3-C1, L3-C2, L3-A2, L3-O2; linked scenario screening (ARE-T08) and the portfolio report (ARE-T09). Check IDs and level rules unchanged.
 - **v0.2 (2026-11-12)**: first English canonical version, translated from Chinese v0.1. No change in content; check IDs unchanged. The Chinese text becomes the reading aid `ARE-A02-agent-ready-maturity-model.zh.md`.
 - **v0.1**: first version: L0–L4, eight dimensions, 39 binary checks.

@@ -1,10 +1,10 @@
 # Agent-Ready Engineering Implementation Checklist (with Value Gate and Implementation Order)
 > Document ID: ARE-A01
-> v0.5 | 2026-11-12 | Status: design recommendation; not an authorization and not a validated industry standard
+> v0.6 | 2026-11-12 | Status: design recommendation; not an authorization and not a validated industry standard
 > Language: English (canonical). Chinese reading aid: `ARE-A01-agent-ready-implementation-checklist.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
 > Rationale: `../principles/ARE-P01-agent-ready-architecture.md` (value premise + dimensions one to seven), `../principles/ARE-P02-agent-native-interface-design.md` (principles 1–12)
 > Industry landscape: `../references/ARE-R02-agent-ready-industry-landscape.md`
-> Deliverable templates: `templates/` (value card, capability matrix, operation contract, authorization matrix, eval report, value review, maturity assessment)
+> Deliverable templates: `templates/` (value card, capability matrix, operation contract, authorization matrix, eval report, value review, maturity assessment, scenario screening, portfolio report)
 > Maturity model: `ARE-A02-agent-ready-maturity-model.md` (L0–L4; read-only exposure requires ≥ L2, write exposure requires ≥ L3, scaling up requires L4)
 > A project's own AGENTS.md / CLAUDE.md, production permissions and Owner decisions take precedence over this checklist.
 
@@ -27,6 +27,7 @@ Value judgment is not a discussion held before engineering; it is the first stag
 - P5 (context economy) can run in parallel with P2–P4; P6 (ingress) must wait until the core is ready.
 - Evals are not the last step: P0 runs a minimum validation, P5 / P6 test tools with real agents, and P7 turns evals into a release gate.
 - Each project copies this checklist into its own tracking record (ADR / issue). **Do not write project data back into this repository.**
+- Assessing many scenarios (architects / consultants): screen candidates with ARE-T08 first, run P0 for each shortlisted scenario, and report each assessment round with ARE-T09. Keep client data in a local workspace (layout in `templates/README.md`).
 
 ## Why this order
 1. **The P0 Value Gate is the cheapest step**: before any re-engineering, it rules out scenarios that need no agent or that nobody will use repeatedly, avoiding useless re-engineering of every system.
@@ -49,7 +50,7 @@ Value judgment is not a discussion held before engineering; it is the first stag
 - [ ] **Minimum validation**: without re-engineering, use existing interfaces plus human fallback (or a read-only prototype) to have a real agent and real users complete one representative task, confirming that the agent can actually use it and users actually want to use it again.
 - [ ] **Scope decision**: decide Go (including writes) / read-only first / not now, and write an explicit out-of-scope list.
 
-**Output**: one value card per candidate scenario (scenario, users, frequency, baseline, target, risk, minimum validation result, decision). Template: `templates/ARE-T01-value-card.md`.
+**Output**: one value card per candidate scenario (scenario, users, frequency, baseline, target, risk, minimum validation result, decision). Template: `templates/ARE-T01-value-card.md`. When there are many candidate ideas, screen them first with `templates/ARE-T08-scenario-screening.md`; only shortlisted scenarios get value cards.
 
 **Acceptance criteria**:
 - Every scenario that moves on has a value card, and its baseline data has a source.
@@ -141,7 +142,7 @@ Value judgment is not a discussion held before engineering; it is the first stag
 **Acceptance criteria**: evals are part of the release process, and regressions in key metrics block a release.
 
 ## P8 Launch, Operations and Value Review
-**Output**: one value review per scenario per review cycle, with conclusions written back to the value card. Template: `templates/ARE-T06-value-review.md`.
+**Output**: one value review per scenario per review cycle, with conclusions written back to the value card. Template: `templates/ARE-T06-value-review.md`. Across several scenarios, each round is summarized in a portfolio report: `templates/ARE-T09-portfolio-report.md`.
 
 - [ ] Provide a sandbox / test environment with test credentials, isolated from production.
 - [ ] Quotas and rate limits per agent; write operations rolled out gradually.
@@ -168,6 +169,7 @@ If only part can be done, the priorities are:
 Do not expose any write operation to agents until items 2–5 are done.
 
 ## Change log
+- **v0.6 (2026-11-12)**: added scenario screening (ARE-T08) for many candidates, the portfolio report (ARE-T09) per round, and the portfolio usage note.
 - **v0.5 (2026-11-12)**: first English canonical version, translated from Chinese v0.4. No change in content. The Chinese text becomes the reading aid `ARE-A01-agent-ready-implementation-checklist.zh.md`.
 - **v0.4**: linked the maturity model (L0–L4) and the maturity assessment.
 - **v0.3**: linked each stage to its standard deliverable template (`templates/`).

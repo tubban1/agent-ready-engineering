@@ -1,10 +1,10 @@
 # Agent-Ready Engineering 实施 Checklist（含价值判断与实施顺序）
 > 文档编号：ARE-A01
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`ARE-A01-agent-ready-implementation-checklist.md` EN v0.5｜术语见 `ARE-R03` 术语表
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`ARE-A01-agent-ready-implementation-checklist.md` EN v0.6｜术语见 `ARE-R03` 术语表
 > v0.4｜2026-11-12｜状态：设计建议，不是授权，也不是已验证的行业标准
 > 理念依据：`../principles/ARE-P01-agent-ready-architecture.zh.md`（价值前提 + 维度一至七）、`../principles/ARE-P02-agent-native-interface-design.zh.md`（原则 1–12）
 > 行业参考：`../references/ARE-R02-agent-ready-industry-landscape.zh.md`
-> 交付物模板：`templates/`（价值卡片、能力矩阵、操作契约卡、授权矩阵、评测报告、价值复盘、成熟度评估表）
+> 交付物模板：`templates/`（价值卡片、能力矩阵、操作契约卡、授权矩阵、评测报告、价值复盘、成熟度评估表、场景筛选表、组合报告）
 > 成熟度分级：`ARE-A02-agent-ready-maturity-model.zh.md`（L0–L4；只读开放需 ≥ L2，写入开放需 ≥ L3，规模化扩大需 L4）
 > 项目自身的 AGENTS.md / CLAUDE.md、生产权限与 Owner 决定优先于本清单。
 
@@ -27,6 +27,7 @@
 - P5（上下文经济）可与 P2–P4 并行；P6（接入层）必须在内核就绪后再做。
 - 评测不是最后一步：P0 做最小验证，P5 / P6 用真实 Agent 测工具，P7 形成发布门槛。
 - 每个项目把本清单复制为自己的跟踪记录（ADR / Issue），**不要回写本知识库**。
+- 评估多个场景时（架构师 / 顾问）：先用 ARE-T08 筛选候选场景，对每个入选场景做 P0，每轮评估用 ARE-T09 出报告。客户资料保存在本地工作区（目录约定见 `templates/README.zh.md`）。
 
 ## 为什么是这个顺序
 1. **P0 价值关卡最便宜**：在任何改造之前排除“不需要 Agent”或“没人会反复用”的场景，避免为全部系统做一遍无用的改造。
@@ -49,7 +50,7 @@
 - [ ] **最小验证**：在不改造系统的前提下，用现有接口 + 人工兜底（或只读原型）让真实 Agent / 真实用户跑通一次代表任务，确认 Agent 真的能用、用户真的愿意再用。
 - [ ] **范围决策**：给出 Go（含写入）/ 只读先行 / 暂不做，以及明确的“不做清单”。
 
-**产出**：每个候选场景一张“价值卡片”（场景、用户、频率、基线、目标、风险、最小验证结果、决策）。模板：`templates/ARE-T01-value-card.zh.md`。
+**产出**：每个候选场景一张“价值卡片”（场景、用户、频率、基线、目标、风险、最小验证结果、决策）。模板：`templates/ARE-T01-value-card.zh.md`。候选想法较多时，先用 `templates/ARE-T08-scenario-screening.zh.md` 筛选，只有入选场景才填价值卡片。
 
 **验收**：
 - 每个进入后续阶段的场景都有价值卡片，且基线数据有来源；
@@ -141,7 +142,7 @@
 **验收**：评测纳入发布流程，关键指标退化时阻止发布。
 
 ## P8 上线运营与价值复盘
-**产出**：每个场景每个复盘周期一份价值复盘，结论回写价值卡片。模板：`templates/ARE-T06-value-review.zh.md`。
+**产出**：每个场景每个复盘周期一份价值复盘，结论回写价值卡片。模板：`templates/ARE-T06-value-review.zh.md`。有多个场景时，每轮用组合报告汇总：`templates/ARE-T09-portfolio-report.zh.md`。
 
 - [ ] 提供沙箱 / 测试环境与测试凭据，和生产隔离。
 - [ ] 按 Agent 配额与限流；写操作灰度开放。

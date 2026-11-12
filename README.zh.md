@@ -1,7 +1,7 @@
 # Agent-Ready Engineering | Agent 原生接口与可信执行知识库
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN 0.12.0｜术语见 `ARE-R03` 术语表
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN 0.13.0｜术语见 `ARE-R03` 术语表
 
-版本：0.12.0（2026-11-12：全部文档与模板完成英文正式版，中文均为 `.zh.md` 阅读版。0.11.0 主线文档 P01、A01、A02 完成英文正式版。0.10.0 确定语言规则，新增术语表 ARE-R03。0.9.0 项目由 agent-native-knowledge 更名为 agent-ready-engineering。0.8.0 文件名加上文档编号前缀。0.7.0 新增文档编号与阅读顺序。0.6.0 新增成熟度分级与评估表。0.5.0 新增标准交付物模板。0.4.0 明确定位为企业 AI 转型执行层标准。0.3.0 价值关卡纳入 Agent-Ready Engineering，新增行业参考。0.2.0 新增架构文档索引与实施 Checklist；0.1.0 为 2026-11-11 研究初稿）
+版本：0.13.0（2026-11-12：面向架构师与顾问的组合评估：ARE-T08 场景筛选表、ARE-T09 组合报告与路线图、证据类型、工作区目录约定。0.12.0 全部文档与模板完成英文正式版，中文均为 `.zh.md` 阅读版。0.11.0 主线文档 P01、A01、A02 完成英文正式版。0.10.0 确定语言规则，新增术语表 ARE-R03。0.9.0 项目由 agent-native-knowledge 更名为 agent-ready-engineering。0.8.0 文件名加上文档编号前缀。0.7.0 新增文档编号与阅读顺序。0.6.0 新增成熟度分级与评估表。0.5.0 新增标准交付物模板。0.4.0 明确定位为企业 AI 转型执行层标准。0.3.0 价值关卡纳入 Agent-Ready Engineering，新增行业参考。0.2.0 新增架构文档索引与实施 Checklist；0.1.0 为 2026-11-11 研究初稿）
 
 这是跨项目知识源，不是 OWL LAB、World2、Bloomroom 或 Interior 任一项目的产品规范。
 
@@ -35,6 +35,8 @@
 | ARE-T05 | `adoption/templates/ARE-T05-eval-report.zh.md` | 评测报告（P5 / P7） |
 | ARE-T06 | `adoption/templates/ARE-T06-value-review.zh.md` | 价值复盘（P8） |
 | ARE-T07 | `adoption/templates/ARE-T07-maturity-assessment.zh.md` | 成熟度评估表 |
+| ARE-T08 | `adoption/templates/ARE-T08-scenario-screening.zh.md` | 场景筛选表（P0，多个候选场景） |
+| ARE-T09 | `adoption/templates/ARE-T09-portfolio-report.zh.md` | 组合报告与路线图（每轮评估） |
 | ARE-M01 | `media/ARE-M01-claude-video-brief-20261111.md` | 视频任务书（已作废，仅作记录，只有中文；不在阅读路径中） |
 
 本表列出中文阅读版路径；每份文档旁边都有同名的英文正式版（去掉 `.zh`）。ARE-R03 是中英对照文件，ARE-M01 只有中文。
@@ -48,7 +50,7 @@
 3. ARE-R01 概念区别：分清 Tool Calling、MCP、Code Mode、A2A
 4. ARE-A01 实施 Checklist：按 P0–P8 怎么做
 5. ARE-A02 成熟度分级：怎么判断做到哪一级、能开放到什么程度
-6. ARE-T00 → T01–T07 模板：每个阶段交付什么
+6. ARE-T00 → T01–T09 模板：每个阶段交付什么
 7. ARE-R02 行业参考：哪些做法有外部印证
 
 术语不确定时随时查 ARE-R03 术语表。
@@ -59,6 +61,7 @@
 | 决策者 | ARE-P01 的“定位与边界”“前提：价值优先”两节 → ARE-A02 → ARE-T01 价值卡片 |
 | 架构师 | ARE-P01 → ARE-P02 → ARE-R01 → ARE-R02 → ARE-R03 |
 | 实施团队 | ARE-A01 → ARE-T00 与 T01–T07 → ARE-A02 与 ARE-T07 评估表 |
+| 架构师 / 顾问（组合评估） | ARE-P01 → ARE-A02 → ARE-T00 工作区目录约定 → ARE-T08 → ARE-T01 → ARE-T07 → ARE-T09 |
 | 在项目中引用本知识库 | ARE-A03 |
 
 ## 语言规则

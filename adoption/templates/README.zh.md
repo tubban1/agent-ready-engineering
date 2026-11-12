@@ -1,6 +1,6 @@
 # Agent-Ready Engineering 标准交付物模板
 > 文档编号：ARE-T00
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN v0.3｜术语见 `ARE-R03` 术语表
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN v0.4｜术语见 `ARE-R03` 术语表
 > v0.2｜2026-11-12｜配套：`../ARE-A01-agent-ready-implementation-checklist.zh.md`（P0–P8）、`../ARE-A02-agent-ready-maturity-model.zh.md`（L0–L4）
 
 ## 使用规则
@@ -19,6 +19,29 @@
 | `ARE-T05-eval-report.zh.md` 评测报告 | P5 / P7 | Agent 实际用起来怎样？能不能发布？ | 每次评测一份 |
 | `ARE-T06-value-review.zh.md` 价值复盘 | P8 | 上线后价值兑现了吗？下一步扩大、维持还是收缩？ | 每个场景每个复盘周期一份 |
 | `ARE-T07-maturity-assessment.zh.md` 成熟度评估表 | 任意阶段 | 现在处在哪一级？差什么？能开放到什么程度？ | 每个场景每次评估一份 |
+| `ARE-T08-scenario-screening.zh.md` 场景筛选表 | P0（组合） | 多个候选想法中，哪些值得填价值卡片？ | 每个项目或每轮筛选一份 |
+| `ARE-T09-portfolio-report.zh.md` 组合报告与路线图 | 每轮评估 | 等级分布如何？风险和共同短板在哪？下一步做什么？ | 每轮评估一份 |
+
+## 工作区目录约定
+本地工具（以及 MCP 入口的本地检查）按以下路径查找交付物，请保持文件名不变。
+
+```
+engagements/<组织>/                   # 架构师 / 顾问：每个项目一个工作区，只保存在本地
+  portfolio/
+    ARE-T08-scenario-screening.md
+    ARE-T09-portfolio-report-<轮次>.md
+  scenarios/<场景简称>/
+    ARE-T01-value-card.md
+    ARE-T02-capability-matrix.md
+    ARE-T03-operation-contract-<操作名>.md
+    ARE-T04-authorization-matrix.md
+    ARE-T05-eval-report-<日期>.md
+    ARE-T06-value-review-<日期>.md
+    ARE-T07-maturity-assessment-<日期>.md
+    evidence/                         # 客户提供的材料，由“证据位置”引用
+```
+- 在单个项目仓库中，把一个场景的文件直接放在 `docs/agent-ready/` 下，文件名相同。
+- 客户资料只保存在本地工作区，不会发送到共享知识库或远程 MCP 服务。
 
 ## 交付物之间的关系
 ```
@@ -32,6 +55,7 @@
 - 价值卡片的**基线与目标**是价值复盘的对比对象。
 - 能力矩阵中的**风险等级**决定授权矩阵中的授权级别。
 - 操作契约卡中的**错误码与状态**是评测故障注入的检查对象。
+- 有多个场景时，**场景筛选表**决定哪些场景填写价值卡片，**组合报告**每轮汇总各场景的成熟度评估表。
 
 ## 与其他层的接口
 | 交付物 | 交给谁 / 从谁接收 |

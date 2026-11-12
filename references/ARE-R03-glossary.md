@@ -1,6 +1,6 @@
 # Glossary | 术语表
 > Document ID: ARE-R03
-> v0.1 | 2026-11-12 | Status: reference
+> v0.2 | 2026-11-12 | Status: reference
 > This is the one bilingual file in the repository: it maps the canonical English terms to the Chinese terms used in `.zh.md` reading aids. 本文件是仓库中唯一的中英对照文件，用于统一英文正式术语与中文阅读版的译法。
 
 ## Rules | 规则
@@ -135,6 +135,23 @@
 | ARE-T05 | Eval Report | 评测报告 |
 | ARE-T06 | Value Review | 价值复盘 |
 | ARE-T07 | Maturity Assessment | 成熟度评估表 |
+| ARE-T08 | Scenario Screening | 场景筛选表 |
+| ARE-T09 | Portfolio Report and Roadmap | 组合报告与路线图 |
+
+## Portfolio assessment | 组合评估
+| English (canonical) | 中文 | Definition |
+| :--- | :--- | :--- |
+| engagement workspace | 项目工作区 | A local folder per engagement holding all deliverables and evidence; client data never leaves it. |
+| scenario screening | 场景筛选 | A light Value Gate pass over many candidate ideas: shortlist / hand back / defer. |
+| shortlist | 入选 | A candidate that gets a full value card. |
+| defer | 暂缓 | A candidate to revisit on a set date. |
+| portfolio report | 组合报告 | The per-round, enterprise-level view built from scenario assessments; never an averaged score. |
+| roadmap | 路线图 | Now / next / later sequence of scenarios and platform capabilities. |
+| high-risk inconsistency | 高风险不一致 | What is exposed to agents goes beyond what the level allows (e.g. writes below L3). |
+| platform-level gap | 平台层短板 | A dimension failing in several scenarios, better solved once as a shared capability. |
+| evidence type | 证据类型 | `inspected` 亲自验证 / `documented` 文档证据 / `self-reported` 自述 (never passes). |
+| evidence request list | 证据清单 | The artifacts to request from a team to assess a target level. |
+| interview guide | 访谈提纲 | Questions for stakeholders, organized by value card section. |
 
 ## Protocol terms (keep in English) | 协议术语（保留英文）
 Tool Calling, MCP, Code Mode, A2A, Resources, Prompts, elicitation, OpenAPI, REST, stdio, Streamable HTTP, Saga, CAS, AP2, Intent Mandate, Cart Mandate.
