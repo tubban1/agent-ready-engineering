@@ -1,92 +1,93 @@
-# 成熟度评估表（Maturity Assessment）
-> 文档编号：ARE-T07
-> 模板 v0.1｜每个场景每次评估一份｜复制到项目目录后填写
-> 检查项的完整定义以 `../ARE-A02-agent-ready-maturity-model.md` 为准；本表只列编号和简称。
+# Maturity Assessment
+> Document ID: ARE-T07
+> Template v0.2 | One per scenario per assessment | Copy into the project directory before filling in
+> The full definition of each check is in `../ARE-A02-agent-ready-maturity-model.md`; this form lists only IDs and short names.
+> Language: English (canonical). Chinese reading aid: `ARE-T07-maturity-assessment.zh.md`.
 
-## 基本信息
-| 项 | 内容 |
+## Basic information
+| Item | Content |
 | :--- | :--- |
-| 场景名称 | <与价值卡片一致> |
-| 价值卡片 | <路径与版本> |
-| 评估日期 | <YYYY-MM-DD> |
-| 评估人 / 评审人 | <> |
-| 被评估版本 | <内核版本、工具定义版本或哈希> |
-| 上次评估 | <日期与等级；首次评估写“无”> |
+| Scenario name | <same as the value card> |
+| Value card | <path and version> |
+| Assessment date | <YYYY-MM-DD> |
+| Assessor / reviewer | <> |
+| Version assessed | <core version, tool definition version or hash> |
+| Previous assessment | <date and level; “none” for the first> |
 
-## 填写规则
-- 结果只填：✅ 通过 / ❌ 不通过 / ➖ 不适用。
-- 通过必须填写证据位置；不适用必须填写理由。
-- 达到第 N 级 = L1 到 LN 全部为 ✅ 或 ➖。
+## How to fill in
+- Result is one of: ✅ pass / ❌ fail / ➖ not applicable.
+- A pass needs an evidence location; not applicable needs a reason.
+- Reaching level N = everything from L1 to LN is ✅ or ➖.
 
-## L1 价值明确
-| 编号 | 简称 | 结果 | 证据位置 / 不适用理由 |
+## L1 Value Defined
+| ID | Short name | Result | Evidence location / reason for N/A |
 | :--- | :--- | :--- | :--- |
-| L1-V1 | 价值卡片，决策为 Go / 只读先行 | | |
-| L1-V2 | 基线有来源或有补测计划 | | |
-| L1-V3 | 最小验证记录 | | |
-| L1-V4 | 能力矩阵与首批范围 | | |
-| L1-A1 | 首批操作有 Owner / 授权人 / 负责人 | | |
-| L1-C1 | 万能执行器已识别并有拆分计划 | | |
+| L1-V1 | Value card, decision Go / read-only first | | |
+| L1-V2 | Baselines sourced or planned for measurement | | |
+| L1-V3 | Minimum validation record | | |
+| L1-V4 | Capability matrix and first batch | | |
+| L1-A1 | First-batch operations have Owner / approver / responsible | | |
+| L1-C1 | Catch-all executors identified with split plan | | |
 
-## L2 只读可用
-| 编号 | 简称 | 结果 | 证据位置 / 不适用理由 |
+## L2 Read-Ready
+| ID | Short name | Result | Evidence location / reason for N/A |
 | :--- | :--- | :--- | :--- |
-| L2-C1 | 只读操作强类型 Schema | | |
-| L2-C2 | 结构化错误 | | |
-| L2-X1 | 字段投影、服务端过滤、游标分页 | | |
-| L2-X2 | 响应上限与截断标记 | | |
-| L2-X3 | 渐进式发现 | | |
-| L2-X4 | 只读工具实测响应体积 | | |
-| L2-A1 | Agent 身份分离、只读委托凭证 | | |
-| L2-A2 | 外部内容标注来源与可信级别 | | |
-| L2-I1 | 接入层无业务逻辑、只读注解正确 | | |
-| L2-O1 | 只读调用审计记录 | | |
-| L2-O2 | 只读部分的真实 Agent 评测 | | |
+| L2-C1 | Strongly typed schemas for reads | | |
+| L2-C2 | Structured errors | | |
+| L2-X1 | Field projection, server-side filtering, cursor pagination | | |
+| L2-X2 | Response limit and truncation flag | | |
+| L2-X3 | Progressive discovery | | |
+| L2-X4 | Measured response size of read-only tools | | |
+| L2-A1 | Separate agent identity, read-only delegated credentials | | |
+| L2-A2 | External content labeled with source and trust level | | |
+| L2-I1 | No business logic in ingress, correct read-only annotations | | |
+| L2-O1 | Audit records for read-only calls | | |
+| L2-O2 | Real-agent eval of the read-only part | | |
 
-## L3 写入可控
-| 编号 | 简称 | 结果 | 证据位置 / 不适用理由 |
+## L3 Write-Safe
+| ID | Short name | Result | Evidence location / reason for N/A |
 | :--- | :--- | :--- | :--- |
-| L3-C1 | 幂等键 | | |
-| L3-C2 | 版本条件写与冲突返回 | | |
+| L3-C1 | Idempotency keys | | |
+| L3-C2 | Conditional writes and conflict response | | |
 | L3-C3 | validate / dry-run | | |
-| L3-C4 | 写操作契约卡验收全部通过 | | |
-| L3-S1 | 长任务状态、取消、断线恢复 | | |
-| L3-S2 | Draft 过期、隔离、清理 | | |
-| L3-S3 | 撤销 / 补偿或标注不可逆 | | |
+| L3-C4 | All write operation contract acceptance records pass | | |
+| L3-S1 | Long-running task status, cancel, recovery after disconnect | | |
+| L3-S2 | Draft expiry, isolation, cleanup | | |
+| L3-S3 | Undo / compensation or marked irreversible | | |
 | L3-S4 | `needs_input` | | |
-| L3-A1 | 授权矩阵经治理层审批 | | |
-| L3-A2 | 终局操作走逐笔确认或预授权，拒绝自报确认 | | |
-| L3-A3 | 凭证不进入模型上下文与沙箱 | | |
-| L3-A4 | 额度上限与一键停用 | | |
-| L3-O1 | 审计记录含授权证据 | | |
-| L3-O2 | 故障注入评测全部通过 | | |
+| L3-A1 | Authorization matrix approved by governance | | |
+| L3-A2 | Final operations via claim or pre-authorization; self-reported confirmation rejected | | |
+| L3-A3 | Credentials kept out of model context and sandbox | | |
+| L3-A4 | Limits and kill switch | | |
+| L3-O1 | Audit records include authorization evidence | | |
+| L3-O2 | All fault-injection evals pass | | |
 
-## L4 可验证运营
-| 编号 | 简称 | 结果 | 证据位置 / 不适用理由 |
+## L4 Verified Operations
+| ID | Short name | Result | Evidence location / reason for N/A |
 | :--- | :--- | :--- | :--- |
-| L4-O1 | 全链路关联 ID | | |
-| L4-O2 | 评测作为发布门槛 | | |
-| L4-I1 | 工具定义版本化与哈希 / 签名 | | |
-| L4-I2 | 多接入方式结果一致 | | |
-| L4-R1 | 环境隔离、灰度、回滚 | | |
-| L4-R2 | 价值复盘并回写价值卡片 | | |
-| L4-R3 | 低价值能力已收缩 / 下线或有维持理由 | | |
-| L4-R4 | 面向 Agent 的使用说明 | | |
+| L4-O1 | End-to-end correlation ID | | |
+| L4-O2 | Evals as release gate | | |
+| L4-I1 | Tool definitions versioned and hashed / signed | | |
+| L4-I2 | Consistent results across ingress paths | | |
+| L4-R1 | Environment isolation, rollout, rollback | | |
+| L4-R2 | Value review written back to the value card | | |
+| L4-R3 | Low-value capabilities shrunk / retired or kept with reasons | | |
+| L4-R4 | Usage guide for agents | | |
 
-## 维度小结
-每个维度填写“该维度所有检查项都通过的最高等级”。
+## Dimension summary
+For each dimension, enter the highest level at which all its checks pass.
 
-| 维度 | V 价值 | C 契约 | S 状态与恢复 | A 授权与信任 | X 上下文经济 | I 接入层 | O 可观测与评测 | R 运营与复盘 |
+| Dimension | V Value | C Contract | S State and Recovery | A Authority and Trust | X Context Economy | I Ingress | O Observability and Evals | R Run and Review |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 达到等级 | | | | | | | | |
+| Level reached | | | | | | | | |
 
-## 结论
-- **当前等级**：<L0 / L1 / L2 / L3 / L4>
-- **允许的动作**：<不开放 / 开始改造 / 开放只读 / 开放写入 / 规模化扩大>
-- **与当前实际开放范围是否一致**：<例：已开放写操作但仅达到 L2 → 不一致，需要立即处理>
-- **目标等级与时间**：<>
+## Conclusion
+- **Current level**: <L0 / L1 / L2 / L3 / L4>
+- **Allowed action**: <do not expose / start re-engineering / expose read-only / expose writes / scale up>
+- **Consistent with what is actually exposed today**: <e.g. writes are exposed but only L2 is reached → inconsistent, fix immediately>
+- **Target level and date**: <>
 
-## 差距与下一步
-| 未通过项 | 计划动作 | 负责人 | 截止日期 |
+## Gaps and next steps
+| Failed check | Planned action | Responsible | Due date |
 | :--- | :--- | :--- | :--- |
 | <> | | | |

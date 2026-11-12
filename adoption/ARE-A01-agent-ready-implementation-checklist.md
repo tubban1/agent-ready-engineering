@@ -1,173 +1,175 @@
-# Agent-Ready Engineering 实施 Checklist（含价值判断与实施顺序）
-> 文档编号：ARE-A01
-> v0.4｜2026-11-12｜状态：设计建议，不是授权，也不是已验证的行业标准
-> 理念依据：`../principles/ARE-P01-agent-ready-architecture.md`（价值前提 + 维度一至七）、`../principles/ARE-P02-agent-native-interface-design.md`（原则 1–12）
-> 行业参考：`../references/ARE-R02-agent-ready-industry-landscape.md`
-> 交付物模板：`templates/`（价值卡片、能力矩阵、操作契约卡、授权矩阵、评测报告、价值复盘、成熟度评估表）
-> 成熟度分级：`ARE-A02-agent-ready-maturity-model.md`（L0–L4；只读开放需 ≥ L2，写入开放需 ≥ L3，规模化扩大需 L4）
-> 项目自身的 AGENTS.md / CLAUDE.md、生产权限与 Owner 决定优先于本清单。
+# Agent-Ready Engineering Implementation Checklist (with Value Gate and Implementation Order)
+> Document ID: ARE-A01
+> v0.5 | 2026-11-12 | Status: design recommendation; not an authorization and not a validated industry standard
+> Language: English (canonical). Chinese reading aid: `ARE-A01-agent-ready-implementation-checklist.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
+> Rationale: `../principles/ARE-P01-agent-ready-architecture.md` (value premise + dimensions one to seven), `../principles/ARE-P02-agent-native-interface-design.md` (principles 1–12)
+> Industry landscape: `../references/ARE-R02-agent-ready-industry-landscape.md`
+> Deliverable templates: `templates/` (value card, capability matrix, operation contract, authorization matrix, eval report, value review, maturity assessment)
+> Maturity model: `ARE-A02-agent-ready-maturity-model.md` (L0–L4; read-only exposure requires ≥ L2, write exposure requires ≥ L3, scaling up requires L4)
+> A project's own AGENTS.md / CLAUDE.md, production permissions and Owner decisions take precedence over this checklist.
 
-## 范围
-本清单中的 Agent-Ready 指**业务服务与接口**能被 Agent 安全、可靠地使用；不是指“代码仓库能否让编程 Agent 工作”（那是 AGENTS.md / 仓库准备度的话题）。
+## Scope
+In this checklist, Agent-Ready means **business services and interfaces** that agents can use safely and reliably. It does not mean “whether a code repository is ready for coding agents” (that is the AGENTS.md / repository readiness topic).
 
-## Agent-Ready Engineering 的定义
-**先判断值不值得让 Agent 做，再把值得做的能力改造成 Agent 能安全、可靠使用的形态，并在上线后持续用实测数据复核价值。**
+## Definition of Agent-Ready Engineering
+**First judge whether it is worth having an agent do it; then turn the capabilities worth doing into a form agents can use safely and reliably; and after launch, keep verifying the value with measured data.**
 
-价值判断不是工程之外的前置讨论，而是本流程的第一阶段和最后一个闭环：
-- **入口**：P0 价值关卡决定做不做、先做哪些；
-- **过程**：P1 用价值优先级决定改造顺序，只改造排在前面的能力；
-- **出口**：P8 用真实使用数据复核价值，决定扩大、维持还是下线。
+Value judgment is not a discussion held before engineering; it is the first stage and the final loop of this process:
+- **Entry**: the P0 Value Gate decides whether to proceed and what comes first.
+- **During**: P1 uses value priority to set the order of re-engineering, and only the top-ranked capabilities are re-engineered.
+- **Exit**: P8 reviews value with real usage data and decides whether to expand, maintain or retire.
 
-## 使用方法
-- 按阶段顺序推进；每个阶段都有**验收标准**，未达标不进入依赖它的下一阶段。
-- 两条轨道（都必须先通过 P0、P1）：
-  - **只读轨道**：完成 P0 + P1 + P5 后，可以先把只读能力开放给 Agent。
-  - **写入轨道**：任何写操作接入 Agent 之前，必须完成 **P2 + P3 + P4**。
-- P5（上下文经济）可与 P2–P4 并行；P6（接入层）必须在内核就绪后再做。
-- 评测不是最后一步：P0 做最小验证，P5 / P6 用真实 Agent 测工具，P7 形成发布门槛。
-- 每个项目把本清单复制为自己的跟踪记录（ADR / Issue），**不要回写本知识库**。
+## How to use
+- Work through the stages in order. Every stage has **acceptance criteria**; do not start a stage that depends on one whose criteria are not met.
+- Two tracks (both must pass P0 and P1 first):
+  - **Read-only track**: after P0 + P1 + P5, read-only capabilities may be exposed to agents.
+  - **Write track**: before any write operation is exposed to agents, **P2 + P3 + P4** must be complete.
+- P5 (context economy) can run in parallel with P2–P4; P6 (ingress) must wait until the core is ready.
+- Evals are not the last step: P0 runs a minimum validation, P5 / P6 test tools with real agents, and P7 turns evals into a release gate.
+- Each project copies this checklist into its own tracking record (ADR / issue). **Do not write project data back into this repository.**
 
-## 为什么是这个顺序
-1. **P0 价值关卡最便宜**：在任何改造之前排除“不需要 Agent”或“没人会反复用”的场景，避免为全部系统做一遍无用的改造。
-2. **P2、P3 成本低、风险收益最大**：幂等、版本条件写、结构化错误和任务状态，直接消除“重复扣款、脏写、盲目重试”。
-3. **P4 决定出事时的破坏半径**，必须在开放写操作之前就位。
-4. **P5 是效率问题**，不影响正确性，可以并行。
-5. **P6 只有在内核已经 Agent-Ready 之后才是“薄适配”**；提前做只会把混乱的 CRUD 包装一遍。
-6. **P7、P8** 让投入可度量，并把结果送回 P0 形成闭环。
-
----
-
-## P0 价值判断（Value Gate）
-**目的**：回答“为什么要让 Agent 做这件事、做成了值多少”，并决定做 / 只读先行 / 不做。
-
-- [ ] **具体场景**：写清谁（真实用户角色）、在什么情境、要完成什么任务、多久发生一次、现在怎么做、痛点在哪里。
-- [ ] **是否真的需要 Agent**：任务是否需要理解模糊意图、多步规划或跨系统组合？如果固定脚本、规则引擎、普通集成或一个更好的 UI 就能解决，**不进入 Agent-Ready 改造**。
-- [ ] **重复使用价值**：是一次性需求还是会反复发生？谁会再次使用？
-- [ ] **可度量的价值假设**：记录当前基线（耗时、错误率、成本、等待时间等，必须实测或来自真实记录），写出目标值与度量方法；不写无法验证的收益数字。
-- [ ] **风险与责任**：最坏情况是什么（错误扣费、错误发送、数据泄露）？外部后果由谁承担？风险是否与价值相称？
-- [ ] **最小验证**：在不改造系统的前提下，用现有接口 + 人工兜底（或只读原型）让真实 Agent / 真实用户跑通一次代表任务，确认 Agent 真的能用、用户真的愿意再用。
-- [ ] **范围决策**：给出 Go（含写入）/ 只读先行 / 暂不做，以及明确的“不做清单”。
-
-**产出**：每个候选场景一张“价值卡片”（场景、用户、频率、基线、目标、风险、最小验证结果、决策）。模板：`templates/ARE-T01-value-card.md`。
-
-**验收**：
-- 每个进入后续阶段的场景都有价值卡片，且基线数据有来源；
-- 至少有一次最小验证的真实记录；
-- 被判定为“不需要 Agent”或“暂不做”的场景有书面理由。
-
-## P1 能力盘点与价值排序
-- [ ] 列出 P0 通过场景所涉及的业务操作，按类型分类：只读查询 / 校验（dry-run）/ 草稿 / 正式提交。
-- [ ] 每个操作标注：是否有副作用、是否可撤销、是否涉及金钱或对外发送、需要谁授权。
-- [ ] 每个操作标注**价值优先级**：被代表任务用到的频率、对价值目标的贡献、改造成本。
-- [ ] 找出“万能执行器”式接口（一个入口可做多种风险不同的事），列入拆分清单。
-- [ ] 只把优先级靠前的能力放入首批改造；其余进入待定池，等 P8 数据再决定。
-
-**产出**：能力矩阵。模板：`templates/ARE-T02-capability-matrix.md`。
-
-**验收**：一张能力矩阵，每一行都能回答“价值优先级多高、Agent 能不能直接执行、不能的话需要什么确认”；首批改造范围明确且有上限。
-
-## P2 领域内核契约（只改内核，先不碰 MCP）
-**产出**：每个首批操作一张操作契约卡，P3 的生命周期与 Draft 部分一并填写。模板：`templates/ARE-T03-operation-contract.md`。
-
-- [ ] 用高阶、有边界的业务意图替代页面级 CRUD（例：`prepare_cancellation` 而不是 `PATCH /order/field`）。
-- [ ] 输入 / 输出使用强类型 Schema：枚举、单位、取值范围、时区、来源与更新时间。
-- [ ] 所有写操作接受 `idempotency_key`；明确作用范围（Owner / Agent / 操作）、保留时长、重复请求原样返回首次结果。
-- [ ] 可变资源带 `revision`，写入要求 `expected_revision`；冲突时返回最新版本号与差异摘要。
-- [ ] 统一错误结构：`code`、`retryable`、`retry_after`、`hint`（需要补充什么、怎么修）、`current_state`。
-- [ ] 提供 `validate` / dry-run：只做校验，不产生任何副作用。
-
-**验收**：
-- 同一写请求重放 N 次，业务效果只发生一次；
-- 携带过期版本号的写入全部被拒绝，且响应中带有最新版本；
-- 每一类错误都能被程序判断“能否重试、何时重试、缺什么”。
-
-## P3 状态机与长任务
-- [ ] 长任务建模为 Job / Operation 实体：`accepted → running → partial → completed / failed / cancelled / unknown`，状态只反映真实系统能力。
-- [ ] 提供 `get_operation_status`、`cancel`，支持部分结果与逐项回执；断线后可凭 ID 恢复。
-- [ ] Draft 实体：有过期时间（TTL）、与正式数据隔离、定时清理。
-- [ ] 已提交操作提供撤销或补偿流程（Saga 风格）；不可逆操作在 P1 矩阵中显式标出。
-- [ ] 信息不足时返回 `needs_input`，并指明具体缺哪个字段。
-
-**验收**：模拟客户端在任务中途断连、超时后重试、并发提交，均不出现重复扣费、重复创建或状态丢失。
-
-## P4 信任边界与授权
-**产出**：授权矩阵，完成后交给治理层。模板：`templates/ARE-T04-authorization-matrix.md`。
-
-- [ ] Agent 身份与人类身份分离；Agent 使用委托凭证，绑定 Owner、Agent、动作、资源、有效期，可随时吊销。
-- [ ] 凭证不进入模型上下文，也不进入 Code Mode 沙箱（由受控代理代为签名 / 转发）。
-- [ ] 服务端拒绝采信代理自报的确认字段（如 `owner_confirmed: true`）。
-- [ ] 操作分三级：Agent 可自动执行 / 需人类确认 / 仅人类可执行。扣费、对外发送、正式落库走人类可信通道。
-- [ ] 人类确认有两种可选形态，按场景选择：
-  - **逐笔确认（Claim）**：人类在网页、扫码或签名中确认具体草稿；
-  - **事先授权（预授权）**：人类事先签署有约束的授权（金额上限、对象、时间窗口、次数），Agent 只能在约束内执行；授权必须服务端可验证、可吊销、每次使用都留痕。行业参考：Google AP2 的 Intent Mandate / Cart Mandate。
-- [ ] 按 Agent 设置金额、频率、资源上限，并有一键停用开关。
-- [ ] 外部内容（用户文件、网页、第三方返回、其他 Agent 消息）标注来源与可信级别；服务端不执行数据中夹带的指令。
-- [ ] 审计日志记录：人类主体、Agent、会话、意图、资源版本、授权证据（逐笔确认或预授权编号）、结果。
-
-**验收**：
-- 在评测环境中模拟 Prompt Injection，影响仅停留在草稿层或预授权约束内；
-- 任意一次终局操作都能追溯到一条人类授权证据；
-- 吊销某个 Agent 或某份预授权后，后续请求立即被拒绝。
-
-## P5 上下文经济（数据访问层，可与 P2–P4 并行）
-- [ ] 查询支持字段投影（`fields`）、服务端过滤与排序、游标分页、结构化摘要。
-- [ ] 响应设大小上限；被截断时返回 `truncated` 标记与下一页游标。
-- [ ] 渐进式发现：先给精简的能力索引，Agent 需要时再调用 `describe_*` / `get_*_schema` 获取完整 Schema。
-- [ ] 大对象用稳定 ID 引用，而不是整体塞进响应。
-- [ ] 实测每个工具的响应体积，以及代表性任务的轮次与 Token 消耗。
-- [ ] 用真实 Agent 跑 P0 的代表任务，按结果迭代工具粒度、命名、描述和响应格式（评测驱动的工具设计）。
-
-**验收**：每个工具都有实测的响应体积数据；代表性任务的调用轮次有明确上限。
-
-## P6 接入层适配（此时才写 MCP）
-- [ ] MCP Server 只做协议转换，不包含业务逻辑或授权判断。
-- [ ] 正确填写 MCP 工具注解（`readOnlyHint`、`destructiveHint`、`idempotentHint`、`openWorldHint`），并记住它们只是提示，约束由内核执行。
-- [ ] 工具描述写清“何时使用、何时不该使用、前提条件、副作用”。
-- [ ] `needs_input` 映射到 MCP elicitation（宿主支持时）；只读数据可按需暴露为 Resources。
-- [ ] REST / OpenAPI 与 Code Mode（类型化 SDK + 沙箱 + 受控代理）复用同一内核与同一套授权。
-- [ ] 工具与 Schema 有版本号和废弃策略；对完整工具定义（描述、输入输出 Schema、注解）做哈希或签名，任何变更都可被发现和审查，不静默修改。
-
-**验收**：新增一种接入方式时，内核代码零改动；同一操作经 MCP、REST、Code Mode 三条路径得到一致的授权结果与业务效果；工具定义的每次变更都有记录。
-
-## P7 可观测与评测
-**产出**：评测报告（P5 的工具迭代评测也用同一模板）。模板：`templates/ARE-T05-eval-report.md`。
-
-- [ ] 关联 ID 贯穿：Agent 会话 → 工具调用 → 内核事务 → 外部效果。
-- [ ] Agent 评测集：以 P0 的代表任务为主，注入超时、重复请求、版本冲突、Prompt Injection。
-- [ ] 指标全部来自实测：任务完成率、越权拒绝率、重复副作用次数、恢复率、Token、延迟、人工介入率。
-- [ ] 对照实验（可选）：同一场景下比较传统 API / 普通 MCP 包装 / Agent-Ready 设计（见接口设计文档“学习/测试路径”）。
-
-**验收**：评测纳入发布流程，关键指标退化时阻止发布。
-
-## P8 上线运营与价值复盘
-**产出**：每个场景每个复盘周期一份价值复盘，结论回写价值卡片。模板：`templates/ARE-T06-value-review.md`。
-
-- [ ] 提供沙箱 / 测试环境与测试凭据，和生产隔离。
-- [ ] 按 Agent 配额与限流；写操作灰度开放。
-- [ ] 面向 Agent 的使用说明：能力索引、典型流程、错误处理方式。
-- [ ] **价值复盘**：按 P0 价值卡片中的指标，用真实使用数据对比基线与目标；记录哪些能力被高频使用、哪些几乎没人用。
-- [ ] 根据复盘决定：扩大（把待定池里的能力纳入下一轮 P1）/ 维持 / 收缩或下线低价值工具（减少 Agent 的选择噪音和维护成本）。
-- [ ] 定期复盘审计日志与评测结果，更新 P1 能力矩阵。
-
-**验收**：
-- 任何新开放的写能力都有灰度计划、回滚方式和负责人；
-- 每个上线场景在约定周期内产出一次价值复盘，结论回写到该场景的价值卡片。
+## Why this order
+1. **The P0 Value Gate is the cheapest step**: before any re-engineering, it rules out scenarios that need no agent or that nobody will use repeatedly, avoiding useless re-engineering of every system.
+2. **P2 and P3 cost little and remove the most risk**: idempotency, conditional writes, structured errors and task status directly eliminate duplicate charges, dirty writes and blind retries.
+3. **P4 determines the blast radius when something goes wrong**, so it must be in place before write operations are exposed.
+4. **P5 is about efficiency**, not correctness, so it can run in parallel.
+5. **P6 is only a “thin adaptation” once the core is Agent-Ready**; doing it earlier merely wraps messy CRUD.
+6. **P7 and P8** make the investment measurable and feed results back to P0 to close the loop.
 
 ---
 
-## 最小可行版本（时间不够时）
-若只能做一小部分，优先级为：
-1. 一张价值卡片 + 一次最小验证（P0）
-2. 幂等键 + `expected_revision`（P2）
-3. 结构化、可判断能否重试的错误（P2）
-4. 长任务状态查询（P3）
-5. 终局操作走人类授权通道：逐笔确认或有约束的预授权（P4）
-6. 字段投影 + 游标（P5）
+## P0 Value Gate
+**Purpose**: answer “why should an agent do this, and what is it worth if it succeeds”, and decide: proceed / read-only first / not now.
 
-做到第 2–5 项之前，不建议把任何写操作开放给 Agent。
+- [ ] **Specific scenario**: state who (real user role), in what situation, what task, how often, how it is done today, and where it hurts.
+- [ ] **Does it really need an agent**: does the task require understanding vague intent, multi-step planning or combining several systems? If a fixed script, a rules engine, a plain integration or a better UI would solve it, **do not start Agent-Ready re-engineering**.
+- [ ] **Recurring value**: is this a one-off need or a recurring one? Who will use it again?
+- [ ] **Measurable value hypothesis**: record the current baseline (time spent, error rate, cost, waiting time and so on; measured or from real records), state the target and how it will be measured. Do not write benefit figures that cannot be verified.
+- [ ] **Risk and responsibility**: what is the worst case (wrong charge, wrong outbound message, data leak)? Who bears the external consequences? Is the risk proportionate to the value?
+- [ ] **Minimum validation**: without re-engineering, use existing interfaces plus human fallback (or a read-only prototype) to have a real agent and real users complete one representative task, confirming that the agent can actually use it and users actually want to use it again.
+- [ ] **Scope decision**: decide Go (including writes) / read-only first / not now, and write an explicit out-of-scope list.
 
-## 变更记录
-- **v0.4（2026-11-12）**：关联成熟度分级（L0–L4）与成熟度评估表。
-- **v0.3（2026-11-12）**：各阶段关联标准交付物模板（`templates/`）。
-- **v0.2（2026-11-12）**：新增 P0 价值关卡并把价值判断贯穿 P1 排序与 P8 复盘，原 P0–P7 顺延为 P1–P8；P4 增加预授权形态；P5 增加评测驱动的工具设计；P6 增加工具定义变更检测；明确范围不含代码仓库准备度。
-- **v0.1（2026-11-12）**：初版 P0–P7。
+**Output**: one value card per candidate scenario (scenario, users, frequency, baseline, target, risk, minimum validation result, decision). Template: `templates/ARE-T01-value-card.md`.
+
+**Acceptance criteria**:
+- Every scenario that moves on has a value card, and its baseline data has a source.
+- There is at least one real record of a minimum validation.
+- Scenarios judged “no agent needed” or “not now” have written reasons.
+
+## P1 Capability Inventory and Prioritization
+- [ ] List the business operations involved in the scenarios that passed P0 and classify them: read-only query / validation (dry-run) / draft / final commit.
+- [ ] For each operation, record: side effects, whether it can be undone, whether it involves money or outbound sending, and who must authorize it.
+- [ ] For each operation, record its **value priority**: how often representative tasks use it, its contribution to the value target, and the cost of re-engineering.
+- [ ] Identify catch-all executor interfaces (one entry point performing several actions of different risk) and put them on a split list.
+- [ ] Put only the top-priority capabilities into the first batch; the rest go to a waiting pool until P8 data is available.
+
+**Output**: capability matrix. Template: `templates/ARE-T02-capability-matrix.md`.
+
+**Acceptance criteria**: a capability matrix in which every row answers “how high is the value priority, can an agent execute it directly, and if not, what confirmation is needed”; the first batch is explicit and capped.
+
+## P2 Domain Core Contract (change the core only; no MCP yet)
+**Output**: one operation contract per first-batch operation; the lifecycle and draft sections for P3 are filled in on the same card. Template: `templates/ARE-T03-operation-contract.md`.
+
+- [ ] Replace page-level CRUD with high-level, bounded business intents (for example `prepare_cancellation` instead of `PATCH /order/field`).
+- [ ] Use strongly typed schemas for inputs and outputs: enums, units, value ranges, time zones, source and update time.
+- [ ] Every write accepts an `idempotency_key`, with a defined scope (Owner / agent / operation) and retention period; a repeated request returns the original result.
+- [ ] Mutable resources carry a `revision`, and writes require `expected_revision`; on conflict, return the latest revision and a summary of differences.
+- [ ] Use one error structure: `code`, `retryable`, `retry_after`, `hint` (what is missing, how to fix it), `current_state`.
+- [ ] Provide `validate` / dry-run: checks only, no side effects.
+
+**Acceptance criteria**:
+- Replaying the same write request N times produces the business effect exactly once.
+- Every write with an outdated revision is rejected, and the response includes the latest revision.
+- For every error type, a program can tell whether to retry, when to retry, and what is missing.
+
+## P3 State Machine and Long-running Operations
+- [ ] Model long-running tasks as job / operation entities: `accepted → running → partial → completed / failed / cancelled / unknown`, with states that reflect only what the system can actually observe.
+- [ ] Provide `get_operation_status` and `cancel`, support partial results and per-item receipts, and allow recovery by ID after a disconnect.
+- [ ] Draft entities have an expiry (TTL), are isolated from committed data, and are cleaned up on schedule.
+- [ ] Committed operations have undo or compensation flows (Saga style); irreversible operations are marked explicitly in the P1 matrix.
+- [ ] When information is missing, return `needs_input` and name the missing fields.
+
+**Acceptance criteria**: when a simulated client disconnects mid-task, retries after a timeout or submits concurrently, there are no duplicate charges, no duplicate records and no lost state.
+
+## P4 Trust Boundary and Authorization
+**Output**: authorization matrix, handed to governance when complete. Template: `templates/ARE-T04-authorization-matrix.md`.
+
+- [ ] Agent identities are separate from human identities; agents use delegated credentials bound to the Owner, agent, actions, resources and validity period, revocable at any time.
+- [ ] Credentials never enter the model context or the Code Mode sandbox (a controlled proxy signs or forwards on their behalf).
+- [ ] The server rejects confirmation fields self-reported by the agent (such as `owner_confirmed: true`).
+- [ ] Operations fall into three levels: agent may execute automatically / requires human confirmation / human only. Charges, outbound sending and committing records go through a trusted human channel.
+- [ ] Human confirmation takes one of two forms, chosen per scenario:
+  - **Claim (per-action confirmation)**: a human confirms a specific draft on a web page, by QR scan or by signature.
+  - **Pre-authorization**: a human signs a bounded authorization in advance (amount limit, counterparties, time window, number of uses), and the agent may act only within those limits. The authorization must be verifiable by the server, revocable and logged on every use. Industry reference: Google AP2 Intent Mandate / Cart Mandate.
+- [ ] Set amount, frequency and resource limits per agent, with a kill switch.
+- [ ] Label external content (user files, web pages, third-party responses, messages from other agents) with source and trust level; the server never executes instructions embedded in data.
+- [ ] Audit logs record: human principal, agent, session, intent, resource revision, authorization evidence (claim or pre-authorization ID), result.
+
+**Acceptance criteria**:
+- In a simulated Prompt Injection in the eval environment, the impact stays within the draft layer or the pre-authorization limits.
+- Every final operation can be traced to a piece of human authorization evidence.
+- After an agent or a pre-authorization is revoked, subsequent requests are rejected immediately.
+
+## P5 Context Economy (data access layer; can run in parallel with P2–P4)
+- [ ] Queries support field projection (`fields`), server-side filtering and sorting, cursor pagination and structured summaries.
+- [ ] Responses have a size limit; when truncated, they return a `truncated` flag and a next-page cursor.
+- [ ] Progressive discovery: provide a small capability index first; agents call `describe_*` / `get_*_schema` for full schemas when needed.
+- [ ] Large objects are referenced by stable ID instead of being embedded whole in responses.
+- [ ] Measure the response size of every tool and the round trips and tokens of representative tasks.
+- [ ] Run real agents on the P0 representative tasks and iterate tool granularity, naming, descriptions and response formats from the results (eval-driven tool design).
+
+**Acceptance criteria**: every tool has measured response-size data; representative tasks have an explicit upper bound on round trips.
+
+## P6 Ingress Adaptation (only now write the MCP server)
+- [ ] The MCP server only translates protocols; it contains no business logic and no authorization decisions.
+- [ ] Fill in MCP tool annotations correctly (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`), remembering they are hints; constraints are enforced by the core.
+- [ ] Tool descriptions state when to use the tool, when not to, preconditions and side effects.
+- [ ] Map `needs_input` to MCP elicitation (where the host supports it); expose read-only data as Resources where useful.
+- [ ] REST / OpenAPI and Code Mode (typed SDK + sandbox + controlled proxy) reuse the same core and the same authorization.
+- [ ] Tools and schemas have version numbers and a deprecation policy; hash or sign the full tool definition (description, input and output schemas, annotations) so every change can be detected and reviewed, never changed silently.
+
+**Acceptance criteria**: adding a new ingress requires zero changes to core code; the same operation via MCP, REST and Code Mode yields the same authorization result and business effect; every change to a tool definition is recorded.
+
+## P7 Observability and Evals
+**Output**: eval report (P5 tool-iteration evals use the same template). Template: `templates/ARE-T05-eval-report.md`.
+
+- [ ] A correlation ID runs through agent session → tool call → core transaction → external effect.
+- [ ] Agent eval suite: based mainly on the P0 representative tasks, injecting timeouts, duplicate requests, revision conflicts and Prompt Injection.
+- [ ] All metrics come from measurement: task completion rate, unauthorized-action rejection rate, number of duplicate side effects, recovery rate, tokens, latency, human intervention rate.
+- [ ] Comparison experiment (optional): in the same scenario, compare a traditional API / a plain MCP wrapper / an Agent-Ready design (see “Learning / testing path” in the interface design document).
+
+**Acceptance criteria**: evals are part of the release process, and regressions in key metrics block a release.
+
+## P8 Launch, Operations and Value Review
+**Output**: one value review per scenario per review cycle, with conclusions written back to the value card. Template: `templates/ARE-T06-value-review.md`.
+
+- [ ] Provide a sandbox / test environment with test credentials, isolated from production.
+- [ ] Quotas and rate limits per agent; write operations rolled out gradually.
+- [ ] Usage guide for agents: capability index, typical flows, error handling.
+- [ ] **Value review**: using the metrics in the P0 value card, compare real usage data with baseline and target; record which capabilities are used heavily and which almost never.
+- [ ] Decide from the review: expand (move capabilities from the waiting pool into the next P1 round) / maintain / shrink or retire low-value tools (less selection noise for agents and less maintenance).
+- [ ] Review audit logs and eval results regularly and update the P1 capability matrix.
+
+**Acceptance criteria**:
+- Every newly exposed write capability has a rollout plan, a rollback method and an owner.
+- Every launched scenario produces a value review within the agreed cycle, with conclusions written back to its value card.
+
+---
+
+## Minimum viable version (when time is short)
+If only part can be done, the priorities are:
+1. One value card + one minimum validation (P0)
+2. Idempotency key + `expected_revision` (P2)
+3. Structured errors that tell whether to retry (P2)
+4. Status queries for long-running tasks (P3)
+5. Final operations go through a human authorization channel: per-action claim or bounded pre-authorization (P4)
+6. Field projection + cursors (P5)
+
+Do not expose any write operation to agents until items 2–5 are done.
+
+## Change log
+- **v0.5 (2026-11-12)**: first English canonical version, translated from Chinese v0.4. No change in content. The Chinese text becomes the reading aid `ARE-A01-agent-ready-implementation-checklist.zh.md`.
+- **v0.4**: linked the maturity model (L0–L4) and the maturity assessment.
+- **v0.3**: linked each stage to its standard deliverable template (`templates/`).
+- **v0.2**: added the P0 Value Gate and carried value judgment through P1 prioritization and P8 review; former P0–P7 renumbered to P1–P8; P4 added pre-authorization; P5 added eval-driven tool design; P6 added tool definition change detection; scope clarified to exclude repository readiness.
+- **v0.1**: first version, P0–P7.

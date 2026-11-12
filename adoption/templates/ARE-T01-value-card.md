@@ -1,73 +1,74 @@
-# 价值卡片（Value Card）— P0
-> 文档编号：ARE-T01
-> 模板 v0.1｜每个候选场景一张｜复制到项目目录后填写
+# Value Card — P0
+> Document ID: ARE-T01
+> Template v0.2 | One per candidate scenario | Copy into the project directory before filling in
+> Language: English (canonical). Chinese reading aid: `ARE-T01-value-card.zh.md`.
 
-## 基本信息
-| 项 | 内容 |
+## Basic information
+| Item | Content |
 | :--- | :--- |
-| 场景名称 | <例：供应商订单变更处理> |
-| 卡片版本 / 日期 | <v1 / YYYY-MM-DD> |
-| 业务 Owner | <对结果负责的人或角色> |
-| 填写人 | <姓名或角色> |
-| 场景来源 | <战略层清单 / 业务部门提出 / 其他> |
+| Scenario name | <e.g. Handling supplier order changes> |
+| Card version / date | <v1 / YYYY-MM-DD> |
+| Business Owner | <person or role accountable for the outcome> |
+| Prepared by | <name or role> |
+| Scenario source | <strategy list / proposed by a business unit / other> |
 
-## 1. 具体场景
-- **谁**：<真实用户角色，例：采购专员>
-- **在什么情境**：<触发条件，例：供应商来函要求改交期>
-- **要完成什么任务**：<一句话描述最终结果>
-- **多久发生一次**：<频率 + 数据来源；没有数据写“未测”>
-- **现在怎么做**：<当前流程、涉及的系统和人>
-- **痛点**：<耗时、出错、等待、遗漏等，尽量具体>
+## 1. Specific scenario
+- **Who**: <real user role, e.g. purchasing specialist>
+- **In what situation**: <trigger, e.g. a supplier writes asking to change the delivery date>
+- **Task to complete**: <the final outcome in one sentence>
+- **How often**: <frequency + data source; write “not measured” if there is no data>
+- **How it is done today**: <current process, systems and people involved>
+- **Pain points**: <time spent, errors, waiting, omissions; be as specific as possible>
 
-## 2. 是否真的需要 Agent
-| 判断项 | 是 / 否 | 说明 |
+## 2. Does it really need an agent
+| Question | Yes / No | Notes |
 | :--- | :--- | :--- |
-| 需要理解模糊或自然语言意图 | | |
-| 需要多步规划或跨系统组合 | | |
-| 每次情况差异大，难以写死规则 | | |
-| 固定脚本 / 规则引擎 / 普通集成即可解决 | | |
-| 一个更好的 UI 即可解决 | | |
+| Requires understanding vague or natural-language intent | | |
+| Requires multi-step planning or combining several systems | | |
+| Cases vary widely and are hard to capture in fixed rules | | |
+| A fixed script / rules engine / plain integration would solve it | | |
+| A better UI would solve it | | |
 
-**结论**：<需要 Agent / 不需要（交还给：采购现成工具 / 普通集成 / UI 改进 / 其他）>
+**Conclusion**: <needs an agent / does not (hand back to: off-the-shelf tool / plain integration / UI improvement / other)>
 
-## 3. 重复使用价值
-- 是一次性需求还是持续发生：<>
-- 谁会再次使用、多久用一次：<>
+## 3. Recurring value
+- One-off or ongoing need: <>
+- Who will use it again, and how often: <>
 
-## 4. 可度量的价值假设
-| 指标 | 当前基线 | 基线来源 | 目标 | 度量方法 |
+## 4. Measurable value hypothesis
+| Metric | Current baseline | Baseline source | Target | How measured |
 | :--- | :--- | :--- | :--- | :--- |
-| <例：单次处理耗时> | <实测值或“未测”> | <日志 / 抽样记录 / 系统报表> | <目标值> | <怎么采集> |
-| <例：人工返工次数> | | | | |
+| <e.g. time per case> | <measured value or “not measured”> | <logs / sampled records / system reports> | <target> | <how it is collected> |
+| <e.g. number of manual reworks> | | | | |
 
-> 没有基线就先补测，不写无法验证的收益数字。
+> Without a baseline, measure it first. Do not write benefit figures that cannot be verified.
 
-## 5. 风险与责任
-- **最坏情况**：<例：错误改单导致违约>
-- **外部后果由谁承担**：<>
-- **是否涉及金钱 / 对外发送 / 不可逆操作**：<>
-- **风险与价值是否相称**：<判断与理由>
+## 5. Risk and responsibility
+- **Worst case**: <e.g. a wrong order change causes a breach of contract>
+- **Who bears the external consequences**: <>
+- **Involves money / outbound sending / irreversible operations**: <>
+- **Is the risk proportionate to the value**: <judgment and reasons>
 
-## 6. 代表任务（也是后续评测的主要用例）
-| 编号 | 任务描述 | 期望结果 | 难点 |
+## 6. Representative tasks (also the main eval cases later)
+| ID | Task description | Expected result | Difficulty |
 | :--- | :--- | :--- | :--- |
 | T1 | <> | <> | <> |
 | T2 | <> | <> | <> |
 
-## 7. 最小验证
-- **方式**：<现有接口 + 人工兜底 / 只读原型 / 其他>
-- **参与者**：<真实用户、使用的 Agent 宿主与模型>
-- **日期**：<>
-- **结果**：<Agent 是否完成代表任务、在哪里卡住、用户是否愿意再用>
-- **证据位置**：<记录、日志或录屏的路径>
+## 7. Minimum validation
+- **Method**: <existing interfaces + human fallback / read-only prototype / other>
+- **Participants**: <real users, the agent host and model used>
+- **Date**: <>
+- **Result**: <did the agent complete the representative task, where did it get stuck, do users want to use it again>
+- **Evidence location**: <path to records, logs or recordings>
 
-## 8. 决策
-- **决定**：<Go（含写入）/ 只读先行 / 暂不做>
-- **首批范围**：<涉及的业务能力，交给能力矩阵>
-- **不做清单**：<明确排除的部分及理由>
-- **决策人 / 日期**：<>
+## 8. Decision
+- **Decision**: <Go (including writes) / read-only first / not now>
+- **First batch scope**: <business capabilities involved, passed to the capability matrix>
+- **Out-of-scope list**: <what is explicitly excluded, and why>
+- **Decided by / date**: <>
 
-## 9. 复盘回写（P8 填写）
-| 复盘日期 | 结论 | 复盘报告位置 |
+## 9. Review write-back (filled in at P8)
+| Review date | Conclusion | Value review location |
 | :--- | :--- | :--- |
-| | <扩大 / 维持 / 收缩 / 下线> | |
+| | <expand / maintain / shrink / retire> | |

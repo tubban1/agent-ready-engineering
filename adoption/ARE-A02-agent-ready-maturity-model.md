@@ -1,118 +1,123 @@
-# Agent-Ready Engineering 成熟度分级
-> 文档编号：ARE-A02
-> v0.1｜2026-11-12｜状态：设计建议；分级与门槛未经实证校准，不是行业标准
-> 配套：`ARE-A01-agent-ready-implementation-checklist.md`（P0–P8）、`templates/`（交付物）、`templates/ARE-T07-maturity-assessment.md`（评估表）
+# Agent-Ready Engineering Maturity Model
+> Document ID: ARE-A02
+> v0.2 | 2026-11-12 | Status: design recommendation; levels and thresholds are not empirically calibrated and are not an industry standard
+> Language: English (canonical). Chinese reading aid: `ARE-A02-agent-ready-maturity-model.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
+> Related: `ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `templates/` (deliverables), `templates/ARE-T07-maturity-assessment.md` (assessment form)
 
-## 用途
-- 让企业知道**某个场景**现在处在哪一级、离下一级差什么、下一步做什么。
-- 把“能不能开放给 Agent”变成可检查的门槛：只读开放、写入开放、规模化扩大分别对应不同等级。
-- 让不同项目、不同时间的评估结果可以比较。
+## Purpose
+- Show an enterprise which level **a given scenario** has reached, what is missing for the next level and what to do next.
+- Turn “can this be exposed to agents?” into checkable thresholds: read-only exposure, write exposure and scaling up each require a different level.
+- Make assessments comparable across projects and over time.
 
-## 评估规则
-1. **按场景评估，不按企业评估**。评估对象是一个价值卡片对应的场景（及其涉及的系统）。企业层面看各场景的等级分布，**不要把多个场景平均成一个企业分数**——平均分会掩盖高风险场景的短板。
-2. **每一项都是二元检查**：通过 / 不通过 / 不适用。只有口头说明不算通过，必须有证据位置（交付物、代码、测试记录、日志）。
-3. **达到第 N 级 = 第 1 级到第 N 级的全部检查项都通过或不适用**。任何一项未通过，等级停在该项所在级别之下。
-4. **“不适用”需要书面理由并经评审确认**。例：场景中没有长任务，L3-S1 可标为不适用。
-5. **评估结果有有效期**。内核、工具定义或授权规则发生变化后需要重新评估相关检查项。
+## Assessment rules
+1. **Assess per scenario, not per enterprise.** The unit of assessment is the scenario behind one value card (and the systems it involves). At enterprise level, look at the distribution of levels across scenarios; **do not average several scenarios into one enterprise score**, because an average hides the weaknesses of high-risk scenarios.
+2. **Every item is a binary check**: pass / fail / not applicable. A verbal explanation never counts as a pass; there must be an evidence location (deliverable, code, test record, log).
+3. **Reaching level N = every check from level 1 to level N passes or is not applicable.** If any check fails, the level stops below the level of that check.
+4. **“Not applicable” needs a written reason confirmed in review.** Example: if the scenario has no long-running tasks, L3-S1 may be marked not applicable.
+5. **Assessments expire.** When the core, tool definitions or authorization rules change, the affected checks must be reassessed.
 
-## 等级总览
-| 等级 | 名称 | 一句话 | 允许的动作 | 主要对应阶段 |
+## Levels
+| Level | Name | In one sentence | Allowed action | Main stages |
 | :--- | :--- | :--- | :--- | :--- |
-| L0 | 未就绪 | 没有价值判断，接口仍是页面级 API | 不开放给 Agent | — |
-| L1 | 价值明确 | 知道为什么做、先做哪些 | 开始改造 | P0–P1 |
-| L2 | 只读可用 | 只读能力可以安全、高效地给 Agent 使用 | **开放只读能力** | P5，及 P2 / P4 的只读部分 |
-| L3 | 写入可控 | 写操作可重试、可恢复、授权可验证、破坏半径受限 | **开放写操作** | P2–P4，P7 的故障注入 |
-| L4 | 可验证运营 | 持续评测、可追溯、用真实数据复核价值 | **规模化扩大** | P6–P8 |
+| L0 | Not Ready | No value judgment; interfaces are still page-level APIs | Do not expose to agents | — |
+| L1 | Value Defined | We know why to do it and what comes first | Start re-engineering | P0–P1 |
+| L2 | Read-Ready | Read-only capabilities can be used by agents safely and efficiently | **Expose read-only capabilities** | P5, plus the read-only parts of P2 / P4 |
+| L3 | Write-Safe | Writes are retry-safe and recoverable, authorization is verifiable, blast radius is limited | **Expose write operations** | P2–P4, fault injection in P7 |
+| L4 | Verified Operations | Continuous evals, full traceability, value reviewed with real data | **Scale up** | P6–P8 |
 
-## 八个检查维度
-| 代号 | 维度 | 对应架构文档 |
+## Eight dimensions
+| Code | Dimension | Section of ARE-P01 |
 | :--- | :--- | :--- |
-| V | 价值 | 前提：价值优先 |
-| C | 契约 | 维度三（幂等、版本、错误） |
-| S | 状态与恢复 | 维度三（生命周期、撤销） |
-| A | 授权与信任 | 维度四、维度六 |
-| X | 上下文经济 | 维度二 |
-| I | 接入层 | 维度五 |
-| O | 可观测与评测 | 维度七 |
-| R | 运营与复盘 | 前提：价值优先（上线后复核） |
+| V | Value | Premise: value first |
+| C | Contract | Dimension three (idempotency, revisions, errors) |
+| S | State and Recovery | Dimension three (lifecycle, undo) |
+| A | Authority and Trust | Dimensions four and six |
+| X | Context Economy | Dimension two |
+| I | Ingress | Dimension five |
+| O | Observability and Evals | Dimension seven |
+| R | Run and Review | Premise: value first (review after launch) |
 
-除了总等级，每个维度也可以单独标出达到的等级，用于找出短板。
+Besides the overall level, each dimension can be given its own level to reveal weak spots.
 
 ---
 
-## L1 价值明确
-| 编号 | 检查项 | 证据 |
+## L1 Value Defined
+| ID | Check | Evidence |
 | :--- | :--- | :--- |
-| L1-V1 | 有价值卡片，决策为“Go”或“只读先行” | 价值卡片 |
-| L1-V2 | 价值指标的基线有来源；没有的标为“未测”并有补测计划 | 价值卡片第 4 节 |
-| L1-V3 | 至少有一次最小验证的真实记录 | 价值卡片第 7 节 |
-| L1-V4 | 能力矩阵已完成，首批改造范围明确且有上限 | 能力矩阵 |
-| L1-A1 | 每个首批操作都有 Owner、授权人、负责人 | 能力矩阵 |
-| L1-C1 | 万能执行器式接口已识别，并有拆分计划 | 能力矩阵拆分清单 |
+| L1-V1 | A value card exists and its decision is “Go” or “read-only first” | Value card |
+| L1-V2 | Baselines of the value metrics have sources; those without are marked “not measured” with a plan to measure | Value card §4 |
+| L1-V3 | At least one real record of a minimum validation | Value card §7 |
+| L1-V4 | The capability matrix is complete, and the first batch is explicit and capped | Capability matrix |
+| L1-A1 | Every first-batch operation has an Owner, an approver and a responsible person | Capability matrix |
+| L1-C1 | Catch-all executor interfaces are identified and have a split plan | Capability matrix split list |
 
-## L2 只读可用
-| 编号 | 检查项 | 证据 |
+## L2 Read-Ready
+| ID | Check | Evidence |
 | :--- | :--- | :--- |
-| L2-C1 | 只读操作有强类型 Schema：单位、枚举、来源、更新时间 | 操作契约卡 / Schema |
-| L2-C2 | 错误结构化：`code`、`retryable`、`retry_after`、`hint` | 操作契约卡第 5 节 |
-| L2-X1 | 支持字段投影、服务端过滤、游标分页 | 接口定义 / 测试 |
-| L2-X2 | 响应有大小上限，截断时返回 `truncated` 与下一页游标 | 接口定义 / 测试 |
-| L2-X3 | 渐进式发现：先给能力索引，再按需获取完整 Schema | 工具列表 |
-| L2-X4 | 每个只读工具都有实测的响应体积 | 评测报告 |
-| L2-A1 | Agent 身份与人类分离；只读委托凭证范围小、有效期短、可吊销 | 授权矩阵 |
-| L2-A2 | 外部内容（用户文件、网页、第三方返回）标注来源与可信级别 | 授权矩阵“不可信内容边界” |
-| L2-I1 | 接入层不含业务逻辑；只读工具的注解填写正确 | 代码 / 工具定义 |
-| L2-O1 | 只读调用有审计记录：主体、Agent、查询条件 | 日志样例 |
-| L2-O2 | 用真实 Agent 跑过代表任务的只读部分，有评测报告 | 评测报告 |
+| L2-C1 | Read-only operations have strongly typed schemas: units, enums, source, update time | Operation contract / schema |
+| L2-C2 | Errors are structured: `code`, `retryable`, `retry_after`, `hint` | Operation contract §5 |
+| L2-X1 | Field projection, server-side filtering and cursor pagination are supported | Interface definition / tests |
+| L2-X2 | Responses have a size limit; when truncated they return `truncated` and a next-page cursor | Interface definition / tests |
+| L2-X3 | Progressive discovery: a capability index first, full schemas on demand | Tool list |
+| L2-X4 | Every read-only tool has a measured response size | Eval report |
+| L2-A1 | Agent identity is separate from human identity; read-only delegated credentials are narrow, short-lived and revocable | Authorization matrix |
+| L2-A2 | External content (user files, web pages, third-party responses) is labeled with source and trust level | Authorization matrix, “untrusted content boundary” |
+| L2-I1 | The ingress layer contains no business logic; read-only tool annotations are correct | Code / tool definitions |
+| L2-O1 | Read-only calls are audited: principal, agent, query conditions | Log sample |
+| L2-O2 | Real agents have run the read-only part of the representative tasks, with an eval report | Eval report |
 
-## L3 写入可控
-| 编号 | 检查项 | 证据 |
+## L3 Write-Safe
+| ID | Check | Evidence |
 | :--- | :--- | :--- |
-| L3-C1 | 写操作接受幂等键；作用范围、保留时长明确；重放返回首次结果 | 操作契约卡第 4 节 + 测试 |
-| L3-C2 | 可变资源要求 `expected_revision`；冲突时返回最新版本与差异摘要 | 操作契约卡第 4 节 + 测试 |
-| L3-C3 | 写操作有 validate / dry-run | 操作契约卡第 6 节 |
-| L3-C4 | 每个首批写操作都有操作契约卡，且其验收记录全部通过 | 操作契约卡第 9 节 |
-| L3-S1 | 长任务有状态实体、状态查询、取消，断线后可凭 ID 恢复 | 操作契约卡第 7 节 + 测试 |
-| L3-S2 | Draft 有过期时间、与正式数据隔离、有清理机制 | 操作契约卡第 8 节 |
-| L3-S3 | 已提交操作有撤销或补偿方式，不可逆操作已显式标注 | 操作契约卡第 6 节 / 能力矩阵 |
-| L3-S4 | 信息不足时返回 `needs_input` 并列出缺失字段 | 操作契约卡第 5 节 + 测试 |
-| L3-A1 | 授权矩阵已完成，并经治理层审批 | 授权矩阵 |
-| L3-A2 | 终局操作走逐笔确认或有效预授权；服务端拒绝 Agent 自报的确认字段 | 授权矩阵 + 测试 |
-| L3-A3 | 凭证不进入模型上下文，也不进入 Code Mode 沙箱 | 架构说明 / 代码 |
-| L3-A4 | 有金额、频率上限，并可一键停用某个 Agent | 授权矩阵 + 演练记录 |
-| L3-O1 | 审计记录包含授权证据（确认编号或预授权编号） | 日志样例 |
-| L3-O2 | 故障注入评测全部通过：重试、版本冲突、断连、Prompt Injection、信息不足 | 评测报告第 2 节 |
+| L3-C1 | Writes accept an idempotency key; scope and retention are defined; a replay returns the original result | Operation contract §4 + tests |
+| L3-C2 | Mutable resources require `expected_revision`; on conflict the latest revision and a summary of differences are returned | Operation contract §4 + tests |
+| L3-C3 | Writes have validate / dry-run | Operation contract §6 |
+| L3-C4 | Every first-batch write operation has an operation contract, and all its acceptance records pass | Operation contract §9 |
+| L3-S1 | Long-running tasks have a state entity, status query and cancel, and can be recovered by ID after a disconnect | Operation contract §7 + tests |
+| L3-S2 | Drafts have an expiry, are isolated from committed data and are cleaned up | Operation contract §8 |
+| L3-S3 | Committed operations have undo or compensation; irreversible operations are marked explicitly | Operation contract §6 / capability matrix |
+| L3-S4 | Missing information returns `needs_input` with the missing fields listed | Operation contract §5 + tests |
+| L3-A1 | The authorization matrix is complete and approved by governance | Authorization matrix |
+| L3-A2 | Final operations go through a claim or a valid pre-authorization; the server rejects confirmation fields self-reported by the agent | Authorization matrix + tests |
+| L3-A3 | Credentials never enter the model context or the Code Mode sandbox | Architecture notes / code |
+| L3-A4 | Amount and frequency limits exist, and any agent can be disabled with a kill switch | Authorization matrix + drill record |
+| L3-O1 | Audit records include authorization evidence (claim ID or pre-authorization ID) | Log sample |
+| L3-O2 | All fault-injection evals pass: retries, revision conflicts, disconnects, Prompt Injection, missing information | Eval report §2 |
 
-## L4 可验证运营
-| 编号 | 检查项 | 证据 |
+## L4 Verified Operations
+| ID | Check | Evidence |
 | :--- | :--- | :--- |
-| L4-O1 | 关联 ID 贯穿 Agent 会话、工具调用、内核事务、外部效果 | 追踪样例 |
-| L4-O2 | 评测纳入发布流程，关键指标退化时阻止发布 | 发布流程配置 / 记录 |
-| L4-I1 | 工具定义有版本号，完整定义做哈希或签名，变更可被发现和审查 | 变更记录 |
-| L4-I2 | 若有多种接入方式（MCP / REST / Code Mode），同一操作的授权结果与业务效果一致 | 评测报告 |
-| L4-R1 | 测试环境与生产隔离；写能力有灰度计划、回滚方式和负责人 | 上线计划 |
-| L4-R2 | 已完成至少一次价值复盘，结论回写价值卡片 | 价值复盘 + 价值卡片第 9 节 |
-| L4-R3 | 根据复盘收缩或下线了低价值能力，或书面说明维持的理由 | 价值复盘第 5 节 |
-| L4-R4 | 有面向 Agent 的使用说明：能力索引、典型流程、错误处理 | 文档 |
+| L4-O1 | A correlation ID runs through agent session, tool call, core transaction and external effect | Trace sample |
+| L4-O2 | Evals are part of the release process; regressions in key metrics block a release | Release pipeline configuration / records |
+| L4-I1 | Tool definitions are versioned, the full definition is hashed or signed, and changes can be detected and reviewed | Change records |
+| L4-I2 | If there are several ingress paths (MCP / REST / Code Mode), the same operation yields the same authorization result and business effect | Eval report |
+| L4-R1 | Test environments are isolated from production; write capabilities have a rollout plan, rollback method and owner | Launch plan |
+| L4-R2 | At least one value review is complete, with conclusions written back to the value card | Value review + value card §9 |
+| L4-R3 | Low-value capabilities have been shrunk or retired based on the review, or there is a written reason to keep them | Value review §5 |
+| L4-R4 | There is a usage guide for agents: capability index, typical flows, error handling | Documentation |
 
 ---
 
-## 企业层面的视图
-企业不给出单一分数，而是给出**场景等级分布**：
+## Enterprise view
+An enterprise gets no single score; it gets a **distribution of scenario levels**:
 
-| 场景 | 当前等级 | 目标等级 | 主要短板（维度） | 下一步 |
+| Scenario | Current level | Target level | Main weak dimensions | Next step |
 | :--- | :--- | :--- | :--- | :--- |
-| <场景 A> | <L2> | <L3> | <A、S> | <完成授权矩阵与长任务状态> |
-| <场景 B> | <L1> | <L2> | <X> | <> |
+| <Scenario A> | <L2> | <L3> | <A, S> | <complete the authorization matrix and long-running task status> |
+| <Scenario B> | <L1> | <L2> | <X> | <> |
 
-阅读方式：
-- 有多少场景已经能安全开放只读（≥ L2）、开放写入（≥ L3）；
-- 高风险场景是否停在 L3 以下却已经开放了写操作——这是最需要优先处理的情况；
-- 哪个维度在多个场景中反复成为短板，说明需要在平台层统一解决（例如统一的委托凭证或审计服务）。
+How to read it:
+- How many scenarios can safely expose read-only capabilities (≥ L2) and writes (≥ L3).
+- Whether any high-risk scenario is below L3 yet already exposes writes. This is the situation to fix first.
+- Which dimension is a weak spot across several scenarios, which suggests solving it once at platform level (for example, a shared delegated-credential or audit service).
 
-## 与行业资料的关系
-代码仓库领域已有类似的分级做法（如 Factory Agent Readiness 按多个维度分 5 级）。本分级借鉴“二元检查 + 逐级达成”的表达方式，但对象是**业务服务与接口**，并把价值判断作为第一级。见 `../references/ARE-R02-agent-ready-industry-landscape.md`。
+## Relation to industry practice
+Repository readiness already has similar models (for example, Factory Agent Readiness grades repositories on several dimensions in five levels). This model borrows the “binary checks, reached level by level” format, but its subject is **business services and interfaces**, and it makes value judgment the first level. See `../references/ARE-R02-agent-ready-industry-landscape.md`.
 
-## 待验证
-- 等级划分和检查项是否覆盖了真实项目中的关键风险，需要在实际项目中评估后修订；
-- 达到更高等级是否对应更高的任务完成率和更少的事故，目前没有数据支持，不得宣称。
+## To be validated
+- Whether the levels and checks cover the key risks of real projects needs to be assessed in actual projects and revised.
+- There is currently no data showing that higher levels correspond to higher task completion or fewer incidents; do not claim so.
+
+## Change log
+- **v0.2 (2026-11-12)**: first English canonical version, translated from Chinese v0.1. No change in content; check IDs unchanged. The Chinese text becomes the reading aid `ARE-A02-agent-ready-maturity-model.zh.md`.
+- **v0.1**: first version: L0–L4, eight dimensions, 39 binary checks.

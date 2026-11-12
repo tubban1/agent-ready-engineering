@@ -1,67 +1,82 @@
-# Agent-Ready Engineering | Agent 原生接口与可信执行知识库
+# Agent-Ready Engineering | Agent-Native Interfaces and Trustworthy Execution
+> Language: English (canonical). Chinese reading aid: `README.zh.md`. Terms follow `references/ARE-R03-glossary.md`.
 
-版本：0.9.0（2026-11-12：项目由 agent-native-knowledge 更名为 agent-ready-engineering。0.8.0 文件名加上文档编号前缀。0.7.0 新增文档编号与阅读顺序。0.6.0 新增成熟度分级与评估表。0.5.0 新增标准交付物模板。0.4.0 明确定位为企业 AI 转型执行层标准。0.3.0 价值关卡纳入 Agent-Ready Engineering，新增行业参考。0.2.0 新增架构文档索引与实施 Checklist；0.1.0 为 2026-11-11 研究初稿）
+Version: 0.12.0 (2026-11-12: all documents and templates now have English canonical versions; Chinese texts are `.zh.md` reading aids. 0.11.0 English versions of P01, A01, A02. 0.10.0 language policy and glossary ARE-R03. 0.9.0 project renamed from agent-native-knowledge to agent-ready-engineering. 0.8.0 document IDs added as filename prefixes. 0.7.0 document IDs and reading order. 0.6.0 maturity model and assessment form. 0.5.0 standard deliverable templates. 0.4.0 positioned as the execution-layer standard of enterprise AI transformation. 0.3.0 Value Gate made part of Agent-Ready Engineering; industry landscape added. 0.2.0 architecture document index and implementation checklist. 0.1.0 first research draft, 2026-11-11.)
 
-这是跨项目知识源，不是 OWL LAB、World2、Bloomroom 或 Interior 任一项目的产品规范。
+This is a cross-project knowledge source, not the product specification of OWL LAB, World2, Bloomroom, Interior or any other project.
 
-## 目标
-让任何新的 Agent 项目首先回答：
-1. 用户在真实场景里为什么需要该服务？是否存在重复使用价值？
-2. 模型怎样发现能力、理解前提、选择工具？
-3. 业务接口是否 Agent-ready（数据、状态、授权、恢复、证据）？
-4. 谁是真正的操作主体、谁授权、谁承担外部效果？
-5. 怎样独立验证执行结果、失败和复现性？
+## Goals
+Help any new agent project answer first:
+1. Why do users need this service in real situations? Does it have recurring value?
+2. How does the model discover capabilities, understand preconditions and choose tools?
+3. Are the business interfaces agent-ready (data, state, authorization, recovery, evidence)?
+4. Who is the real acting principal, who authorizes, and who bears the external effects?
+5. How are execution results, failures and reproducibility verified independently?
 
-## 文档编号
-编号写在每份文档标题下方，并作为文件名前缀（两个 `README.md` 除外），**只标识文档，不代表阅读顺序**；编号一经分配不再变更，也不复用。引用时可写“见 ARE-A02 的 L3-A2”。
-前缀：P = 原则（Principles），R = 参考（References），A = 实施（Adoption），T = 模板（Templates），M = 其他材料（Media）。
+## Document IDs
+Each document's ID appears under its title and as its filename prefix (except the two `README.md` files). **IDs identify documents; they do not indicate reading order.** Once assigned, an ID never changes and is never reused. Cite as, for example, “see L3-A2 in ARE-A02”.
+Prefixes: P = Principles, R = References, A = Adoption, T = Templates, M = Media.
 
-| 编号 | 文件 | 内容 |
+Every document has an English canonical file `<name>.md` and a Chinese reading aid `<name>.zh.md` next to it, except ARE-R03 (bilingual by design) and ARE-M01 (Chinese only, record-only).
+
+| ID | File | Content |
 | :--- | :--- | :--- |
-| ARE-P01 | `principles/ARE-P01-agent-ready-architecture.md` | Agent-Ready Engineering 的定位与边界、价值前提、架构七个维度 |
-| ARE-P02 | `principles/ARE-P02-agent-native-interface-design.md` | 面向 Agent 的接口设计理念与原则 1–12 |
-| ARE-R01 | `references/ARE-R01-tool-calling-mcp-code-mode.md` | Tool Calling / MCP / Code Mode / A2A 的技术区别 |
-| ARE-R02 | `references/ARE-R02-agent-ready-industry-landscape.md` | 行业中 Agent-Ready 相关资料、来源可信度与已吸收的做法 |
-| ARE-A01 | `adoption/ARE-A01-agent-ready-implementation-checklist.md` | 实施 Checklist：P0 价值关卡 → P8 价值复盘，含验收标准 |
-| ARE-A02 | `adoption/ARE-A02-agent-ready-maturity-model.md` | 成熟度分级：L0–L4，按场景评估 |
-| ARE-A03 | `adoption/ARE-A03-project-reference.md` | 在新 / 已有项目中低侵入引用本知识库 |
-| ARE-T00 | `adoption/templates/README.md` | 模板总览与交付物之间的关系 |
-| ARE-T01 | `adoption/templates/ARE-T01-value-card.md` | 价值卡片（P0） |
-| ARE-T02 | `adoption/templates/ARE-T02-capability-matrix.md` | 能力矩阵（P1） |
-| ARE-T03 | `adoption/templates/ARE-T03-operation-contract.md` | 操作契约卡（P2–P3） |
-| ARE-T04 | `adoption/templates/ARE-T04-authorization-matrix.md` | 授权矩阵（P4） |
-| ARE-T05 | `adoption/templates/ARE-T05-eval-report.md` | 评测报告（P5 / P7） |
-| ARE-T06 | `adoption/templates/ARE-T06-value-review.md` | 价值复盘（P8） |
-| ARE-T07 | `adoption/templates/ARE-T07-maturity-assessment.md` | 成熟度评估表 |
-| ARE-M01 | `media/ARE-M01-claude-video-brief-20261111.md` | 视频任务书（已作废，仅作记录；不在阅读路径中） |
+| ARE-P01 | `principles/ARE-P01-agent-ready-architecture.md` | Positioning and boundaries of Agent-Ready Engineering, the value premise, seven architecture dimensions |
+| ARE-P02 | `principles/ARE-P02-agent-native-interface-design.md` | Agent-native interface design and principles 1–12 |
+| ARE-R01 | `references/ARE-R01-tool-calling-mcp-code-mode.md` | Engineering distinctions between Tool Calling / MCP / Code Mode / A2A |
+| ARE-R02 | `references/ARE-R02-agent-ready-industry-landscape.md` | Industry sources on Agent-Ready, source reliability and practices adopted |
+| ARE-R03 | `references/ARE-R03-glossary.md` | English–Chinese glossary (English terms are canonical); the only bilingual file |
+| ARE-A01 | `adoption/ARE-A01-agent-ready-implementation-checklist.md` | Implementation checklist: P0 Value Gate → P8 value review, with acceptance criteria |
+| ARE-A02 | `adoption/ARE-A02-agent-ready-maturity-model.md` | Maturity model: L0–L4, assessed per scenario |
+| ARE-A03 | `adoption/ARE-A03-project-reference.md` | Referencing this repository from new or existing projects with minimal intrusion |
+| ARE-T00 | `adoption/templates/README.md` | Template overview and how the deliverables connect |
+| ARE-T01 | `adoption/templates/ARE-T01-value-card.md` | Value Card (P0) |
+| ARE-T02 | `adoption/templates/ARE-T02-capability-matrix.md` | Capability Matrix (P1) |
+| ARE-T03 | `adoption/templates/ARE-T03-operation-contract.md` | Operation Contract (P2–P3) |
+| ARE-T04 | `adoption/templates/ARE-T04-authorization-matrix.md` | Authorization Matrix (P4) |
+| ARE-T05 | `adoption/templates/ARE-T05-eval-report.md` | Eval Report (P5 / P7) |
+| ARE-T06 | `adoption/templates/ARE-T06-value-review.md` | Value Review (P8) |
+| ARE-T07 | `adoption/templates/ARE-T07-maturity-assessment.md` | Maturity Assessment |
+| ARE-M01 | `media/ARE-M01-claude-video-brief-20261111.md` | Video brief (superseded, record only, Chinese only; not on the reading path) |
 
-新增文档时，在对应前缀下取下一个未使用的编号，并同步更新本表与阅读顺序。
+When adding a document, take the next unused ID under the right prefix and update this table and the reading order.
 
-## 阅读顺序
-**主线（第一次阅读）**
-1. ARE-P01 架构：先理解定位、价值前提和七个维度（为什么、做什么）
-2. ARE-P02 接口原则：面向 Agent 的接口长什么样
-3. ARE-R01 概念区别：分清 Tool Calling、MCP、Code Mode、A2A
-4. ARE-A01 实施 Checklist：按 P0–P8 怎么做
-5. ARE-A02 成熟度分级：怎么判断做到哪一级、能开放到什么程度
-6. ARE-T00 → T01–T07 模板：每个阶段交付什么
-7. ARE-R02 行业参考：哪些做法有外部印证
+## Reading order
+**Main path (first reading)**
+1. ARE-P01 Architecture: positioning, the value premise and the seven dimensions (why and what)
+2. ARE-P02 Interface principles: what agent-facing interfaces look like
+3. ARE-R01 Concept distinctions: Tool Calling, MCP, Code Mode, A2A
+4. ARE-A01 Implementation checklist: how to work through P0–P8
+5. ARE-A02 Maturity model: how to judge the level reached and how far to expose
+6. ARE-T00 → T01–T07 Templates: what each stage delivers
+7. ARE-R02 Industry landscape: which practices have outside corroboration
 
-**按角色的捷径**
-| 角色 | 阅读路径 |
+Look up ARE-R03 Glossary whenever a term is unclear.
+
+**Shortcuts by role**
+| Role | Reading path |
 | :--- | :--- |
-| 决策者 | ARE-P01 的“定位与边界”“前提：价值优先”两节 → ARE-A02 → ARE-T01 价值卡片 |
-| 架构师 | ARE-P01 → ARE-P02 → ARE-R01 → ARE-R02 |
-| 实施团队 | ARE-A01 → ARE-T00 与 T01–T07 → ARE-A02 与 ARE-T07 评估表 |
-| 在项目中引用本知识库 | ARE-A03 |
+| Decision maker | ARE-P01 sections “Positioning and boundaries” and “Premise: value first” → ARE-A02 → ARE-T01 Value Card |
+| Architect | ARE-P01 → ARE-P02 → ARE-R01 → ARE-R02 → ARE-R03 |
+| Implementation team | ARE-A01 → ARE-T00 and T01–T07 → ARE-A02 and ARE-T07 Maturity Assessment |
+| Referencing this repository from a project | ARE-A03 |
 
-## 使用规则
-- 本目录为“知识”，不自动覆盖具体项目的安全政策、产品目标或本地 AGENTS.md / CLAUDE.md。
-- 每条观点标明：已验证事实 / 工作假设 / 设计建议；模型推断不得伪装成实测。
-- 有冲突时，以项目明确的 Owner 决定、授权边界、真实生产状态和最新验收为准；不得引用此文扩大权限。
-- 默认禁止把内部漏洞、私人凭证、用户数据、未发布代码与未修复的缺陷公开。
-- 以 Git 管理版本，建立远程只读 URL 后再用于跨机器、跨 Owner、闭源宿主分发。当前目录仅是 Mac 本地源，**并非自动全局生效**。
-- 不把整篇文本注入每个 Agent 的系统提示词；用项目指针、按需检索、有限技能模块组合。
+## Language policy
+- **English is canonical**; Chinese is a reading aid and not normative. When they disagree, English wins.
+- **One ID, two files, side by side**: `ARE-P01-<slug>.md` (English) and `ARE-P01-<slug>.zh.md` (Chinese). No paragraph-by-paragraph bilingual text in one file (except the ARE-R03 glossary), so agents do not read everything twice and the two languages do not drift within a file.
+- **Identifiers are never translated**: document IDs, check IDs, stage and level IDs, dimension codes, field names, tool names and code are identical in both languages.
+- **Each Chinese file records the English version it corresponds to** in its header; when the English text is updated and the Chinese is not, the Chinese file is marked “needs update” (待更新).
+- **ARE-R03 is the reference for terms**; register new terms there before using them.
+- **The MCP entry returns English by default**; when Chinese is requested, it also returns the corresponding English version and whether the Chinese is outdated.
+- **Migration status**: complete as of 2026-11-12. All documents and templates have English canonical versions, except ARE-M01 (record only).
 
-## 优先级
-真实用户价值 > 已验证的安全/授权 > 执行证据 > 最小明确的业务操作 > 工具数量/协议偏好/架构宏大叙事。
+## Rules of use
+- This directory is “knowledge”. It does not automatically override a project's security policy, product goals or local AGENTS.md / CLAUDE.md.
+- Every statement is labeled as verified fact / working hypothesis / design recommendation; model inference must never pose as measurement.
+- In a conflict, the project's explicit Owner decisions, authorization boundaries, real production state and latest acceptance results prevail; this repository must never be cited to widen permissions.
+- By default, never disclose internal vulnerabilities, private credentials, user data, unreleased code or unfixed defects.
+- Versioned with Git. Establish a remote read-only URL before distributing across machines, across Owners or to closed hosts. This directory is currently a local source on a Mac and is **not automatically in effect everywhere**.
+- Do not inject whole documents into every agent's system prompt; combine project pointers, on-demand retrieval and limited skill modules.
+
+## Priorities
+Real user value > verified security / authorization > execution evidence > minimal, explicit business operations > number of tools / protocol preferences / grand architecture narratives.

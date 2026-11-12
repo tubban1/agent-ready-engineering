@@ -1,41 +1,46 @@
-# Agent-Ready Engineering 标准交付物模板
-> 文档编号：ARE-T00
-> v0.2｜2026-11-12｜配套：`../ARE-A01-agent-ready-implementation-checklist.md`（P0–P8）、`../ARE-A02-agent-ready-maturity-model.md`（L0–L4）
+# Agent-Ready Engineering Standard Deliverable Templates
+> Document ID: ARE-T00
+> v0.3 | 2026-11-12 | Related: `../ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `../ARE-A02-agent-ready-maturity-model.md` (L0–L4)
+> Language: English (canonical). Chinese reading aid: `README.zh.md`. Each template also has a `.zh.md` reading aid. Terms follow `../../references/ARE-R03-glossary.md`.
 
-## 使用规则
-- 每个项目把需要的模板**复制到自己的项目目录**（如 `docs/agent-ready/`）再填写，不要回写本知识库。
-- 所有数字必须有来源（实测、日志、真实记录）；没有数据就写“未测”，不要估一个数填进去。
-- `<尖括号>` 是待填写项；“示例”行只说明怎么填，复制后删除。
-- 每份交付物都写上版本和日期；内容变化时更新版本，不静默改写。
+## Rules of use
+- Each project **copies the templates it needs into its own directory** (for example `docs/agent-ready/`) before filling them in. Do not write project data back into this repository.
+- Every number needs a source (measurement, logs, real records). Without data, write “not measured” instead of an estimate.
+- `<angle brackets>` mark fields to fill in; “example” rows only show how to fill them and are deleted after copying.
+- Every deliverable carries a version and date; when its content changes, update the version instead of rewriting silently.
+- Fill templates in English or Chinese as the project prefers, but keep IDs (check IDs, stage IDs, field names) unchanged.
 
-## 模板与阶段
-| 模板 | 阶段 | 回答的问题 | 粒度 |
+## Templates and stages
+| Template | Stage | Question it answers | Granularity |
 | :--- | :--- | :--- | :--- |
-| `ARE-T01-value-card.md` 价值卡片 | P0 | 值不值得让 Agent 做？ | 每个场景一张 |
-| `ARE-T02-capability-matrix.md` 能力矩阵 | P1 | 涉及哪些操作？先改造哪些？ | 每个项目一张，可按场景分节 |
-| `ARE-T03-operation-contract.md` 操作契约卡 | P2–P3 | 这个操作怎样做到可重试、可恢复、可判断？ | 每个首批改造的操作一张 |
-| `ARE-T04-authorization-matrix.md` 授权矩阵 | P4 | 谁授权、Agent 能做到哪一步、怎么留证据？ | 每个项目一张 |
-| `ARE-T05-eval-report.md` 评测报告 | P5 / P7 | Agent 实际用起来怎样？能不能发布？ | 每次评测一份 |
-| `ARE-T06-value-review.md` 价值复盘 | P8 | 上线后价值兑现了吗？下一步扩大、维持还是收缩？ | 每个场景每个复盘周期一份 |
-| `ARE-T07-maturity-assessment.md` 成熟度评估表 | 任意阶段 | 现在处在哪一级？差什么？能开放到什么程度？ | 每个场景每次评估一份 |
+| `ARE-T01-value-card.md` Value Card | P0 | Is it worth having an agent do this? | One per scenario |
+| `ARE-T02-capability-matrix.md` Capability Matrix | P1 | Which operations are involved? Which come first? | One per project, optionally sectioned by scenario |
+| `ARE-T03-operation-contract.md` Operation Contract | P2–P3 | How is this operation made retry-safe, recoverable and interpretable? | One per first-batch operation |
+| `ARE-T04-authorization-matrix.md` Authorization Matrix | P4 | Who authorizes, how far can the agent go, how is evidence kept? | One per project |
+| `ARE-T05-eval-report.md` Eval Report | P5 / P7 | How do agents actually perform? Can we release? | One per eval run |
+| `ARE-T06-value-review.md` Value Review | P8 | Was the value delivered after launch? Expand, maintain or shrink? | One per scenario per review cycle |
+| `ARE-T07-maturity-assessment.md` Maturity Assessment | Any stage | Which level are we at? What is missing? How far can we expose it? | One per scenario per assessment |
 
-## 交付物之间的关系
+## How the deliverables connect
 ```
-价值卡片 ──▶ 能力矩阵 ──▶ 操作契约卡 ──▶ 授权矩阵
-   ▲          (排序)        (P2–P3)        (P4)
-   │                                        │
-价值复盘 ◀──────────── 评测报告 ◀────────────┘
- (P8，结论回写价值卡片；扩大的能力回到能力矩阵)
+Value Card ──▶ Capability Matrix ──▶ Operation Contract ──▶ Authorization Matrix
+    ▲            (prioritize)            (P2–P3)                  (P4)
+    │                                                               │
+Value Review ◀──────────────── Eval Report ◀────────────────────────┘
+ (P8: conclusions written back to the value card; expanded capabilities return to the capability matrix)
 ```
-- 价值卡片的**代表任务**是评测报告的主要测试用例。
-- 价值卡片的**基线与目标**是价值复盘的对比对象。
-- 能力矩阵中的**风险等级**决定授权矩阵中的授权级别。
-- 操作契约卡中的**错误码与状态**是评测故障注入的检查对象。
+- The value card's **representative tasks** are the main test cases of the eval report.
+- The value card's **baseline and target** are what the value review compares against.
+- The capability matrix's **risk level** determines the authorization level in the authorization matrix.
+- The operation contract's **error codes and states** are what fault injection checks.
 
-## 与其他层的接口
-| 交付物 | 交给谁 / 从谁接收 |
+## Interfaces with other layers
+| Deliverable | Handed to / received from |
 | :--- | :--- |
-| 价值卡片 | 从战略层接收候选场景；“不需要 Agent”的结论交还对应的线 |
-| 授权矩阵、审计证据 | 交给治理层 |
-| 能力矩阵中的 Owner / 授权人 / 负责人 | 向组织层提出的要求 |
-| 能力矩阵中的数据依赖 | 与数据层约定 |
+| Value card | Candidate scenarios received from strategy; “no agent needed” conclusions handed back to the appropriate workstream |
+| Authorization matrix, audit evidence | Handed to governance |
+| Owner / approver / responsible person in the capability matrix | Requirements placed on the organization |
+| Data dependencies in the capability matrix | Agreed with the data layer |
+
+## Change log
+- **v0.3 (2026-11-12)**: first English canonical version, translated from Chinese v0.2; added the rule on the language of filled-in templates. The Chinese text becomes `README.zh.md`.

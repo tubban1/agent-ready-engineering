@@ -1,47 +1,48 @@
-# Agent-Ready 行业参考与现状
-> 文档编号：ARE-R02
-> 状态：参考说明｜检索日期 2026-11-12｜来源多为厂商博客与二手解读，权威原文已单独标注
-> 用途：了解行业怎样使用 “Agent-Ready” 一词，以及哪些做法已有外部印证；不是标准，不构成授权。
+# Agent-Ready Industry Landscape
+> Document ID: ARE-R02
+> v0.2 | Status: reference note | Sources retrieved 2026-11-12 | Most sources are vendor blogs and secondary write-ups; primary sources are marked separately
+> Purpose: understand how the industry uses the term “Agent-Ready” and which practices have outside corroboration. Not a standard; grants no authorization.
+> Language: English (canonical). Chinese reading aid: `ARE-R02-agent-ready-industry-landscape.zh.md`. Terms follow `ARE-R03-glossary.md`.
 
-## 结论
-- 行业里**没有统一的 Agent-Ready 标准**，这个词至少有三种用法：服务/API 设计、代码仓库准备度、安全与授权。
-- 本知识库的 Agent-Ready 指**服务与接口**（第一种），同时吸收第三种的安全做法；第二种只是同名，不在范围内。
-- 价值判断（Value Gate）在公开资料中很少作为 Agent-Ready 的一部分出现，是本知识库的主动选择，见 `../principles/ARE-P01-agent-ready-architecture.md`。
+## Conclusions
+- There is **no unified Agent-Ready standard** in the industry. The term has at least three uses: service / API design, code repository readiness, and security and authorization.
+- In this repository, Agent-Ready means **services and interfaces** (the first use), while also adopting security practices from the third. The second only shares the name and is out of scope.
+- Value judgment (Value Gate) rarely appears as part of Agent-Ready in public sources; including it is a deliberate choice of this repository. See `../principles/ARE-P01-agent-ready-architecture.md`.
 
-## 一、服务 / API 侧（与本知识库同一话题）
-| 来源 | 类型 | 要点 |
+## 1. Services / APIs (the same topic as this repository)
+| Source | Type | Key points |
 | :--- | :--- | :--- |
-| Anthropic《Writing effective tools for agents — with agents》（2025-09） | 权威原文 | 工具是确定性系统与非确定性 Agent 之间的契约；评测驱动迭代；少而精、命名空间、省 Token 的响应、可指导修正的错误信息 |
-| Cloudflare Code Mode（博客与开发者文档） | 权威原文 | 把工具暴露为 TypeScript API，模型写代码在隔离沙箱执行；据其报道用少量工具覆盖整个 Cloudflare API |
-| Agent Experience（AX）系列文章（Netlify 提出，Resend、WorkOS、Speakeasy、Pinecone、Apideck 等） | 厂商博客 | 稳定的返回结构、明确类型、写清限制、可自我修正的错误、高风险操作需人类确认 |
-| Agent-ready API 指南（freeCodeCamp、apilayer、Apidog 等） | 厂商 / 社区博客 | 完整 OpenAPI、统一错误、显式状态、幂等键、边界授权；与“好的 API 设计”高度重合 |
-| arXiv 2607.12056（Agent-ready 网站框架） | 单篇论文 | 研究对象是网站而非 API；可解读、可执行、决策可靠三维度；概念验证中成功率有明显提升，不能直接推广到 API |
+| Anthropic, “Writing effective tools for agents — with agents” (2025-09) | Primary source | Tools are a contract between deterministic systems and non-deterministic agents; eval-driven iteration; few, focused tools, namespacing, token-efficient responses, error messages that guide correction |
+| Cloudflare Code Mode (blog and developer docs) | Primary source | Exposes tools as a TypeScript API; the model writes code that runs in an isolated sandbox; reportedly covers the whole Cloudflare API with a few tools |
+| Agent Experience (AX) articles (coined by Netlify; Resend, WorkOS, Speakeasy, Pinecone, Apideck and others) | Vendor blogs | Stable response shapes, explicit types, documented limits, self-correcting errors, human confirmation for high-risk actions |
+| Agent-ready API guides (freeCodeCamp, apilayer, Apidog and others) | Vendor / community blogs | Complete OpenAPI, consistent errors, explicit state, idempotency keys, authorization at the boundary; heavy overlap with “good API design” |
+| arXiv 2607.12056 (framework for agent-ready websites) | Single paper | Studies websites, not APIs; three dimensions: interpretability, executability, decision reliability; a clear success-rate improvement in its proof of concept, which cannot be generalized to APIs directly |
 
-## 二、代码仓库侧（同名，不在本知识库范围）
-- AGENTS.md：给编程 Agent 的仓库说明文件，据报道已由 Linux 基金会下的 Agentic AI Foundation 维护。
-- Factory Agent Readiness、Larridin 等：给代码仓库按维度和等级打分（测试、CI、文档、可观测等）。
-- 可借鉴之处：**成熟度分级**的表达方式；本知识库的 P0–P8 未来可整理成可打分的等级。
+## 2. Code repositories (same name, out of scope)
+- AGENTS.md: an instruction file for coding agents in a repository, reportedly now stewarded by the Agentic AI Foundation under the Linux Foundation.
+- Factory Agent Readiness, Larridin and others: grade repositories by dimension and level (tests, CI, documentation, observability and so on).
+- What to borrow: the **maturity model** format; this repository's P0–P8 could later be organized into gradable levels.
 
-## 三、安全与授权（对应架构文档维度四、六）
-| 来源 | 类型 | 要点 |
+## 3. Security and authorization (dimensions four and six of the architecture document)
+| Source | Type | Key points |
 | :--- | :--- | :--- |
-| OWASP Top 10 for Agentic Applications（2026 版，2025-12 发布） | 权威原文 | ASI01–ASI10，含目标劫持、工具滥用、身份与权限滥用等；“最小自主”（least agency）原则 |
-| OWASP MCP Security Cheat Sheet | 权威原文 | 工具注解是提示不是约束，客户端应视为不可信；对完整工具定义做哈希以发现变更；服务端执行授权；禁止令牌透传 |
-| Google AP2（Agent Payments Protocol） | 协议（本次依据二手资料，权威原文为 AP2 官方规范） | 人类在场时签 Cart Mandate；事先签 Intent Mandate 约束价格、时间等，Agent 在约束内执行；交易标明有 Agent 参与 |
+| OWASP Top 10 for Agentic Applications (2026 edition, published 2025-12) | Primary source | ASI01–ASI10, including goal hijacking, tool misuse, identity and privilege abuse; the principle of least agency |
+| OWASP MCP Security Cheat Sheet | Primary source | Tool annotations are hints, not constraints, and clients should treat them as untrusted; hash full tool definitions to detect changes; enforce authorization on the server; no token passthrough |
+| Google AP2 (Agent Payments Protocol) | Protocol (this review relied on secondary sources; the primary source is the official AP2 specification) | A Cart Mandate is signed with the human present; an Intent Mandate signed in advance constrains price, timing and so on, and the agent acts within those limits; transactions indicate that an agent was involved |
 
-## 已吸收进本知识库的做法
-| 做法 | 来源 | 位置 |
+## Practices adopted into this repository
+| Practice | Source | Location |
 | :--- | :--- | :--- |
-| 预授权（有约束的事先授权）作为 Claim 的另一种形态 | AP2 | 架构文档维度四；Checklist P4 |
-| 评测驱动的工具设计，从最小验证就开始 | Anthropic | 架构文档维度七；Checklist P0 / P5 |
-| 工具定义版本化并做哈希，变更可发现 | OWASP MCP Cheat Sheet | 架构文档维度五；Checklist P6 |
-| 明确范围：服务与接口，不是代码仓库 | 对照仓库准备度资料 | 架构文档开头；Checklist 范围 |
+| Pre-authorization (bounded advance authorization) as another form of claim | AP2 | Architecture document dimension four; checklist P4 |
+| Eval-driven tool design, starting from the minimum validation | Anthropic | Architecture document dimension seven; checklist P0 / P5 |
+| Versioning and hashing tool definitions so changes are visible | OWASP MCP Cheat Sheet | Architecture document dimension five; checklist P6 |
+| Explicit scope: services and interfaces, not code repositories | Comparison with repository readiness sources | Opening of the architecture document; checklist scope |
 
-## 判断（工作假设，未验证）
-- Agent-Ready Engineering 很可能成为企业 AI 转型中的**标准工程环节**，并被现有的 API 治理、平台工程与安全评审吸收；但转型的起点仍是业务价值。
-- 最先固化为标准的大概率是授权、确认与审计（有安全、合规、支付的外部压力）；接入协议与上下文策略变化快，不宜过早固定。
+## Judgments (working hypotheses, not validated)
+- Agent-Ready Engineering is likely to become a **standard engineering stage** of enterprise AI transformation and be absorbed into existing API governance, platform engineering and security review; but transformation still starts from business value.
+- The parts most likely to harden into standards first are authorization, confirmation and audit (under external pressure from security, compliance and payments); ingress protocols and context strategies change quickly and should not be fixed too early.
 
-## 来源链接
+## Source links
 - https://anthropic.com/engineering/writing-tools-for-agents
 - https://blog.cloudflare.com/code-mode/
 - https://developers.cloudflare.com/agents/api-reference/codemode
@@ -58,3 +59,6 @@
 - https://arxiv.org/pdf/2607.12056
 - https://docs.factory.ai/web/agent-readiness/overview
 - https://www.harness.io/blog/the-agent-native-repo-why-agents-md-is-the-new-standard
+
+## Change log
+- **v0.2 (2026-11-12)**: first English canonical version, translated from the Chinese reference note of 2026-11-12. No change in content. The Chinese text becomes the reading aid `ARE-R02-agent-ready-industry-landscape.zh.md`.

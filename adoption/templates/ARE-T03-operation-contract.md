@@ -1,86 +1,87 @@
-# 操作契约卡（Operation Contract）— P2–P3
-> 文档编号：ARE-T03
-> 模板 v0.1｜每个首批改造的操作一张｜复制到项目目录后填写
-> 契约写在领域内核层；MCP / REST / Code Mode 只做映射，不改变契约。
+# Operation Contract — P2–P3
+> Document ID: ARE-T03
+> Template v0.2 | One per first-batch operation | Copy into the project directory before filling in
+> The contract lives in the domain core; MCP / REST / Code Mode only map it and never change it.
+> Language: English (canonical). Chinese reading aid: `ARE-T03-operation-contract.zh.md`.
 
-## 基本信息
-| 项 | 内容 |
+## Basic information
+| Item | Content |
 | :--- | :--- |
-| 操作名称 | <例：confirm_order_change> |
-| 契约版本 / 日期 | <v1 / YYYY-MM-DD> |
-| 业务意图 | <一句话：这个操作完成什么业务结果> |
-| 类型 | 只读查询 / 校验 / 草稿 / 正式提交 |
-| 风险等级 | <与能力矩阵一致> |
-| 负责人 | <> |
+| Operation name | <e.g. confirm_order_change> |
+| Contract version / date | <v1 / YYYY-MM-DD> |
+| Business intent | <one sentence: what business outcome this operation achieves> |
+| Type | read-only query / validation / draft / final commit |
+| Risk level | <same as the capability matrix> |
+| Responsible | <> |
 
-## 1. 何时使用 / 何时不该使用
-- **使用**：<>
-- **不该使用**：<例：只想查看订单时，用 search_orders>
-- **前提条件**：<例：必须先有 prepare 返回的 prepared_id>
+## 1. When to use / when not to use
+- **Use**: <>
+- **Do not use**: <e.g. to view an order only, use search_orders>
+- **Preconditions**: <e.g. requires a prepared_id returned by prepare>
 
-## 2. 输入
-| 字段 | 类型 | 必填 | 单位 / 取值范围 / 枚举 | 说明 |
+## 2. Input
+| Field | Type | Required | Unit / range / enum | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| `idempotency_key` | string | 写操作必填 | | 见第 4 节 |
-| `expected_revision` | integer | 可变资源必填 | | 见第 4 节 |
+| `idempotency_key` | string | required for writes | | see section 4 |
+| `expected_revision` | integer | required for mutable resources | | see section 4 |
 | <> | | | | |
 
-## 3. 输出
-| 字段 | 类型 | 说明 |
+## 3. Output
+| Field | Type | Notes |
 | :--- | :--- | :--- |
-| `revision` | integer | 写入后的新版本 |
-| `operation_id` | string | 长任务时返回，用于查询状态 |
+| `revision` | integer | new revision after the write |
+| `operation_id` | string | returned for long-running tasks, used to query status |
 | <> | | |
 
-- **默认返回字段**：<列出；其余通过 `fields` 投影获取>
-- **响应大小上限**：<例：超过上限时返回 `truncated: true` 与 `next_cursor`>
-- **数据来源与时间**：<返回中是否带来源、更新时间、可信级别>
+- **Fields returned by default**: <list; others via `fields` projection>
+- **Response size limit**: <e.g. beyond the limit, return `truncated: true` and `next_cursor`>
+- **Data source and time**: <does the response carry source, update time, trust level>
 
-## 4. 重试与并发
-| 项 | 约定 |
+## 4. Retries and concurrency
+| Item | Agreement |
 | :--- | :--- |
-| 幂等键作用范围 | <Owner / Agent / 操作> |
-| 幂等键保留时长 | <> |
-| 重复请求的返回 | 原样返回首次结果 |
-| 版本冲突时 | 拒绝写入，返回最新 `revision` 与差异摘要 |
+| Idempotency key scope | <Owner / agent / operation> |
+| Idempotency key retention | <> |
+| Response to a repeated request | returns the original result |
+| On revision conflict | rejects the write; returns the latest `revision` and a summary of differences |
 
-## 5. 错误
-| `code` | 含义 | `retryable` | `retry_after` | `hint`（需要补充什么 / 怎么修） |
+## 5. Errors
+| `code` | Meaning | `retryable` | `retry_after` | `hint` (what is missing / how to fix) |
 | :--- | :--- | :--- | :--- | :--- |
-| `revision_conflict` | 资源已被修改 | 否（需重新读取） | — | 重新读取后基于最新版本决定 |
-| `needs_input` | 信息不足 | 否（补充后再提交） | — | 列出缺少的字段 |
-| `rate_limited` | 超出配额 | 是 | <秒> | — |
+| `revision_conflict` | the resource has changed | no (re-read first) | — | re-read and decide based on the latest revision |
+| `needs_input` | information missing | no (resubmit after supplying it) | — | list the missing fields |
+| `rate_limited` | quota exceeded | yes | <seconds> | — |
 | <> | | | | |
 
-## 6. 副作用与撤销
-- **副作用**：<无 / 内部写入 / 对外发送 / 涉及金钱>
-- **是否有 dry-run**：<对应的 validate 操作名>
-- **撤销或补偿方式**：<对应的撤销操作，或说明不可逆>
+## 6. Side effects and undo
+- **Side effects**: <none / internal write / outbound sending / involves money>
+- **Dry-run available**: <name of the matching validate operation>
+- **Undo or compensation**: <matching undo operation, or state that it is irreversible>
 
-## 7. 生命周期（长任务时填写）
-| 状态 | 含义 | 可转到 |
+## 7. Lifecycle (for long-running tasks)
+| State | Meaning | Can move to |
 | :--- | :--- | :--- |
-| `accepted` | 已接收，未开始 | running / cancelled |
-| `running` | 执行中 | partial / completed / failed / cancelled |
-| `partial` | 部分完成，有逐项回执 | completed / failed |
-| `completed` | 完成，附结果证据 | — |
-| `failed` | 失败，附错误 | — |
-| `cancelled` | 已取消 | — |
-| `unknown` | 无法确认（例：外部系统无回执） | 需人工核实 |
+| `accepted` | received, not started | running / cancelled |
+| `running` | in progress | partial / completed / failed / cancelled |
+| `partial` | partly done, with per-item receipts | completed / failed |
+| `completed` | done, with evidence of the result | — |
+| `failed` | failed, with an error | — |
+| `cancelled` | cancelled | — |
+| `unknown` | cannot be confirmed (e.g. no receipt from an external system) | needs manual verification |
 
-- **状态查询**：<操作名，例：get_operation_status>
-- **取消**：<操作名>
-- **断线恢复方式**：<凭 operation_id 查询>
+- **Status query**: <operation name, e.g. get_operation_status>
+- **Cancel**: <operation name>
+- **Recovery after disconnect**: <query by operation_id>
 
-## 8. Draft（如适用）
-- **过期时间（TTL）**：<>
-- **隔离方式**：<草稿与正式数据如何隔离>
-- **清理方式**：<>
+## 8. Draft (if applicable)
+- **Expiry (TTL)**: <>
+- **Isolation**: <how drafts are isolated from committed data>
+- **Cleanup**: <>
 
-## 9. 验收记录
-| 检查项 | 结果 | 证据位置 |
+## 9. Acceptance record
+| Check | Result | Evidence location |
 | :--- | :--- | :--- |
-| 同一请求重放 N 次，业务效果只发生一次 | | |
-| 过期版本写入被拒绝，且返回最新版本 | | |
-| 每类错误可被程序判断能否重试 | | |
-| 断连后可凭 ID 恢复状态 | | |
+| Replaying the same request N times produces the business effect once | | |
+| Writes with an outdated revision are rejected and return the latest revision | | |
+| A program can tell whether each error type is retryable | | |
+| Status can be recovered by ID after a disconnect | | |

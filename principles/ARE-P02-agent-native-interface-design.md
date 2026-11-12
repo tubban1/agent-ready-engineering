@@ -1,83 +1,88 @@
 # Agent-Native Interface Design
-> 文档编号：ARE-P02
-> 面向 Agent 的原生接口设计｜v0.1｜2026-11-11
+> Document ID: ARE-P02
+> v0.2 | 2026-11-12 | Native interface design for agents
+> Language: English (canonical). Chinese reading aid: `ARE-P02-agent-native-interface-design.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
 
-## 研究命题
-传统 API 的存在不意味着适合 Agent 使用。过去的 API 往往服务于 UI 和人类逐屏操作。Agent 需要围绕真实目标发现、理解、执行、恢复、验证服务。
-**Agent-native 不等于使用 MCP 包裹既有 API，更不等于允许 Agent 无限制操作。**
+## Research proposition
+Having an API does not make it suitable for agents. APIs have usually served UIs and humans working screen by screen. Agents need to discover, understand, execute, recover and verify services around real goals.
+**Agent-native does not mean wrapping existing APIs in MCP, and it certainly does not mean letting agents operate without limits.**
 
-### 范式转移：从人机交互到面向 Agent 的契约
-过去的软件系统通常围绕人机交互设计：
-> **人理解界面 → 人选择操作 → 软件执行 → 人解释结果**
+### Paradigm shift: from human-computer interaction to contracts for agents
+Software systems have traditionally been designed around human-computer interaction:
+> **Human understands the interface → human chooses an action → software executes → human interprets the result**
 
-Agent 时代则要求重新建立明确的软件契约：
-> **Agent 发现能力 → 理解语义和边界 → 获得授权 → 执行操作 → 验证结果 → 必要时恢复**
+The agent era requires an explicit software contract instead:
+> **Agent discovers capabilities → understands semantics and boundaries → obtains authorization → executes → verifies the result → recovers when needed**
 
-原来由人的判断力、记忆和责任承担的诸多中间环节，必须转化为面向机器的结构化契约。从面向页面展示的数据接口，转向面向**任务、查询、状态和证据**的接口。
+The many intermediate steps once carried by human judgment, memory and responsibility must become structured, machine-facing contracts: a shift from data interfaces built for page display to interfaces built around **tasks, queries, state and evidence**.
 
-### 传统 API 与更适合 Agent 的 API 对比
-以前人打开网页，系统一次返回 10–20 条记录，是因为人需要逐页浏览。Agent 的目标不同，它可能需要从 10 万条记录中找出符合多个条件的 37 条，并给出可以追溯的判断依据。这不意味着 Agent API 应该取消分页直接返回十万条，而是需要服务端筛选与稳定游标。
+### Traditional APIs vs. APIs better suited to agents
+A web page returns 10–20 records at a time because humans browse page by page. An agent's goal is different: it may need to find the 37 records that meet several conditions among 100,000 and give a traceable basis for its judgment. This does not mean an agent API should drop pagination and return 100,000 records; it needs server-side filtering and stable cursors.
 
-| 维度 | 常见传统 API | 更适合 Agent 的 API |
+| Dimension | Typical traditional API | API better suited to agents |
 | :--- | :--- | :--- |
-| **数据获取** | 固定分页，按页面浏览 | 服务端筛选、排序、字段选择、游标与批量读取 |
-| **查询表达** | 按预设页面功能查询 | 支持结构化条件和组合查询 |
-| **返回结果** | 返回用于渲染 UI 的数据 | 返回结构化数据、来源、时间和稳定引用 |
-| **操作粒度** | 每次请求完成一个低级动作 | 提供有明确边界的业务级操作 |
-| **长任务** | HTTP 请求完成即返回 | 返回任务 ID，支持查询进度、取消和恢复 |
-| **重复请求** | 可能重复创建或修改 | 幂等键、版本条件、冲突检测 |
-| **错误处理** | 错误码或提示文字 | 可判断、可恢复的错误类型和下一步条件 |
-| **权限** | 账号或 API Token 权限 | 绑定 Owner、Agent、动作、资源、有效期和批准证据 |
-| **批量操作** | 多次逐项调用 | 受限批处理、部分失败与逐项回执 |
-| **状态同步** | 反复轮询 | 增量变更、订阅、游标、事件通知 |
-| **发现能力** | 开发者阅读 API 文档 | 机器可读 Schema、效果声明与调用前提 |
-| **可验证性** | HTTP 200 或业务成功标记 | 区分请求接受、执行结果和外部结果证据 |
+| **Data retrieval** | Fixed pagination, browsing page by page | Server-side filtering, sorting, field selection, cursors and batch reads |
+| **Query expression** | Queries limited to predefined page functions | Structured conditions and combined queries |
+| **Results** | Data shaped for rendering a UI | Structured data with source, time and stable references |
+| **Operation granularity** | One low-level action per request | Business-level operations with clear boundaries |
+| **Long-running tasks** | Returns when the HTTP request completes | Returns a task ID, with progress queries, cancellation and recovery |
+| **Repeated requests** | May create or modify twice | Idempotency keys, conditional versions, conflict detection |
+| **Error handling** | Error codes or message text | Error types a program can interpret and recover from, with conditions for the next step |
+| **Permissions** | Account or API token permissions | Bound to Owner, agent, action, resource, validity period and approval evidence |
+| **Batch operations** | Many calls, one item at a time | Bounded batches with partial failure and per-item receipts |
+| **State synchronization** | Repeated polling | Incremental changes, subscriptions, cursors, event notifications |
+| **Capability discovery** | Developers read API documentation | Machine-readable schemas, effect declarations and preconditions |
+| **Verifiability** | HTTP 200 or a business success flag | Distinguishes request accepted, execution result and evidence of external outcome |
 
-过去十年移动互联网和前端组件化（React/Vue）大行其道，导致工业界产出的大量 API 都是 “面向人眼 UI 逐屏特化” 的：
+Over the past decade, mobile internet and front-end componentization (React/Vue) meant that much of the industry's API output was “specialized for human eyes, screen by screen”:
 
-一个页面要展示什么，后端就造一个包含几百个杂乱展示字段的接口；
-翻页做成写死的 page=1&size=20，因为人类一页只能看 20 条；
-接口没有幂等键，因为人点了按钮之后前端把按钮 disabled 掉就行；
-错误只返回一个中文提示文案，因为只要弹个 Toast 给人类看就够了。
+whatever a page needs to show, the backend builds an interface with hundreds of loosely organized display fields;
+pagination is hard-coded as page=1&size=20 because a human can only look at 20 items per page;
+interfaces have no idempotency key because the front end simply disables the button after a click;
+errors return only a human-readable message string because showing a toast to a person is enough.
 
-人类调用 API 时，人脑在背后充当了“隐式的异常修复器、责任承担者和上下文推理机”。
+When humans call APIs, the human brain quietly acts as the “implicit exception handler, bearer of responsibility and context reasoner”.
 
-当 Agent 作为一个独立的自主决策实体接入系统时，这些针对人眼的缺陷被瞬间放大：Agent 会因为分页盲目翻到 100 页导致 Token 暴涨、会因为没有幂等在网络抖动时重复下单扣款、会因为看不懂报错而陷入死循环。
+When an agent connects to the system as an independent decision maker, these human-oriented shortcomings are magnified at once: the agent pages blindly through 100 pages and burns tokens, places duplicate orders and charges on a flaky network because there is no idempotency, and loops forever because it cannot interpret an error.
 
-因此，表格中列出的这些手段，首先是 “让接口具备机器自主可用的最低可行底线（Agent-Ready Baseline）”。如果一个系统连游标、幂等和状态区分都没有，让 Agent 在上面跑无异于在沙滩上建高楼。
+The measures in the table are therefore, first of all, “the minimum viable baseline for machine-autonomous use (Agent-Ready Baseline)”. Running agents on a system without cursors, idempotency and explicit state is like building a tower on sand.
 
-### 四个深层的设计变化
-1. **Agent 操作目标，而非页面动作**：例如“建立采购订单草稿并验证库存”，比让 Agent 分别操作十几个按钮更稳定；但业务级工具必须限定副作用，不能变成不透明的万能执行器。
-2. **数据的机器可读语义与可信度**：一条供应商价格是报价、预测还是已确认合同价格？是否含税？什么日期有效？这些过去由人阅读页面上下文判断的隐式信息，必须进入机器可理解的显式契约。
-3. **可恢复的操作设计**：网络断开或异常后，Agent 应该能查询原请求是否已执行，而不是盲目重试导致重复采购、重复发邮件或重复付款。
-4. **预算可控的资源访问**：面向机器的接口必须支持结果上限、成本估计、调用额度、异步执行和取消，防止 Agent 陷入错误循环耗尽资源。
+### Four deeper design changes
+1. **Agents operate on goals, not page actions**: for example, “create a purchase order draft and verify stock” is more robust than having an agent work a dozen buttons. But business-level tools must bound their side effects and must not turn into opaque catch-all executors.
+2. **Machine-readable semantics and trustworthiness of data**: is a supplier price a quote, a forecast or a confirmed contract price? Does it include tax? When is it valid? This implicit information, once inferred by humans from page context, must become an explicit contract machines can understand.
+3. **Recoverable operation design**: after a disconnect or failure, an agent should be able to check whether the original request was executed, instead of retrying blindly and causing duplicate purchases, emails or payments.
+4. **Budget-controlled resource access**: machine-facing interfaces must support result limits, cost estimates, call quotas, asynchronous execution and cancellation, so an agent stuck in an error loop cannot exhaust resources.
 
-## 设计原则（建议；不是已验证的行业定律）
-1. **Value first**：先证明具体用户反复需要的结果，再造通用平台。切忌先建覆盖所有场景的宏大接口。
-2. **Intent-oriented but bounded**：提供有明确业务语义的操作，限定副作用、前提、对象与权限。避免无所不能的 `execute(anything)`。
-3. **Progressive discovery**：按需查找准确的操作说明、输入/输出 Schema、风险类别，避免把全部工具定义放入模型上下文；发现能力不自动获得调用权限。
-4. **Machine-first retrieval**：服务端筛选、结构化查询、字段投影、稳定游标、批量请求、合理的查询配额，而非仅为人类 UI 固定每页 10–20 条。禁止无限量倾倒数据。
-5. **Semantic contracts**：字段单位、来源、更新时间、版本、可信程度、缺失值及业务前提明确。区分发布者声明、系统观察、独立验证、外部完成。
-6. **Observable lifecycle**：至少区分 accepted/queued/claimed/running/partial/completed/failed/cancelled/unknown，状态依据实际系统能力，不伪造执行事实。传输 ACK 不等于原生 Agent 执行。
-7. **Recovery by design**：幂等键、请求/效果绑定、状态读取、条件写入 (CAS/version)、可取消任务、重复请求安全、部分成功的逐项回执。
-8. **Authority as separate layers**：身份认证、Agent 凭证、宿主权限、Owner 逐项批准、对外共享许可分别验证；不能用 `owner_confirmed:true` 的代理自报替代真人可验证批准。
-9. **Declarative side effects**：工具明确标注 read/private write/external effect/Owner-only or irreversible；同一工具不应模糊混合风险不同的行为。
-10. **Safe composition**：Agent 可以规划、Code Mode 可以组合调用，但每个业务子操作必须由服务器独立验证；代码沙箱不直接拿到密钥、私人文件或任意网络出口。
-11. **Resource efficiency**：预算/限流、可增量同步、响应摘要+稳定引用、细粒度进度；比较任务成功率、模型调用轮次、上下文消耗、延迟而非工具数。
-12. **Host portability**：兼容不同模型与 MCP 客户端，不默认能主动唤醒任何封闭宿主；与宿主原生会话的关系需要实机验证。
+## Design principles (recommendations; not validated industry laws)
+1. **Value first**: prove the outcome specific users need repeatedly before building a general platform. Do not start with a grand interface covering every scenario.
+2. **Intent-oriented but bounded**: provide operations with clear business meaning, and bound their side effects, preconditions, objects and permissions. Avoid an all-powerful `execute(anything)`.
+3. **Progressive discovery**: fetch precise operation descriptions, input/output schemas and risk categories on demand, instead of putting every tool definition into the model context. Discovering a capability does not grant permission to call it.
+4. **Machine-first retrieval**: server-side filtering, structured queries, field projection, stable cursors, batch requests and reasonable query quotas, not only 10–20 items per page fixed for human UIs. Never dump unbounded data.
+5. **Semantic contracts**: make units, source, update time, version, trust level, missing values and business preconditions explicit. Distinguish publisher claims, system observations, independent verification and external completion.
+6. **Observable lifecycle**: distinguish at least accepted / queued / claimed / running / partial / completed / failed / cancelled / unknown, based on what the system can actually observe; never fabricate execution facts. A transport ACK is not native agent execution.
+7. **Recovery by design**: idempotency keys, binding requests to effects, state reads, conditional writes (CAS / version), cancellable tasks, safe repeated requests, per-item receipts for partial success.
+8. **Authority as separate layers**: verify authentication, agent credentials, host permissions, the Owner's per-action approval and external sharing permission separately; an agent self-reporting `owner_confirmed:true` never replaces human-verifiable approval.
+9. **Declarative side effects**: tools explicitly declare read / private write / external effect / Owner-only or irreversible; one tool should not blur actions of different risk.
+10. **Safe composition**: agents may plan and Code Mode may compose calls, but every business sub-operation must be verified independently by the server; code sandboxes get no direct access to secrets, private files or arbitrary network egress.
+11. **Resource efficiency**: budgets / rate limits, incremental sync, summaries plus stable references, fine-grained progress; compare task success rate, model round trips, context consumption and latency, not the number of tools.
+12. **Host portability**: work with different models and MCP clients; do not assume any closed host can be woken up proactively; the relationship with a host's native sessions needs to be verified on real systems.
 
-## API 改造示例
-**传统 UI API：** `GET /orders?page=1&page_size=20`，返回一页订单卡片。
-**Agent-native 查询：** `search_orders({status, date_range, fields, cursor, limit})` 返回明确单位/来源/时间戳/稳定 order_id。分页仍保留，服务端进行可靠筛选与查询配额。
-**Agent-native 动作：** `prepare_cancellation({order_id, expected_revision})` 返回需要的条件和可能副作用；经授权调用 `confirm_cancellation({prepared_id, approval_receipt, idempotency_key})`；再 `get_operation_status({operation_id})` 验证真实结果。此例是建议性业务契约，不是现有 World2 真实接口。
+## API redesign example
+**Traditional UI API:** `GET /orders?page=1&page_size=20` returns one page of order cards.
+**Agent-native query:** `search_orders({status, date_range, fields, cursor, limit})` returns explicit units / source / timestamps / stable order_id. Pagination remains, with reliable server-side filtering and query quotas.
+**Agent-native action:** `prepare_cancellation({order_id, expected_revision})` returns the required conditions and possible side effects; with authorization, call `confirm_cancellation({prepared_id, approval_receipt, idempotency_key})`; then `get_operation_status({operation_id})` verifies the real result. This example is a suggested business contract, not an existing World2 interface.
 
-## 跨 Owner 协作的原则
-不以“完整共享协作平台”为第一目标。先验证两位真实 Owner 与各自 Agent 之间一次有用、安全、双方理解的信息交换，并测试重复使用价值。身份、许可、个人信息边界、撤销与交付证据必须独立成立。
+## Principles for cross-Owner collaboration
+Do not aim for a “complete shared collaboration platform” first. First validate one useful, safe exchange of information that both sides understand between two real Owners and their agents, and test whether it has recurring value. Identity, permission, personal-information boundaries, revocation and delivery evidence must each hold on their own.
 
-## 学习/测试路径
-单一真实业务场景，对照传统 API / 普通 MCP 包装 / Agent-native 设计；使用同样模型、用户目标、权限条件、失败注入；量化端到端任务完成、越权拒绝、重复副作用、恢复率、Token、延迟和用户是否愿意再次使用。
+## Learning / testing path
+Take one real business scenario and compare a traditional API / a plain MCP wrapper / an agent-native design, with the same model, user goal, permission conditions and fault injection; measure end-to-end task completion, rejected unauthorized actions, duplicate side effects, recovery rate, tokens, latency and whether users want to use it again.
 
-## 状态与边界
-- **已观察（项目经验）**：World2 八工具存在混合效果/嵌套子操作的审核压力；原生 Agent 唤醒、Webhook、ACK 与任务完成可分离；Owner Agent 自报同意不是独立授权证据。
-- **设计建议**：统一操作注册表、按业务语义精细声明、可证明的授权与服务端执行约束。
-- **待验证假设**：Agent-native 接口必然提高任务成功率/降低成本；MCP 成为所有环境唯一标准；Code Mode 在 OpenAI 公开上架审核与任务级工具等效。不得作为已证实事实。
+## Status and boundaries
+- **Observed (project experience)**: World2's eight tools face review pressure from mixed effects / nested sub-operations; native agent wake-up, webhooks, ACKs and task completion can be separate; an Owner's agent self-reporting consent is not independent authorization evidence.
+- **Design recommendations**: a unified operation registry, fine-grained declarations by business meaning, provable authorization and server-side execution constraints.
+- **Hypotheses to be validated**: that agent-native interfaces necessarily raise task success / lower cost; that MCP becomes the only standard in every environment; that Code Mode is equivalent to task-level tools in OpenAI's public listing review. None of these may be presented as established fact.
+
+## Change log
+- **v0.2 (2026-11-12)**: first English canonical version, translated from Chinese v0.1. No change in content. The Chinese text becomes the reading aid `ARE-P02-agent-native-interface-design.zh.md`.
+- **v0.1 (2026-11-11)**: first version.

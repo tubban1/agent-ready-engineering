@@ -1,63 +1,64 @@
-# 授权矩阵（Authorization Matrix）— P4
-> 文档编号：ARE-T04
-> 模板 v0.1｜每个项目一张｜复制到项目目录后填写｜完成后交给治理层
+# Authorization Matrix — P4
+> Document ID: ARE-T04
+> Template v0.2 | One per project | Copy into the project directory before filling in | Hand to governance when complete
+> Language: English (canonical). Chinese reading aid: `ARE-T04-authorization-matrix.zh.md`.
 
-## 基本信息
-| 项 | 内容 |
+## Basic information
+| Item | Content |
 | :--- | :--- |
-| 项目 / 系统 | <> |
-| 矩阵版本 / 日期 | <v1 / YYYY-MM-DD> |
-| 关联能力矩阵 | <路径> |
-| 审批人（治理层） | <> |
+| Project / system | <> |
+| Matrix version / date | <v1 / YYYY-MM-DD> |
+| Related capability matrix | <path> |
+| Approver (governance) | <> |
 
-## 授权级别定义
-| 级别 | 含义 | 适用 |
+## Authorization levels
+| Level | Meaning | Applies to |
 | :--- | :--- | :--- |
-| A 自动 | Agent 可直接执行，只留审计记录 | 只读、校验、草稿 |
-| B 确认 | 需人类可信通道确认：逐笔确认，或在有效预授权约束内执行 | 内部正式写入、有限额度的花费 |
-| C 仅人类 | Agent 只能准备草稿，执行必须由人类完成 | 不可逆、高额、对外法律效力的操作 |
+| A Automatic | The agent may execute directly; an audit record is kept | Reads, validation, drafts |
+| B Confirmation | Requires a trusted human channel: a per-action claim, or execution within a valid pre-authorization | Internal final writes, spending within limits |
+| C Human only | The agent may only prepare a draft; a human must execute | Irreversible, high-value or legally binding external operations |
 
-## 确认形态
-| 形态 | 说明 | 证据 |
+## Forms of confirmation
+| Form | Description | Evidence |
 | :--- | :--- | :--- |
-| 逐笔确认（Claim） | 人类在网页 / 扫码 / 签名中确认具体草稿 | 确认记录编号 |
-| 预授权 | 人类事先签署有约束的授权（金额上限、对象、时间窗口、次数），Agent 在约束内执行 | 预授权编号 + 每次使用记录 |
+| Claim (per-action confirmation) | A human confirms a specific draft on a web page, by QR scan or by signature | Claim record ID |
+| Pre-authorization | A human signs a bounded authorization in advance (amount limit, counterparties, time window, number of uses); the agent acts only within those limits | Pre-authorization ID + record of each use |
 
-> 服务端不采信 Agent 自报的确认字段（如 `owner_confirmed: true`）。
+> The server never accepts confirmation fields self-reported by the agent (such as `owner_confirmed: true`).
 
-## 矩阵
-| 操作 | 风险等级 | 授权级别 | 确认形态 | 确认通道 | 额度 / 频率上限 | 凭证范围与有效期 | 审计证据字段 | 吊销方式 |
+## Matrix
+| Operation | Risk level | Authorization level | Form of confirmation | Confirmation channel | Amount / frequency limits | Credential scope and validity | Audit evidence fields | Revocation |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| <示例：search_orders> | 低 | A | — | — | <查询配额> | <只读，短期> | 主体、Agent、查询条件 | 吊销 Agent 凭证 |
-| <示例：confirm_order_change> | 高 | B | 逐笔确认 | <网页确认链接> | <单笔与每日上限> | <仅订单变更，短期> | 主体、Agent、草稿 ID、版本、确认编号 | 吊销 Agent 凭证 / 作废草稿 |
+| <example: search_orders> | low | A | — | — | <query quota> | <read-only, short-lived> | principal, agent, query conditions | revoke the agent credential |
+| <example: confirm_order_change> | high | B | claim | <web confirmation link> | <per-action and daily limits> | <order changes only, short-lived> | principal, agent, draft ID, revision, claim ID | revoke the agent credential / void the draft |
 | <> | | | | | | | | |
 
-## 预授权模板（如使用）
-| 项 | 内容 |
+## Pre-authorization template (if used)
+| Item | Content |
 | :--- | :--- |
-| 授权人 | <> |
-| 允许的操作 | <> |
-| 约束 | <金额上限 / 对象范围 / 时间窗口 / 次数> |
-| 有效期 | <> |
-| 验证方式 | <服务端如何验证签名或记录> |
-| 吊销方式 | <> |
+| Authorized by | <> |
+| Allowed operations | <> |
+| Limits | <amount limit / counterparties / time window / number of uses> |
+| Validity | <> |
+| Verification | <how the server verifies the signature or record> |
+| Revocation | <> |
 
-## 凭证与边界
-- **Agent 身份**：<Agent 凭证如何签发，与人类身份如何区分>
-- **凭证是否进入模型上下文 / Code Mode 沙箱**：<必须为“否”；说明由什么代理代为签名或转发>
-- **一键停用**：<停用某个 Agent 的方式与负责人>
+## Credentials and boundaries
+- **Agent identity**: <how agent credentials are issued and kept distinct from human identities>
+- **Do credentials enter the model context / Code Mode sandbox**: <must be “no”; state which proxy signs or forwards on their behalf>
+- **Kill switch**: <how a given agent is disabled, and who is responsible>
 
-## 不可信内容边界
-| 输入来源 | 可信级别 | 处理方式 |
+## Untrusted content boundary
+| Input source | Trust level | Handling |
 | :--- | :--- | :--- |
-| 用户上传文件 | 不可信 | 作为数据返回并标注来源，不作为指令 |
-| 网页 / 第三方接口返回 | 不可信 | 同上 |
-| 其他 Agent 的消息 | 不可信 | 同上 |
-| 系统自身结构化字段 | 可信 | — |
+| User-uploaded files | untrusted | returned as data with source labeled, never treated as instructions |
+| Web pages / third-party responses | untrusted | same as above |
+| Messages from other agents | untrusted | same as above |
+| The system's own structured fields | trusted | — |
 
-## 验收记录
-| 检查项 | 结果 | 证据位置 |
+## Acceptance record
+| Check | Result | Evidence location |
 | :--- | :--- | :--- |
-| 模拟 Prompt Injection，影响仅停留在草稿层或预授权约束内 | | |
-| 任意终局操作都能追溯到人类授权证据 | | |
-| 吊销 Agent 或预授权后，后续请求立即被拒绝 | | |
+| In a simulated Prompt Injection, the impact stays within the draft layer or pre-authorization limits | | |
+| Every final operation can be traced to human authorization evidence | | |
+| After an agent or pre-authorization is revoked, subsequent requests are rejected immediately | | |

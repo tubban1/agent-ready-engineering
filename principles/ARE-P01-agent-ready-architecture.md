@@ -1,229 +1,235 @@
-# Agent-Ready Architecture | 架构师视角的 Agent-Ready
-> 文档编号：ARE-P01
-> v0.4.2｜2026-11-12｜状态：设计观点与工作假设，不是已验证的行业定律
-> 姊妹文档：`ARE-P02-agent-native-interface-design.md`（接口原则）、`../references/ARE-R01-tool-calling-mcp-code-mode.md`（概念分层）、`../references/ARE-R02-agent-ready-industry-landscape.md`（行业参考）、`../adoption/ARE-A01-agent-ready-implementation-checklist.md`（实施顺序与验收）
-> 范围：本文的 Agent-Ready 指**业务服务与接口**能被 Agent 安全、可靠地使用；不是指代码仓库能否让编程 Agent 工作（AGENTS.md / 仓库准备度是另一个话题）。
+# Agent-Ready Architecture | The Architect's View
+> Document ID: ARE-P01
+> v0.5 | 2026-11-12 | Status: design position and working hypotheses, not a validated industry law
+> Language: English (canonical). Chinese reading aid: `ARE-P01-agent-ready-architecture.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
+> Related: `ARE-P02-agent-native-interface-design.md` (interface principles), `../references/ARE-R01-tool-calling-mcp-code-mode.md` (concept layers), `../references/ARE-R02-agent-ready-industry-landscape.md` (industry landscape), `../adoption/ARE-A01-agent-ready-implementation-checklist.md` (implementation order and acceptance criteria)
+> Scope: in this document, Agent-Ready means **business services and interfaces** that agents can use safely and reliably. It does not mean whether a code repository is ready for coding agents (AGENTS.md / repository readiness is a separate topic).
 
-站在系统架构师（System Architect）的视角，**Agent-Ready 的本质绝不是“给系统增加一个 MCP 接口”，也不是“把 API 封装成几个工具”**。
+From a system architect's point of view, **Agent-Ready is not “adding an MCP endpoint to the system”, nor “wrapping APIs as a few tools”.**
 
-从架构演进的角度来看，Agent-Ready 是一场关于**“调用端假设、状态确定性、资源预算模型、信任边界与可验证性”**的系统重构。但重构之前必须先回答一个更朴素的问题：**这件事值不值得让 Agent 来做？** 因此本文把 **Agent-Ready Engineering** 定义为：
+In terms of architectural evolution, Agent-Ready is a system re-engineering of **client assumptions, state determinism, resource budgeting, trust boundaries and verifiability**. But before any re-engineering, a simpler question must be answered: **is this worth having an agent do?** This document therefore defines **Agent-Ready Engineering** as:
 
-> **先判断价值，再把值得做的能力改造成 Agent 能安全、可靠使用的形态，并在上线后用实测数据复核价值。**
+> **Judge value first; then turn the capabilities worth doing into a form agents can use safely and reliably; and after launch, verify the value with measured data.**
 
-下文先给出定位与边界、价值前提，再从七个维度透视架构（维度一至五为核心，维度六、七为落地时最常被遗漏的部分）。
+The sections below cover positioning and boundaries, the value premise, and then seven architecture dimensions (dimensions one to five are the core; six and seven are the parts most often missed in practice).
 
 ---
 
-### 定位与边界：企业 AI 转型中的执行层标准
+### Positioning and boundaries: the execution-layer standard in enterprise AI transformation
 
-**一句话定位**：Agent-Ready Engineering 是让 Agent 在企业核心业务中**安全执行、可验证交付**的标准流程。
+**Positioning in one sentence**: Agent-Ready Engineering is the standard process for letting agents **execute safely and deliver verifiably** in an enterprise's core business.
 
-企业 AI 转型通常有多条并行的线：员工提效、内容与分析、Agent 操作自家系统、对外开放给外部 Agent、传统机器学习、组织与人才。Agent-Ready Engineering **不负责整个转型**，只负责其中“让 Agent 真正执行业务”这一层——这是转型中最难、风险最大、也最需要工程能力的一段，转型投入能否变成可度量的业务结果，很大程度取决于这一层。
+Enterprise AI transformation usually runs on several parallel workstreams: employee productivity, content and analytics, agents acting on the enterprise's own systems, opening services to external agents, traditional machine learning, and organization and talent. Agent-Ready Engineering is **not responsible for the whole transformation**. It covers only the layer where agents actually execute business work. This is the hardest and riskiest part of the transformation and the one that most needs engineering; whether transformation spending becomes measurable business results depends heavily on this layer.
 
-“标准流程”不等于“全部流程”：不需要覆盖转型的每一条线，而是在执行层成为可复制、可验收的默认做法（类似云原生、DevOps 之于企业 IT 转型）。
+“Standard process” does not mean “the entire process”. It does not need to cover every workstream; it needs to become the repeatable, verifiable default in the execution layer (as cloud native and DevOps did for enterprise IT transformation).
 
-| 我们做（核心） | 只定义接口（不负责做） | 不做 |
+| What we do (core) | Interfaces only (not our job) | Out of scope |
 | :--- | :--- | :--- |
-| P0 价值关卡：判断哪些业务值得让 Agent 做 | **从战略层接收**：候选场景清单 | 组织架构设计、岗位调整 |
-| P1–P6：能力盘点、内核契约、状态、授权、上下文、接入层 | **交给治理层**：授权矩阵、审计证据、风险分级 | 员工培训、变革管理 |
-| P7–P8：评测、上线运营、价值复盘 | **向组织层提出要求**：每个能力有 Owner、授权人、负责人 | 员工提效工具的选型与推广 |
-| | **从数据层接收**：数据源、数据质量与访问权限约定 | 通用 AI 战略规划 |
+| P0 Value Gate: decide which business work is worth having agents do | **Receive from strategy**: list of candidate scenarios | Organization design, role changes |
+| P1–P6: capability inventory, core contracts, state, authorization, context, ingress | **Hand to governance**: authorization matrix, audit evidence, risk levels | Employee training, change management |
+| P7–P8: evals, launch and operations, value review | **Require from the organization**: every capability has an Owner, an approver and a responsible person | Selecting and rolling out employee productivity tools |
+| | **Receive from the data layer**: agreements on data sources, data quality and access rights | General AI strategy |
 
-**边界原则**：
-* 与其他层的交界处只规定“需要对方提供什么、会交付给对方什么”，不替对方完成工作；
-* AI 治理只承担其中工程可落地的部分（可验证的授权、审计日志、风险分级），不负责治理委员会、政策制定；
-* P0 让我们参与转型前期的业务判断，P8 让我们用实测数据证明成果——两头已足够进入核心业务，无需向组织与人效方向扩张；
-* P0 判定“不需要 Agent”的场景，记录理由后交还给对应的线（例如采购现成工具、普通集成），不在本流程内继续处理。
+**Boundary principles**:
+* At each boundary, specify only “what we need from the other side and what we deliver to it”; do not do the other side's work.
+* For AI governance, take on only what engineering can implement (verifiable authorization, audit logs, risk levels), not governance committees or policy writing.
+* P0 lets us take part in early business judgment; P8 lets us prove outcomes with measured data. These two ends are enough to reach the core business without expanding into organization or productivity work.
+* Scenarios that P0 judges as “no agent needed” are recorded with reasons and handed back to the appropriate workstream (for example, buying an off-the-shelf tool or a plain integration). They are not processed further here.
 
-**成为“标准”靠的是可复制、可验收**：阶段与验收标准（已有，见实施 Checklist）、标准交付物模板（已有，见 `../adoption/templates/`：价值卡片、能力矩阵、操作契约卡、授权矩阵、评测报告、价值复盘）、成熟度分级（已有，见 `../adoption/ARE-A02-agent-ready-maturity-model.md`：L0 未就绪 → L4 可验证运营）。
-
----
-
-### 前提：价值优先（Value Gate）
-
-架构手段本身不产生价值。一个没人反复使用的能力，做得再 Agent-Ready 也只是成本。所以价值判断是 Agent-Ready Engineering 的**第一道关卡和最后一道闭环**，而不是工程之外的讨论：
-
-* **做不做**：有具体用户、具体任务、真实频率吗？任务真的需要 Agent 的理解与规划能力，还是固定脚本、规则引擎、普通集成或一个更好的 UI 就能解决？后者不需要 Agent-Ready 改造。
-* **先做什么**：价值决定改造顺序。只改造被代表任务高频使用、对价值目标贡献最大的能力，而不是“把所有系统先重构一遍”。
-* **值多少、风险多大**：价值假设必须可度量（基线来自实测或真实记录），并与最坏情况的风险、外部后果由谁承担放在一起权衡。
-* **先小验证，再改造**：在改造前用现有接口 + 人工兜底让真实 Agent 和真实用户跑通一次代表任务，确认“Agent 能用、用户愿意再用”。
-* **上线后复核**：用真实使用数据对比基线；高频能力加深改造，几乎无人使用的工具收缩或下线——工具越少，Agent 的选择噪音也越少。
-
-> 价值判断回答“为什么做、做哪些”；下面七个维度回答“决定做了以后，怎样做得安全可靠”。两者缺一不可：只有价值没有工程，Agent 会在真实业务里出事故；只有工程没有价值，会造出没人用的“Agent-Ready 平台”。
+**Becoming a “standard” depends on being repeatable and verifiable**: stages with acceptance criteria (available, see the implementation checklist), standard deliverable templates (available, see `../adoption/templates/`: value card, capability matrix, operation contract, authorization matrix, eval report, value review), and a maturity model (available, see `../adoption/ARE-A02-agent-ready-maturity-model.md`: L0 Not Ready → L4 Verified Operations).
 
 ---
 
-### 维度一：调用端假设的根本颠覆（Client Axiom Shift）
+### Premise: value first (Value Gate)
 
-软件架构的第一原则是“定义调用方假设”。在过去几十年中，系统的客户端主要有两种：
-1. **确定性客户端（代码）**：调用顺序在编译期固定，逻辑是布尔判断，输入输出严格匹配类型；
-2. **人类客户端（用户）**：虽然行为随机，但有常识、记忆和耐心，人脑能在界面中容忍错位、自行拼凑上下文、感知异常并自行兜底，同时承担操作责任。
+Architecture by itself produces no value. A capability nobody uses repeatedly is only a cost, however Agent-Ready it is. Value judgment is therefore **the first gate and the final loop** of Agent-Ready Engineering, not a discussion outside engineering:
 
-**Agent-Ready 面临的是第三种客户端——“概率性智能体（Probabilistic Actor）”：**
-* 它具备自主规划和语义理解能力，但**不能可靠地依赖界面布局、页面上下文和“人一看就懂”的隐式信息**。多模态模型和 computer use 可以“看”屏幕，但截图理解既昂贵又不稳定，不应作为业务契约的承载方式；
-* 它的行为是概率性的，可能产生幻觉，可能在网络抖动或报错含糊时陷入循环或盲目重试；
-* 它的“工作记忆”有限且昂贵（即 Context Window）；
-* 它本身不承担法律与经济责任——责任仍属于授权它的人类 Owner。
+* **Whether to do it**: is there a specific user, a specific task, a real frequency? Does the task truly need an agent's understanding and planning, or would a fixed script, a rules engine, a plain integration or a better UI solve it? The latter need no Agent-Ready re-engineering.
+* **What first**: value sets the order of work. Re-engineer only the capabilities used most by representative tasks and contributing most to the value target, rather than “rebuilding every system first”.
+* **How much it is worth and how risky it is**: the value hypothesis must be measurable (baseline from measurements or real records) and weighed against the worst case and who bears the external consequences.
+* **Validate small, then re-engineer**: before re-engineering, use existing interfaces plus human fallback to have a real agent and real users complete one representative task, confirming that “the agent can use it and users want to use it again”.
+* **Review after launch**: compare real usage data with the baseline; deepen high-use capabilities and shrink or retire tools almost nobody uses. Fewer tools also mean less selection noise for agents.
 
-> **架构师的第一思考**：
-> **当调用端从“确定性程序”变为“具备自主决策能力的概率性黑盒”时，我的后端系统如何依然保持状态变更的强确定性与高可靠性？**
+> Value judgment answers “why and which”; the seven dimensions below answer “once decided, how to do it safely and reliably”. Both are required: value without engineering lets agents cause incidents in real business; engineering without value produces an “Agent-Ready platform” nobody uses.
 
 ---
 
-### 维度二：把 Context Window 当作稀缺的“工作内存”来做容量设计
+### Dimension one: a fundamental shift in client assumptions (Client Axiom Shift)
 
-传统架构师衡量吞吐与资源，看的是 QPS、并发连接数、DB 连接池和 I/O 带宽。
-在 Agent 场景中，**上下文窗口是一种昂贵、有限且容易被污染的工作内存，Token 消耗是新的带宽与成本维度。**
+The first principle of software architecture is to define assumptions about the caller. For decades, systems mainly had two kinds of clients:
+1. **Deterministic clients (code)**: call order fixed at build time, Boolean logic, inputs and outputs strictly typed.
+2. **Human clients (users)**: behavior is random, but humans have common sense, memory and patience. They tolerate misaligned interfaces, piece context together, notice anomalies, recover on their own, and bear responsibility for their actions.
 
-> 注：常见类比是“L1 Cache”。它有助于理解“小、贵、易被冲刷”，但并不精确——缓存对上层透明、可随时回源，而上下文中的内容会直接影响模型推理，被冲掉的信息模型并不知道要重新取回。
+**Agent-Ready faces a third kind of client: the probabilistic actor.**
+* It can plan autonomously and understand meaning, but **cannot reliably depend on interface layout, page context or implicit information that “a human gets at a glance”**. Multimodal models and computer use can “see” a screen, but screenshot understanding is expensive and unstable and should not carry business contracts.
+* Its behavior is probabilistic. It may hallucinate, and it may loop or retry blindly when the network is flaky or errors are vague.
+* Its working memory (the context window) is limited and expensive.
+* It does not bear legal or financial responsibility; that stays with the human Owner who authorized it.
 
-* **防上下文污染（Anti-Context Thrashing）**：
-  * 如果像传统 API 那样把包含 200 个字段的原始数据倾倒给 Agent，会挤占有限窗口、稀释关键信息，增加误读和幻觉的概率；
-* **发现机制的懒加载（Progressive Discovery）**：
-  * 架构上应支持能力的渐进式暴露（项目示例：Bloomroom 通过 `get_design_schema` 按需读取设计 Schema），而不是在初始化握手时把所有庞大的 Schema 静态塞进上下文；
-* **数据访问层的 Machine-First 重塑**：
-  * 传统固定分页（一次 20 条）对 Agent 意味着大量的多轮往返（网络 + 推理）；
-  * Agent-Ready 的数据层应支持**服务端过滤、字段投影（Projection）、游标分片、结构化摘要与稳定引用**，并对响应设大小上限、显式标记截断，提高单次交互的信息密度。
-* **把 Token 当作可度量的资源**：每个工具响应的体积、每个任务的轮次与 Token 消耗都应实测记录，而不是凭感觉优化。
+> **The architect's first question**:
+> **When the client changes from a deterministic program into a probabilistic black box that makes its own decisions, how does my backend still keep state changes strongly deterministic and highly reliable?**
 
 ---
 
-### 维度三：非确定性环境下的强状态机与防重试灾难
+### Dimension two: capacity planning for the context window as scarce working memory
 
-传统分布式系统依赖共识协议或事务保证内部一致性。而 Agent 是运行在系统外部的非确定性客户端，极易与服务端产生“状态认知脱节”。
+Traditional architects measure throughput and resources by QPS, concurrent connections, database connection pools and I/O bandwidth.
+With agents, **the context window is expensive, limited working memory that is easily polluted, and token consumption is a new dimension of bandwidth and cost.**
 
-架构师必须在领域模型中注入**防御性可恢复机制（Defensive Resilience）**：
+> Note: a common analogy is the “L1 cache”. It helps convey “small, expensive, easily flushed”, but it is imprecise: a cache is transparent to the layer above and can always refetch from the source, whereas content in the context directly shapes the model's reasoning, and the model does not know to refetch information that has been pushed out.
+
+* **Avoid context pollution (anti-context thrashing)**:
+  * Dumping raw records with 200 fields on an agent, as traditional APIs do, crowds the limited window, dilutes key information and raises the chance of misreading and hallucination.
+* **Lazy loading for discovery (progressive discovery)**:
+  * The architecture should expose capabilities progressively (project example: Bloomroom reads its design schema on demand via `get_design_schema`), rather than stuffing every large schema into the context at the initial handshake.
+* **Machine-first redesign of data access**:
+  * Traditional fixed pagination (20 records at a time) means many round trips (network plus inference) for an agent.
+  * An Agent-Ready data layer should support **server-side filtering, field projection, cursor pagination, structured summaries and stable references**, cap response size and mark truncation explicitly, raising the information density of each interaction.
+* **Treat tokens as a measurable resource**: measure and record the size of every tool response and the round trips and tokens of every task, instead of optimizing by feel.
+
+---
+
+### Dimension three: strong state machines in a non-deterministic environment, and preventing retry disasters
+
+Traditional distributed systems rely on consensus protocols or transactions for internal consistency. An agent, however, is a non-deterministic client running outside the system and easily falls out of sync with the server's actual state.
+
+Architects must build **defensive resilience** into the domain model:
 
 ```
-                    ┌───────────────────────────┐
-                    │  Agent (非确定性推理客户端) │
-                    └─────────────┬─────────────┘
-                                  │ 1. 携带期望版本与幂等键
-                                  ▼
-                    ┌───────────────────────────┐
-                    │   CAS 并发控制与版本状态机   │  ← 服务端强校验
-                    │  - expected_revision      │
-                    │  - idempotency_key        │
-                    │  - status: needs_input    │
-                    └─────────────┬─────────────┘
-                                  │ 2. 状态明确，拒绝脑补
-                                  ▼
-                    ┌───────────────────────────┐
-                    │    真实业务数据与事务执行   │
-                    └───────────────────────────┘
+                    ┌──────────────────────────────────┐
+                    │  Agent (non-deterministic client) │
+                    └────────────────┬─────────────────┘
+                                     │ 1. Sends expected revision and idempotency key
+                                     ▼
+                    ┌──────────────────────────────────┐
+                    │  CAS concurrency control and     │  ← strict server-side checks
+                    │  revisioned state machine        │
+                    │  - expected_revision             │
+                    │  - idempotency_key               │
+                    │  - status: needs_input           │
+                    └────────────────┬─────────────────┘
+                                     │ 2. Explicit state, no guessing
+                                     ▼
+                    ┌──────────────────────────────────┐
+                    │  Real business data and          │
+                    │  transaction execution           │
+                    └──────────────────────────────────┘
 ```
 
-1. **版本条件写（CAS / Optimistic Concurrency Control）**：
-   * 项目示例：Interior 的 `refine_design` 要求传入 `expected_revision`。版本不匹配即被拦截，避免基于过期认知的脏写；
-   * 冲突时应**返回当前版本号与差异摘要**，让 Agent 能重新读取、重新决策，而不是只返回一个“冲突”。
-2. **幂等键（Idempotency Key）**：
-   * 所有写操作接受幂等键，并明确其作用范围（按 Owner / Agent / 操作）、保留时长，以及重复请求时原样返回首次结果。CAS 防“基于旧状态的写”，幂等防“同一意图写多次”，两者互补，缺一不可。
-3. **机器可判断的错误契约**：
-   * 错误必须结构化：错误码、是否可重试、`retry_after`、需要补充的输入、当前状态。Agent 的“死循环重试”往往不是模型问题，而是服务端只回了一句给人看的提示文案。
-4. **副作用严格声明（Declarative Side Effects）**：
-   * 把只读探索（Discovery）、本地自检（Validation / dry-run）、暂态草稿（Draft）与最终提交（Commit）在边界上切开，消灭“万能执行器”。
-5. **把业务过程实体化（Lifecycle Observability）**：
-   * 请求被接受（ACK / HTTP 200）不等于业务完成。长任务应建模为独立的状态实体（如 `accepted -> running -> partial -> completed / failed / cancelled / unknown`），允许 Agent 在断线后凭任务 ID 重新查询进度，避免“盲目重试导致的重复扣款与采购”。
-6. **可撤销与补偿**：
-   * Draft 只保护“尚未提交”的阶段。对已提交的操作，应尽可能提供撤销或补偿流程（Saga 风格），并说明哪些操作不可逆。
+1. **Conditional writes (CAS / optimistic concurrency control)**:
+   * Project example: Interior's `refine_design` requires `expected_revision`. A mismatched revision is rejected, preventing dirty writes based on outdated knowledge.
+   * On conflict, **return the current revision and a summary of differences** so the agent can re-read and decide again, instead of returning only “conflict”.
+2. **Idempotency keys**:
+   * Every write accepts an idempotency key, with a defined scope (per Owner / agent / operation), a retention period, and the rule that a repeated request returns the original result. CAS prevents “writes based on stale state”; idempotency prevents “the same intent written several times”. They complement each other and both are required.
+3. **A machine-readable error contract**:
+   * Errors must be structured: error code, whether it is retryable, `retry_after`, the input still needed, and the current state. Agents stuck in retry loops are often not a model problem but a server that returned only a message meant for humans.
+4. **Declarative side effects**:
+   * Separate read-only discovery, validation (dry-run), temporary drafts and final commits at clear boundaries, and eliminate “catch-all executors”.
+5. **Make business processes into entities (lifecycle observability)**:
+   * A request being accepted (ACK / HTTP 200) does not mean the business work is done. Model long-running tasks as separate state entities (such as `accepted -> running -> partial -> completed / failed / cancelled / unknown`) so an agent can query progress by task ID after a disconnect, avoiding “duplicate charges and purchases caused by blind retries”.
+6. **Undo and compensation**:
+   * Drafts protect only the “not yet committed” phase. For committed operations, provide undo or compensation flows (Saga style) wherever possible, and state which operations are irreversible.
 
 ---
 
-### 维度四：零信任与“授权-执行”分离（Authority vs. Execution）
+### Dimension four: zero trust and the separation of authority and execution
 
-在安全层面，Agent-Ready 不是推翻 RBAC，而是**在 RBAC 之上增加一层“委托授权”**：人类主体仍按角色拥有权限，Agent 只获得其中一个范围更小、时效更短、可随时撤销的子集。
+On the security side, Agent-Ready does not overturn RBAC; it **adds a layer of delegated authorization on top of RBAC**. The human principal keeps role-based permissions; the agent receives only a narrower, shorter-lived, revocable subset.
 
-* **拒绝“代理自报信任”**：
-  * Agent 传入 `owner_confirmed: true` 绝不能当作真实授权凭证；授权证据必须来自服务端可验证的人类通道。
-* **委托凭证（Delegated Credentials）**：
-  * Agent 使用独立于人类的身份与凭证，绑定 Owner、Agent、允许的动作、资源与有效期；凭证不直接暴露给模型或代码沙箱。
-* **分权架构：探索权与认领权分离（Draft & Claim Pattern）**：
-  * **Agent 拥有“方案探索与编排权”**：可以调用模型、调整参数、生成临时 Draft（带有时效性与隔离）；
-  * **人类 Owner 拥有“终局资产与履约权”**：最终的扣费、对外发送、正式落库，必须通过人类可信通道（如网页 Claim、扫码、独立签名）完成交接；
-  * 这样即使 Agent 发生幻觉或遭遇 Prompt Injection，其破坏半径也被限制在暂态草稿内。
-* **事先授权（预授权）作为 Claim 的另一种形态**：
-  * 逐笔确认适合低频高风险操作；高频场景可以让人类**事先签署有约束的授权**（金额上限、对象、时间窗口、次数），Agent 只能在约束内执行；
-  * 预授权必须由服务端验证、可随时吊销、每次使用都留痕；它约束的是 Agent 的执行范围，而不是把判断权整体交给 Agent；
-  * 行业参考：Google AP2 区分人类在场时签署的 Cart Mandate 和事先签署的 Intent Mandate。
-* **额度与急停**：按 Agent 设置金额、频率与资源上限，并保留可立即吊销某个 Agent 权限的开关。
+* **Reject self-reported trust**:
+  * An agent sending `owner_confirmed: true` must never count as real authorization; authorization evidence must come from a human channel the server can verify.
+* **Delegated credentials**:
+  * Agents use identities and credentials separate from humans, bound to the Owner, the agent, allowed actions, resources and validity period. Credentials are never exposed directly to the model or a code sandbox.
+* **Separation of powers: exploration vs. claiming (Draft & Claim)**:
+  * **The agent holds the right to explore and orchestrate**: it may call models, adjust parameters and produce temporary drafts (time-limited and isolated).
+  * **The human Owner holds the right to final assets and fulfillment**: final charges, outbound sending and committing records must be handed over through a trusted human channel (such as a web claim, QR scan or independent signature).
+  * Even if the agent hallucinates or suffers a Prompt Injection, its blast radius stays within temporary drafts.
+* **Pre-authorization as another form of claim**:
+  * Per-action confirmation suits low-frequency, high-risk operations. For high-frequency scenarios, a human can **sign a bounded authorization in advance** (amount limit, counterparties, time window, number of uses), and the agent may act only within those limits.
+  * Pre-authorizations must be verified by the server, revocable at any time and logged on every use. They limit the agent's scope of execution; they do not hand over judgment to the agent wholesale.
+  * Industry reference: Google AP2 distinguishes a Cart Mandate signed with the human present from an Intent Mandate signed in advance.
+* **Limits and kill switch**: set amount, frequency and resource limits per agent, and keep a switch that can immediately revoke a given agent's access.
 
 ---
 
-### 维度五：领域核心与接入层的解耦（Core Domain vs. Ingress）
+### Dimension five: decoupling the domain core from the ingress layer (Core Domain vs. Ingress)
 
-很多团队的架构错误在于：**为了支持 Agent，在业务代码里四处硬编码 MCP**。
+A common architectural mistake is **hard-coding MCP throughout business code in order to support agents**.
 
-需要先分清几个**不同层次**的概念（详见 `../references/ARE-R01-tool-calling-mcp-code-mode.md`），它们并不是同一层的“协议方言”：
+First separate several concepts that sit on **different layers** (see `../references/ARE-R01-tool-calling-mcp-code-mode.md`); they are not “protocol dialects” of one layer:
 
-| 层次 | 代表 | 在架构中的位置 |
+| Layer | Examples | Place in the architecture |
 | :--- | :--- | :--- |
-| 模型能力 | Tool Calling（各家模型 API 的工具调用） | 模型向宿主表达“调用什么、传什么参数”；不直接连接你的系统 |
-| 接入协议 | MCP、REST / OpenAPI | 宿主或客户端如何发现并调用你的能力——这才是 Ingress 层 |
-| 执行方式 | Code Mode | Agent 生成受限代码，在沙箱中组合调用类型化 API；底层仍走同一套授权 |
-| Agent 间协作 | A2A | 独立 Agent 之间委托任务、交换结果；与 MCP 互补，不是替代 |
+| Model capability | Tool Calling (tool use in each vendor's model API) | The model tells the host “what to call and with which arguments”; it does not connect to your system directly |
+| Ingress protocol | MCP, REST / OpenAPI | How hosts or clients discover and call your capabilities. This is the ingress layer |
+| Execution style | Code Mode | The agent writes constrained code that combines typed APIs in a sandbox; underneath, the same authorization applies |
+| Agent-to-agent | A2A | Independent agents delegate tasks and exchange results; complementary to MCP, not a replacement |
 
 ```
-               ┌───────────┐    ┌───────────┐    ┌───────────────┐
-  接入层       │    MCP    │    │   REST    │    │ Code Mode 沙箱 │
- (Ingress)     │(Agent宿主)│    │(Web/程序)  │    │(类型化SDK+代理)│
-               └─────┬─────┘    └─────┬─────┘    └───────┬───────┘
-                     └────────────────┼──────────────────┘
+               ┌───────────┐    ┌───────────┐    ┌──────────────────┐
+  Ingress      │    MCP    │    │   REST    │    │ Code Mode sandbox │
+               │(agent host)│   │(web/apps) │    │(typed SDK + proxy)│
+               └─────┬─────┘    └─────┬─────┘    └─────────┬────────┘
+                     └────────────────┼────────────────────┘
                                       ▼
-               ┌─────────────────────────────────────────┐
- 领域核心      │         Agent-Ready 核心领域内核        │
- (Domain Core) │ - Bounded Intent (高阶业务意图)         │
-               │ - Idempotent & Reversible (幂等与可恢复) │
-               │ - Provenance & Validation (证据与强校验) │
-               │ - Authorization (每个子操作独立授权)     │
-               └─────────────────────────────────────────┘
+               ┌──────────────────────────────────────────┐
+ Domain Core   │        Agent-Ready domain core           │
+               │ - Bounded Intent                         │
+               │ - Idempotent & Reversible                │
+               │ - Provenance & Validation                │
+               │ - Authorization (per sub-operation)      │
+               └──────────────────────────────────────────┘
 ```
 
-* **内核做厚，接入层做薄**：
-  * 业务内核本身就应具备：有界意图、幂等性、强类型校验、状态机、授权判断和可追踪凭据；
-  * 如果领域内核是 Agent-Ready 的，挂一个 MCP Server 主要是适配工作；如果内核还是混乱的页面级 CRUD，再多包装层也依然脆弱；
-  * MCP 的工具注解（如 `readOnlyHint`、`destructiveHint`、`idempotentHint`）只是给宿主的**提示**，不是安全保证；真正的约束必须在内核里执行；
-  * 工具定义（描述、输入输出 Schema、注解）本身也是契约：应有版本号，并对完整定义做哈希或签名，任何变更都可被发现和审查（参考 OWASP MCP Security Cheat Sheet）。
+* **Thick core, thin ingress**:
+  * The business core itself should provide bounded intent, idempotency, strongly typed validation, state machines, authorization decisions and traceable evidence.
+  * If the domain core is Agent-Ready, adding an MCP server is mostly adaptation work; if the core is still messy page-level CRUD, no amount of wrapping will make it robust.
+  * MCP tool annotations (such as `readOnlyHint`, `destructiveHint`, `idempotentHint`) are only **hints** to the host, not security guarantees; real constraints must be enforced in the core.
+  * Tool definitions (descriptions, input and output schemas, annotations) are contracts too: they should be versioned, and the full definition should be hashed or signed so every change can be detected and reviewed (see the OWASP MCP Security Cheat Sheet).
 
 ---
 
-### 维度六：数据与指令分离（Untrusted Content Boundary）
+### Dimension six: separating data from instructions (Untrusted Content Boundary)
 
-Agent 读取的一切——用户上传的文件、网页、邮件、第三方 API 返回值、其他 Agent 的消息——都可能夹带看起来像指令的文本（Prompt Injection）。
+Everything an agent reads (uploaded files, web pages, emails, third-party API responses, messages from other agents) may contain text that looks like instructions (Prompt Injection).
 
-* 工具返回的外部内容应标注**来源与可信级别**，与系统自身的结构化字段区分开；
-* 服务端不因为“数据里写着要执行某操作”就扩大权限或跳过确认；
-* 高风险操作的前提条件由服务端校验，而不是依赖模型“读懂并遵守”某段文字；
-* 这一维度与维度四相互配合：即使注入成功影响了 Agent 的决策，Draft & Claim 和委托凭证仍把后果限制在可控范围内。
-
----
-
-### 维度七：可观测、审计与评测（Provenance & Evals）
-
-Agent 在“无人盯盘”时运行，系统必须能事后回答：**谁授权了哪个 Agent、出于什么意图、基于哪个版本、做了什么、结果如何。**
-
-* **全链路追踪**：用关联 ID 串起 Agent 会话 → 工具调用 → 内核事务 → 外部效果；
-* **审计日志**：记录人类主体、Agent 身份、动作、资源版本、授权证据与最终结果；
-* **评测驱动的工具设计**：评测不是上线前最后一步。从价值关卡的最小验证开始，就用真实 Agent 跑代表任务，按结果迭代工具粒度、命名、描述与响应格式（参考 Anthropic《Writing effective tools for agents — with agents》）；
-* **评测（Evals）**：用真实 Agent 跑代表性任务，并注入超时、重复请求、版本冲突、Prompt Injection 等故障；度量任务完成率、越权拒绝、重复副作用、恢复率、Token 与延迟——这些数字必须来自实测，不能由模型推断代替；
-* **契约版本**：工具与 Schema 有版本号和废弃周期，避免静默改动让已部署的 Agent 行为漂移。
+* External content returned by tools should be labeled with **source and trust level** and kept distinct from the system's own structured fields.
+* The server never widens permissions or skips confirmation because “the data says to perform an action”.
+* Preconditions for high-risk operations are checked by the server, not left to the model to “read and obey” some text.
+* This dimension works together with dimension four: even if an injection does influence the agent's decisions, Draft & Claim and delegated credentials keep the consequences within a controlled range.
 
 ---
 
-### 架构师眼中的一句话总结
+### Dimension seven: observability, audit and evals (Provenance & Evals)
 
-> **Agent-Ready 是企业架构的一次“去人脑隐式依赖”重构。**
+Agents run with no one watching, so the system must be able to answer afterwards: **who authorized which agent, with what intent, based on which revision, what it did and what the result was.**
+
+* **End-to-end tracing**: a correlation ID links agent session → tool call → core transaction → external effect.
+* **Audit logs**: record the human principal, agent identity, action, resource revision, authorization evidence and final result.
+* **Eval-driven tool design**: evals are not the last step before launch. Starting with the minimum validation at the Value Gate, run real agents on representative tasks and iterate tool granularity, naming, descriptions and response formats from the results (see Anthropic, “Writing effective tools for agents — with agents”).
+* **Evals**: run real agents on representative tasks and inject faults such as timeouts, duplicate requests, revision conflicts and Prompt Injection; measure task completion, rejected unauthorized actions, duplicate side effects, recovery, tokens and latency. These numbers must come from measurement, never from model inference.
+* **Contract versions**: tools and schemas have version numbers and deprecation periods, so silent changes do not make deployed agents drift.
+
+---
+
+### The architect's one-sentence summary
+
+> **Agent-Ready is a re-engineering of enterprise architecture that removes implicit dependence on the human brain.**
 >
-> 它不是在讨论某个具体的协议，而是**系统如何为“非确定性推理客户端”建立强确定性的契约、状态机、信任边界、资源防御与可验证证据**，从而让 AI 智能体在脱离人工盯盘的情况下，依然能安全地驱动真实业务。
+> It is not about any particular protocol. It is about **how a system establishes strongly deterministic contracts, state machines, trust boundaries, resource defenses and verifiable evidence for non-deterministic reasoning clients**, so that AI agents can still drive real business safely without a human watching over them.
 
 ---
 
-## 状态与边界
-- **项目示例（来自本地项目经验，未作为公开基准验证）**：Bloomroom `get_design_schema` 按需读取；Interior `refine_design` 的 `expected_revision`。
-- **设计建议**：价值前提与维度一至七中的架构手段；实施顺序与验收见 `../adoption/ARE-A01-agent-ready-implementation-checklist.md`（P0 价值关卡 → P8 价值复盘）。
-- **待验证假设**：Agent-Ready 内核必然降低端到端成本或提高任务成功率；Agent-Ready Engineering 会成为企业 AI 转型中的标准工程环节；以上类比（工作内存 / L1 Cache）只用于理解，不是性能模型。
-- **定位决定（Owner 决定，2026-11-12）**：聚焦企业 AI 转型中的执行层，即 Agent-Ready Engineering；组织与人才、员工提效、内容分析、通用 AI 战略不在范围内，只定义与它们的接口。
-- **v0.4.2 变更**：成熟度分级已建立，更新“定位与边界”中的状态说明。
-- **v0.4.1 变更**：标准交付物模板已建立，更新“定位与边界”中的状态说明。
-- **v0.4 变更**：新增“定位与边界”：执行层标准、做 / 只定义接口 / 不做三类边界、标准交付物。
-- **v0.3 变更**：把价值优先纳入 Agent-Ready Engineering 的定义（前提：Value Gate）；明确范围为服务与接口；补充预授权、工具定义变更检测、评测驱动的工具设计。
-- **v0.2 变更**：修正“Agent 完全没有视觉”“协议方言”“颠覆 RBAC”等表述；补充幂等、错误契约、补偿、数据/指令分离、可观测与评测。
+## Status and boundaries
+- **Project examples (from local project experience, not validated as public benchmarks)**: Bloomroom's on-demand `get_design_schema`; the `expected_revision` of Interior's `refine_design`.
+- **Design recommendations**: the value premise and the architectural measures in dimensions one to seven; implementation order and acceptance criteria are in `../adoption/ARE-A01-agent-ready-implementation-checklist.md` (P0 Value Gate → P8 value review).
+- **Hypotheses to be validated**: that an Agent-Ready core necessarily lowers end-to-end cost or raises task success; that Agent-Ready Engineering will become a standard engineering stage of enterprise AI transformation. The analogies above (working memory / L1 cache) are for understanding only, not performance models.
+- **Positioning decision (Owner decision, 2026-11-12)**: focus on the execution layer of enterprise AI transformation, that is, Agent-Ready Engineering. Organization and talent, employee productivity, content analytics and general AI strategy are out of scope; only the interfaces to them are defined.
+
+## Change log
+- **v0.5 (2026-11-12)**: first English canonical version, translated from Chinese v0.4.2. No change in content. The Chinese text becomes the reading aid `ARE-P01-agent-ready-architecture.zh.md`.
+- **v0.4.2**: maturity model available; status note in “Positioning and boundaries” updated.
+- **v0.4.1**: standard deliverable templates available; status note in “Positioning and boundaries” updated.
+- **v0.4**: added “Positioning and boundaries”: execution-layer standard; three boundary types (do / interfaces only / out of scope); standard deliverables.
+- **v0.3**: value-first made part of the definition of Agent-Ready Engineering (premise: Value Gate); scope set to services and interfaces; added pre-authorization, tool definition change detection, eval-driven tool design.
+- **v0.2**: corrected statements such as “agents have no vision at all”, “protocol dialects” and “overturning RBAC”; added idempotency, error contract, compensation, data/instruction separation, observability and evals.

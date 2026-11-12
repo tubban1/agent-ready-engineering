@@ -1,52 +1,53 @@
-# 价值复盘（Value Review）— P8
-> 文档编号：ARE-T06
-> 模板 v0.1｜每个场景每个复盘周期一份｜复制到项目目录后填写
-> 结论回写到对应价值卡片的“复盘回写”一节。
+# Value Review — P8
+> Document ID: ARE-T06
+> Template v0.2 | One per scenario per review cycle | Copy into the project directory before filling in
+> Write the conclusion back to section 9 (“Review write-back”) of the matching value card.
+> Language: English (canonical). Chinese reading aid: `ARE-T06-value-review.zh.md`.
 
-## 基本信息
-| 项 | 内容 |
+## Basic information
+| Item | Content |
 | :--- | :--- |
-| 场景名称 | <与价值卡片一致> |
-| 价值卡片 | <路径与版本> |
-| 复盘周期 | <起止日期> |
-| 复盘日期 | <YYYY-MM-DD> |
-| 参与人 | <业务 Owner、负责人等> |
+| Scenario name | <same as the value card> |
+| Value card | <path and version> |
+| Review period | <start and end dates> |
+| Review date | <YYYY-MM-DD> |
+| Participants | <business Owner, responsible person, etc.> |
 
-## 1. 价值指标对比
-指标、基线、目标都取自价值卡片。
+## 1. Value metrics compared
+Metrics, baseline and target are taken from the value card.
 
-| 指标 | 基线 | 目标 | 本周期实际 | 数据来源 | 是否达成 |
+| Metric | Baseline | Target | Actual this period | Data source | Achieved |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| <> | | | | <日志 / 报表 / 抽样> | |
+| <> | | | | <logs / reports / sampling> | |
 
-## 2. 使用情况
-| 操作 | 调用次数 | 成功率 | 人工介入次数 | 备注 |
+## 2. Usage
+| Operation | Calls | Success rate | Human interventions | Notes |
 | :--- | :--- | :--- | :--- | :--- |
 | <> | | | | |
 
-- **高频使用的能力**：<>
-- **几乎没人用的能力**：<>
-- **用户反馈**：<真实用户是否愿意继续使用，原话或记录位置>
+- **Heavily used capabilities**: <>
+- **Capabilities almost nobody uses**: <>
+- **User feedback**: <whether real users want to keep using it; quotes or record location>
 
-## 3. 风险与事故
-| 日期 | 事件 | 影响 | 是否被授权边界拦住 | 改进动作 |
+## 3. Risks and incidents
+| Date | Event | Impact | Stopped by the authorization boundary | Improvement |
 | :--- | :--- | :--- | :--- | :--- |
 | <> | | | | |
 
-## 4. 成本
-- **改造投入**：<人力、时间；按实际记录>
-- **运行成本**：<模型调用、基础设施；按实际账单>
+## 4. Cost
+- **Re-engineering effort**: <people and time, from actual records>
+- **Running cost**: <model calls, infrastructure, from actual bills>
 
-## 5. 决定
-| 范围 | 决定 | 理由 |
+## 5. Decision
+| Scope | Decision | Reason |
 | :--- | :--- | :--- |
-| 整个场景 | <扩大 / 维持 / 收缩 / 下线> | |
-| <能力 A> | <加深改造 / 维持 / 下线> | |
-| 待定池中的 <能力 B> | <纳入下一轮能力矩阵 / 继续等待> | |
+| Whole scenario | <expand / maintain / shrink / retire> | |
+| <capability A> | <deepen / maintain / retire> | |
+| <capability B> from the waiting pool | <move into the next capability matrix round / keep waiting> | |
 
-## 6. 后续动作
-| 动作 | 负责人 | 截止日期 |
+## 6. Follow-up actions
+| Action | Responsible | Due date |
 | :--- | :--- | :--- |
-| 回写价值卡片 | | |
-| 更新能力矩阵 | | |
+| Write back to the value card | | |
+| Update the capability matrix | | |
 | <> | | |

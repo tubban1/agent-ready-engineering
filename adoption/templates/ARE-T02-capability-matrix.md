@@ -1,46 +1,47 @@
-# 能力矩阵（Capability Matrix）— P1
-> 文档编号：ARE-T02
-> 模板 v0.1｜每个项目一张，可按场景分节｜复制到项目目录后填写
+# Capability Matrix — P1
+> Document ID: ARE-T02
+> Template v0.2 | One per project, optionally sectioned by scenario | Copy into the project directory before filling in
+> Language: English (canonical). Chinese reading aid: `ARE-T02-capability-matrix.zh.md`.
 
-## 基本信息
-| 项 | 内容 |
+## Basic information
+| Item | Content |
 | :--- | :--- |
-| 项目 / 系统 | <> |
-| 矩阵版本 / 日期 | <v1 / YYYY-MM-DD> |
-| 关联价值卡片 | <场景名称与卡片路径> |
-| 首批改造上限 | <例：本轮最多改造 N 个操作> |
+| Project / system | <> |
+| Matrix version / date | <v1 / YYYY-MM-DD> |
+| Related value card | <scenario name and card path> |
+| First batch cap | <e.g. at most N operations this round> |
 
-## 字段说明
-| 字段 | 取值 |
+## Field definitions
+| Field | Values |
 | :--- | :--- |
-| 类型 | 只读查询 / 校验（dry-run）/ 草稿 / 正式提交 |
-| 副作用 | 无 / 内部写入 / 对外发送 / 涉及金钱 |
-| 可撤销 | 是 / 可补偿 / 不可逆 |
-| 风险等级 | 低 / 中 / 高（决定授权矩阵中的级别） |
-| 使用频率 | 代表任务中用到的次数或真实调用记录；没有数据写“未测” |
-| 价值贡献 | 对价值卡片中哪个指标有贡献：高 / 中 / 低 |
-| 改造成本 | 高 / 中 / 低（简述原因） |
-| 现状问题 | 万能执行器 / 无幂等 / 无版本 / 错误不可判断 / 返回过大 / 无状态查询 等 |
-| 决定 | 首批 / 待定池 / 不开放给 Agent |
+| Type | read-only query / validation (dry-run) / draft / final commit |
+| Side effects | none / internal write / outbound sending / involves money |
+| Undoable | yes / compensable / irreversible |
+| Risk level | low / medium / high (sets the level in the authorization matrix) |
+| Frequency of use | times used in representative tasks or real call records; “not measured” if there is no data |
+| Value contribution | which value-card metric it contributes to: high / medium / low |
+| Re-engineering cost | high / medium / low (with a short reason) |
+| Current problems | catch-all executor / no idempotency / no revision / errors not interpretable / responses too large / no status query, etc. |
+| Decision | first batch / waiting pool / not exposed to agents |
 
-## 矩阵
-| 操作 | 类型 | 副作用 | 可撤销 | 风险等级 | 使用频率 | 价值贡献 | 改造成本 | 现状问题 | Owner | 授权人 | 负责人 | 数据依赖 | 决定 |
+## Matrix
+| Operation | Type | Side effects | Undoable | Risk level | Frequency of use | Value contribution | Re-engineering cost | Current problems | Owner | Approver | Responsible | Data dependencies | Decision |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| <示例：search_orders> | 只读查询 | 无 | — | 低 | <> | 高 | 低 | 固定分页、返回字段过多 | <> | — | <> | 订单库 | 首批 |
-| <示例：update_order> | 正式提交 | 对外发送 | 可补偿 | 高 | <> | 高 | 高 | 万能执行器、无幂等 | <> | <> | <> | 订单库、供应商接口 | 首批（需拆分） |
+| <example: search_orders> | read-only query | none | — | low | <> | high | low | fixed pagination, too many fields returned | <> | — | <> | order database | first batch |
+| <example: update_order> | final commit | outbound sending | compensable | high | <> | high | high | catch-all executor, no idempotency | <> | <> | <> | order database, supplier interface | first batch (needs split) |
 | <> | | | | | | | | | | | | | |
 
-## 拆分清单（万能执行器）
-| 原接口 | 混在一起的行为 | 拆分后的操作 |
+## Split list (catch-all executors)
+| Original interface | Actions mixed together | Operations after splitting |
 | :--- | :--- | :--- |
-| <示例：update_order> | 改字段、取消、通知供应商 | `prepare_order_change` / `confirm_order_change` / `notify_supplier` |
+| <example: update_order> | change fields, cancel, notify supplier | `prepare_order_change` / `confirm_order_change` / `notify_supplier` |
 
-## 首批范围与理由
-- **首批**：<操作列表>
-- **排序理由**：<为什么这些先做：频率、价值贡献、风险、成本>
-- **待定池**：<操作列表，等 P8 复盘数据再决定>
-- **不开放给 Agent**：<操作列表及理由>
+## First batch and rationale
+- **First batch**: <list of operations>
+- **Ranking rationale**: <why these first: frequency, value contribution, risk, cost>
+- **Waiting pool**: <list of operations, to be decided with P8 review data>
+- **Not exposed to agents**: <list of operations and reasons>
 
-## 对其他层的要求
-- **组织层**：<哪些操作缺少 Owner / 授权人 / 负责人>
-- **数据层**：<需要约定的数据源、质量要求、访问权限>
+## Requirements on other layers
+- **Organization**: <which operations lack an Owner / approver / responsible person>
+- **Data layer**: <data sources, quality requirements and access rights to agree on>

@@ -1,16 +1,21 @@
-# 各项目如何使用本知识库
-> 文档编号：ARE-A03
+# How Projects Use This Repository
+> Document ID: ARE-A03
+> v0.2 | 2026-11-12
+> Language: English (canonical). Chinese reading aid: `ARE-A03-project-reference.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
 
-## 推荐分层
-1. 共享知识源：本目录 `agent-ready-engineering/`，由 Git 版本管理。
-2. 每个项目：只添加一小段只读指针，注明版本/URI，明确项目具体规则优先。
-3. 具体实现：在项目内形成 ADR、Schema、Evals 和变更测试；不要复制长期分叉的完整原文。
-4. 远端 Agent：优先由授权 MCP Resource 或只读 Git RAW 内容按需读取；不要假设它能访问 Mac 本地绝对路径。
+## Recommended layering
+1. Shared knowledge source: this directory, `agent-ready-engineering/`, versioned with Git.
+2. Each project: adds only a short read-only pointer that names the version / URI and states that project-specific rules take precedence.
+3. Concrete implementation: ADRs, schemas, evals and change tests live inside the project; do not copy full texts that will drift apart over time.
+4. Remote agents: prefer reading on demand through an authorized MCP Resource or read-only raw Git content; do not assume they can reach absolute paths on a local Mac.
 
-## 建议的简短项目指针（确认项目需要后人工纳入）
-> For agent-facing APIs and MCP tool design, consult the shared Agent-Native Interface Design playbook at `../agent-ready-engineering/principles/ARE-P02-agent-native-interface-design.md` (v0.1). It is advisory, not authorization. Project AGENTS.md/CLAUDE.md, production permissions, and Owner approvals take precedence. Do not import or publicize private project data.
+## Suggested short project pointer (add manually once the project needs it)
+> For agent-facing APIs and MCP tool design, consult the shared Agent-Native Interface Design playbook at `../agent-ready-engineering/principles/ARE-P02-agent-native-interface-design.md` (v0.2). It is advisory, not authorization. Project AGENTS.md/CLAUDE.md, production permissions, and Owner approvals take precedence. Do not import or publicize private project data.
 
-## 推广门槛
-- 不能在未验证跨平台文件可达性时宣称“自动所有 Agent 可用”；
-- 各项目保留独立开发规则，安全与权限不得被共享知识覆盖；
-- 变更知识库时同步版本号、来源与待验证假设，不静默改写既有准则。
+## Conditions for wider rollout
+- Do not claim “automatically available to every agent” before verifying that the files are reachable across platforms.
+- Each project keeps its own development rules; shared knowledge must never override security or permissions.
+- When changing this repository, update version numbers, sources and hypotheses to be validated together; never silently rewrite existing guidance.
+
+## Change log
+- **v0.2 (2026-11-12)**: first English canonical version, translated from Chinese. Pointer updated to reference ARE-P02 v0.2. The Chinese text becomes the reading aid `ARE-A03-project-reference.zh.md`.
