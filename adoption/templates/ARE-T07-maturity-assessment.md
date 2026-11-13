@@ -1,6 +1,6 @@
 # Maturity Assessment
 > Document ID: ARE-T07
-> Template v0.3 | One per scenario per assessment | Copy into the project directory before filling in
+> Template v0.4 | One per scenario per assessment | Copy into the project directory before filling in
 > The full definition of each check is in `../ARE-A02-agent-ready-maturity-model.md`; this form lists only IDs and short names.
 > Language: English (canonical). Chinese reading aid: `ARE-T07-maturity-assessment.zh.md`.
 
@@ -14,6 +14,7 @@
 | Version assessed | <core version, tool definition version or hash> |
 | Previous assessment | <date and level; “none” for the first> |
 | Passes by evidence type | <inspected n / documented n> |
+| Currently exposed to agents | <none / read-only / write> |
 
 ## How to fill in
 - Result is one of: ✅ pass / ❌ fail / ➖ not applicable.
@@ -91,5 +92,5 @@ For each dimension, enter the highest level at which all its checks pass.
 
 ## Gaps and next steps
 | Failed check | Planned action | Responsible | Due date |
-| :--- | :--- | :--- | :--- | :--- |
+| :--- | :--- | :--- | :--- |
 | <> | | | |

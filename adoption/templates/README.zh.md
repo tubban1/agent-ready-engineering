@@ -1,6 +1,6 @@
 # Agent-Ready Engineering 标准交付物模板
 > 文档编号：ARE-T00
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN v0.4｜术语见 `ARE-R03` 术语表
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN v0.5｜术语见 `ARE-R03` 术语表
 > v0.2｜2026-11-12｜配套：`../ARE-A01-agent-ready-implementation-checklist.zh.md`（P0–P8）、`../ARE-A02-agent-ready-maturity-model.zh.md`（L0–L4）
 
 ## 使用规则
@@ -21,6 +21,19 @@
 | `ARE-T07-maturity-assessment.zh.md` 成熟度评估表 | 任意阶段 | 现在处在哪一级？差什么？能开放到什么程度？ | 每个场景每次评估一份 |
 | `ARE-T08-scenario-screening.zh.md` 场景筛选表 | P0（组合） | 多个候选想法中，哪些值得填价值卡片？ | 每个项目或每轮筛选一份 |
 | `ARE-T09-portfolio-report.zh.md` 组合报告与路线图 | 每轮评估 | 等级分布如何？风险和共同短板在哪？下一步做什么？ | 每轮评估一份 |
+
+## 机器可读取值
+本地检查会读取已填写的模板，因此部分字段使用固定取值。中英文文件都使用这些取值；它们属于标识符，不翻译。
+
+| 字段 | 取值 | 所在模板 |
+| :--- | :--- | :--- |
+| 检查结果 | `✅` 通过 / `❌` 不通过 / `➖` 不适用 | ARE-T07 |
+| 证据类型 | `inspected` / `documented`（`self-reported` 永远不算通过） | ARE-T07 |
+| 目前对 Agent 开放的范围 | `none` / `read-only` / `write` | ARE-T07 |
+| 等级 | `L0`–`L4` | ARE-T07、ARE-T09 |
+| 价值卡片决定 | `go` / `read-only-first` / `not-now` | ARE-T01 第 8 节 |
+| 筛选结果 | `shortlist` / `hand-back` / `defer` | ARE-T08 |
+| 日期 | `YYYY-MM-DD`（文件名中也用此格式） | 全部 |
 
 ## 工作区目录约定
 本地工具（以及 MCP 入口的本地检查）按以下路径查找交付物，请保持文件名不变。

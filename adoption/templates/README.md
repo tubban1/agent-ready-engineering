@@ -1,6 +1,6 @@
 # Agent-Ready Engineering Standard Deliverable Templates
 > Document ID: ARE-T00
-> v0.4 | 2026-11-12 | Related: `../ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `../ARE-A02-agent-ready-maturity-model.md` (L0–L4)
+> v0.5 | 2026-11-13 | Related: `../ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `../ARE-A02-agent-ready-maturity-model.md` (L0–L4)
 > Language: English (canonical). Chinese reading aid: `README.zh.md`. Each template also has a `.zh.md` reading aid. Terms follow `../../references/ARE-R03-glossary.md`.
 
 ## Rules of use
@@ -22,6 +22,19 @@
 | `ARE-T07-maturity-assessment.md` Maturity Assessment | Any stage | Which level are we at? What is missing? How far can we expose it? | One per scenario per assessment |
 | `ARE-T08-scenario-screening.md` Scenario Screening | P0 (portfolio) | Which of many candidate ideas deserve a value card? | One per engagement or screening round |
 | `ARE-T09-portfolio-report.md` Portfolio Report and Roadmap | Each assessment round | What is the distribution, where are the risks and shared gaps, what comes next? | One per assessment round |
+
+## Machine-readable values
+Local checks read filled templates, so some fields use fixed values. Use them in English and Chinese files alike; they are identifiers and are never translated.
+
+| Field | Values | Where |
+| :--- | :--- | :--- |
+| Check result | `✅` pass / `❌` fail / `➖` not applicable | ARE-T07 |
+| Evidence type | `inspected` / `documented` (`self-reported` never passes) | ARE-T07 |
+| Currently exposed to agents | `none` / `read-only` / `write` | ARE-T07 |
+| Level | `L0`–`L4` | ARE-T07, ARE-T09 |
+| Value card decision | `go` / `read-only-first` / `not-now` | ARE-T01 §8 |
+| Screening result | `shortlist` / `hand-back` / `defer` | ARE-T08 |
+| Dates | `YYYY-MM-DD` (also in file names) | all |
 
 ## Workspace layout
 Local tools (and the MCP entry's local checks) find deliverables by these paths, so keep the names.
@@ -67,5 +80,6 @@ Value Review ◀──────────────── Eval Report ◀
 | Data dependencies in the capability matrix | Agreed with the data layer |
 
 ## Change log
+- **v0.5 (2026-11-13)**: added machine-readable values (results, evidence types, exposure, decisions, screening results, dates); ARE-T07 gained the exposure field.
 - **v0.4 (2026-11-12)**: added ARE-T08 Scenario Screening and ARE-T09 Portfolio Report and Roadmap; added the workspace layout.
 - **v0.3 (2026-11-12)**: first English canonical version, translated from Chinese v0.2; added the rule on the language of filled-in templates. The Chinese text becomes `README.zh.md`.

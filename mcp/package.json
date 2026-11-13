@@ -1,0 +1,22 @@
+{
+  "name": "are-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP server for the Agent-Ready Engineering framework (in development, milestone M1)",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "yaml": "2.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.17.6",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3"
+  }
+}

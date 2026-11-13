@@ -1,0 +1,276 @@
+# ARE maturity checks (ARE-A02 / ARE-T07). Generated once from the Markdown tables, then kept in sync by the consistency test.
+# Text fields must match the tables exactly; edit both together.
+checks:
+  - id: L1-V1
+    level: L1
+    dimension: V
+    inspection_recommended: false
+    check: {en: "A value card exists and its decision is “Go” or “read-only first”", zh: "有价值卡片，决策为“Go”或“只读先行”"}
+    evidence: {en: "Value card", zh: "价值卡片"}
+    short: {en: "Value card, decision Go / read-only first", zh: "价值卡片，决策为 Go / 只读先行"}
+  - id: L1-V2
+    level: L1
+    dimension: V
+    inspection_recommended: false
+    check: {en: "Baselines of the value metrics have sources; those without are marked “not measured” with a plan to measure", zh: "价值指标的基线有来源；没有的标为“未测”并有补测计划"}
+    evidence: {en: "Value card §4", zh: "价值卡片第 4 节"}
+    short: {en: "Baselines sourced or planned for measurement", zh: "基线有来源或有补测计划"}
+  - id: L1-V3
+    level: L1
+    dimension: V
+    inspection_recommended: false
+    check: {en: "At least one real record of a minimum validation", zh: "至少有一次最小验证的真实记录"}
+    evidence: {en: "Value card §7", zh: "价值卡片第 7 节"}
+    short: {en: "Minimum validation record", zh: "最小验证记录"}
+  - id: L1-V4
+    level: L1
+    dimension: V
+    inspection_recommended: false
+    check: {en: "The capability matrix is complete, and the first batch is explicit and capped", zh: "能力矩阵已完成，首批改造范围明确且有上限"}
+    evidence: {en: "Capability matrix", zh: "能力矩阵"}
+    short: {en: "Capability matrix and first batch", zh: "能力矩阵与首批范围"}
+  - id: L1-A1
+    level: L1
+    dimension: A
+    inspection_recommended: false
+    check: {en: "Every first-batch operation has an Owner, an approver and a responsible person", zh: "每个首批操作都有 Owner、授权人、负责人"}
+    evidence: {en: "Capability matrix", zh: "能力矩阵"}
+    short: {en: "First-batch operations have Owner / approver / responsible", zh: "首批操作有 Owner / 授权人 / 负责人"}
+  - id: L1-C1
+    level: L1
+    dimension: C
+    inspection_recommended: false
+    check: {en: "Catch-all executor interfaces are identified and have a split plan", zh: "万能执行器式接口已识别，并有拆分计划"}
+    evidence: {en: "Capability matrix split list", zh: "能力矩阵拆分清单"}
+    short: {en: "Catch-all executors identified with split plan", zh: "万能执行器已识别并有拆分计划"}
+  - id: L2-C1
+    level: L2
+    dimension: C
+    inspection_recommended: false
+    check: {en: "Read-only operations have strongly typed schemas: units, enums, source, update time", zh: "只读操作有强类型 Schema：单位、枚举、来源、更新时间"}
+    evidence: {en: "Operation contract / schema", zh: "操作契约卡 / Schema"}
+    short: {en: "Strongly typed schemas for reads", zh: "只读操作强类型 Schema"}
+  - id: L2-C2
+    level: L2
+    dimension: C
+    inspection_recommended: false
+    check: {en: "Errors are structured: `code`, `retryable`, `retry_after`, `hint`", zh: "错误结构化：`code`、`retryable`、`retry_after`、`hint`"}
+    evidence: {en: "Operation contract §5", zh: "操作契约卡第 5 节"}
+    short: {en: "Structured errors", zh: "结构化错误"}
+  - id: L2-X1
+    level: L2
+    dimension: X
+    inspection_recommended: false
+    check: {en: "Field projection, server-side filtering and cursor pagination are supported", zh: "支持字段投影、服务端过滤、游标分页"}
+    evidence: {en: "Interface definition / tests", zh: "接口定义 / 测试"}
+    short: {en: "Field projection, server-side filtering, cursor pagination", zh: "字段投影、服务端过滤、游标分页"}
+  - id: L2-X2
+    level: L2
+    dimension: X
+    inspection_recommended: false
+    check: {en: "Responses have a size limit; when truncated they return `truncated` and a next-page cursor", zh: "响应有大小上限，截断时返回 `truncated` 与下一页游标"}
+    evidence: {en: "Interface definition / tests", zh: "接口定义 / 测试"}
+    short: {en: "Response limit and truncation flag", zh: "响应上限与截断标记"}
+  - id: L2-X3
+    level: L2
+    dimension: X
+    inspection_recommended: false
+    check: {en: "Progressive discovery: a capability index first, full schemas on demand", zh: "渐进式发现：先给能力索引，再按需获取完整 Schema"}
+    evidence: {en: "Tool list", zh: "工具列表"}
+    short: {en: "Progressive discovery", zh: "渐进式发现"}
+  - id: L2-X4
+    level: L2
+    dimension: X
+    inspection_recommended: false
+    check: {en: "Every read-only tool has a measured response size", zh: "每个只读工具都有实测的响应体积"}
+    evidence: {en: "Eval report", zh: "评测报告"}
+    short: {en: "Measured response size of read-only tools", zh: "只读工具实测响应体积"}
+  - id: L2-A1
+    level: L2
+    dimension: A
+    inspection_recommended: false
+    check: {en: "Agent identity is separate from human identity; read-only delegated credentials are narrow, short-lived and revocable", zh: "Agent 身份与人类分离；只读委托凭证范围小、有效期短、可吊销"}
+    evidence: {en: "Authorization matrix", zh: "授权矩阵"}
+    short: {en: "Separate agent identity, read-only delegated credentials", zh: "Agent 身份分离、只读委托凭证"}
+  - id: L2-A2
+    level: L2
+    dimension: A
+    inspection_recommended: false
+    check: {en: "External content (user files, web pages, third-party responses) is labeled with source and trust level", zh: "外部内容（用户文件、网页、第三方返回）标注来源与可信级别"}
+    evidence: {en: "Authorization matrix, “untrusted content boundary”", zh: "授权矩阵“不可信内容边界”"}
+    short: {en: "External content labeled with source and trust level", zh: "外部内容标注来源与可信级别"}
+  - id: L2-I1
+    level: L2
+    dimension: I
+    inspection_recommended: false
+    check: {en: "The ingress layer contains no business logic; read-only tool annotations are correct", zh: "接入层不含业务逻辑；只读工具的注解填写正确"}
+    evidence: {en: "Code / tool definitions", zh: "代码 / 工具定义"}
+    short: {en: "No business logic in ingress, correct read-only annotations", zh: "接入层无业务逻辑、只读注解正确"}
+  - id: L2-O1
+    level: L2
+    dimension: O
+    inspection_recommended: false
+    check: {en: "Read-only calls are audited: principal, agent, query conditions", zh: "只读调用有审计记录：主体、Agent、查询条件"}
+    evidence: {en: "Log sample", zh: "日志样例"}
+    short: {en: "Audit records for read-only calls", zh: "只读调用审计记录"}
+  - id: L2-O2
+    level: L2
+    dimension: O
+    inspection_recommended: false
+    check: {en: "Real agents have run the read-only part of the representative tasks, with an eval report", zh: "用真实 Agent 跑过代表任务的只读部分，有评测报告"}
+    evidence: {en: "Eval report", zh: "评测报告"}
+    short: {en: "Real-agent eval of the read-only part", zh: "只读部分的真实 Agent 评测"}
+  - id: L3-C1
+    level: L3
+    dimension: C
+    inspection_recommended: true
+    check: {en: "Writes accept an idempotency key; scope and retention are defined; a replay returns the original result", zh: "写操作接受幂等键；作用范围、保留时长明确；重放返回首次结果"}
+    evidence: {en: "Operation contract §4 + tests", zh: "操作契约卡第 4 节 + 测试"}
+    short: {en: "Idempotency keys", zh: "幂等键"}
+  - id: L3-C2
+    level: L3
+    dimension: C
+    inspection_recommended: true
+    check: {en: "Mutable resources require `expected_revision`; on conflict the latest revision and a summary of differences are returned", zh: "可变资源要求 `expected_revision`；冲突时返回最新版本与差异摘要"}
+    evidence: {en: "Operation contract §4 + tests", zh: "操作契约卡第 4 节 + 测试"}
+    short: {en: "Conditional writes and conflict response", zh: "版本条件写与冲突返回"}
+  - id: L3-C3
+    level: L3
+    dimension: C
+    inspection_recommended: false
+    check: {en: "Writes have validate / dry-run", zh: "写操作有 validate / dry-run"}
+    evidence: {en: "Operation contract §6", zh: "操作契约卡第 6 节"}
+    short: {en: "validate / dry-run", zh: "validate / dry-run"}
+  - id: L3-C4
+    level: L3
+    dimension: C
+    inspection_recommended: false
+    check: {en: "Every first-batch write operation has an operation contract, and all its acceptance records pass", zh: "每个首批写操作都有操作契约卡，且其验收记录全部通过"}
+    evidence: {en: "Operation contract §9", zh: "操作契约卡第 9 节"}
+    short: {en: "All write operation contract acceptance records pass", zh: "写操作契约卡验收全部通过"}
+  - id: L3-S1
+    level: L3
+    dimension: S
+    inspection_recommended: false
+    check: {en: "Long-running tasks have a state entity, status query and cancel, and can be recovered by ID after a disconnect", zh: "长任务有状态实体、状态查询、取消，断线后可凭 ID 恢复"}
+    evidence: {en: "Operation contract §7 + tests", zh: "操作契约卡第 7 节 + 测试"}
+    short: {en: "Long-running task status, cancel, recovery after disconnect", zh: "长任务状态、取消、断线恢复"}
+  - id: L3-S2
+    level: L3
+    dimension: S
+    inspection_recommended: false
+    check: {en: "Drafts have an expiry, are isolated from committed data and are cleaned up", zh: "Draft 有过期时间、与正式数据隔离、有清理机制"}
+    evidence: {en: "Operation contract §8", zh: "操作契约卡第 8 节"}
+    short: {en: "Draft expiry, isolation, cleanup", zh: "Draft 过期、隔离、清理"}
+  - id: L3-S3
+    level: L3
+    dimension: S
+    inspection_recommended: false
+    check: {en: "Committed operations have undo or compensation; irreversible operations are marked explicitly", zh: "已提交操作有撤销或补偿方式，不可逆操作已显式标注"}
+    evidence: {en: "Operation contract §6 / capability matrix", zh: "操作契约卡第 6 节 / 能力矩阵"}
+    short: {en: "Undo / compensation or marked irreversible", zh: "撤销 / 补偿或标注不可逆"}
+  - id: L3-S4
+    level: L3
+    dimension: S
+    inspection_recommended: false
+    check: {en: "Missing information returns `needs_input` with the missing fields listed", zh: "信息不足时返回 `needs_input` 并列出缺失字段"}
+    evidence: {en: "Operation contract §5 + tests", zh: "操作契约卡第 5 节 + 测试"}
+    short: {en: "`needs_input`", zh: "`needs_input`"}
+  - id: L3-A1
+    level: L3
+    dimension: A
+    inspection_recommended: false
+    check: {en: "The authorization matrix is complete and approved by governance", zh: "授权矩阵已完成，并经治理层审批"}
+    evidence: {en: "Authorization matrix", zh: "授权矩阵"}
+    short: {en: "Authorization matrix approved by governance", zh: "授权矩阵经治理层审批"}
+  - id: L3-A2
+    level: L3
+    dimension: A
+    inspection_recommended: true
+    check: {en: "Final operations go through a claim or a valid pre-authorization; the server rejects confirmation fields self-reported by the agent", zh: "终局操作走逐笔确认或有效预授权；服务端拒绝 Agent 自报的确认字段"}
+    evidence: {en: "Authorization matrix + tests", zh: "授权矩阵 + 测试"}
+    short: {en: "Final operations via claim or pre-authorization; self-reported confirmation rejected", zh: "终局操作走逐笔确认或预授权，拒绝自报确认"}
+  - id: L3-A3
+    level: L3
+    dimension: A
+    inspection_recommended: false
+    check: {en: "Credentials never enter the model context or the Code Mode sandbox", zh: "凭证不进入模型上下文，也不进入 Code Mode 沙箱"}
+    evidence: {en: "Architecture notes / code", zh: "架构说明 / 代码"}
+    short: {en: "Credentials kept out of model context and sandbox", zh: "凭证不进入模型上下文与沙箱"}
+  - id: L3-A4
+    level: L3
+    dimension: A
+    inspection_recommended: false
+    check: {en: "Amount and frequency limits exist, and any agent can be disabled with a kill switch", zh: "有金额、频率上限，并可一键停用某个 Agent"}
+    evidence: {en: "Authorization matrix + drill record", zh: "授权矩阵 + 演练记录"}
+    short: {en: "Limits and kill switch", zh: "额度上限与一键停用"}
+  - id: L3-O1
+    level: L3
+    dimension: O
+    inspection_recommended: false
+    check: {en: "Audit records include authorization evidence (claim ID or pre-authorization ID)", zh: "审计记录包含授权证据（确认编号或预授权编号）"}
+    evidence: {en: "Log sample", zh: "日志样例"}
+    short: {en: "Audit records include authorization evidence", zh: "审计记录含授权证据"}
+  - id: L3-O2
+    level: L3
+    dimension: O
+    inspection_recommended: true
+    check: {en: "All fault-injection evals pass: retries, revision conflicts, disconnects, Prompt Injection, missing information", zh: "故障注入评测全部通过：重试、版本冲突、断连、Prompt Injection、信息不足"}
+    evidence: {en: "Eval report §2", zh: "评测报告第 2 节"}
+    short: {en: "All fault-injection evals pass", zh: "故障注入评测全部通过"}
+  - id: L4-O1
+    level: L4
+    dimension: O
+    inspection_recommended: false
+    check: {en: "A correlation ID runs through agent session, tool call, core transaction and external effect", zh: "关联 ID 贯穿 Agent 会话、工具调用、内核事务、外部效果"}
+    evidence: {en: "Trace sample", zh: "追踪样例"}
+    short: {en: "End-to-end correlation ID", zh: "全链路关联 ID"}
+  - id: L4-O2
+    level: L4
+    dimension: O
+    inspection_recommended: false
+    check: {en: "Evals are part of the release process; regressions in key metrics block a release", zh: "评测纳入发布流程，关键指标退化时阻止发布"}
+    evidence: {en: "Release pipeline configuration / records", zh: "发布流程配置 / 记录"}
+    short: {en: "Evals as release gate", zh: "评测作为发布门槛"}
+  - id: L4-I1
+    level: L4
+    dimension: I
+    inspection_recommended: false
+    check: {en: "Tool definitions are versioned, the full definition is hashed or signed, and changes can be detected and reviewed", zh: "工具定义有版本号，完整定义做哈希或签名，变更可被发现和审查"}
+    evidence: {en: "Change records", zh: "变更记录"}
+    short: {en: "Tool definitions versioned and hashed / signed", zh: "工具定义版本化与哈希 / 签名"}
+  - id: L4-I2
+    level: L4
+    dimension: I
+    inspection_recommended: false
+    check: {en: "If there are several ingress paths (MCP / REST / Code Mode), the same operation yields the same authorization result and business effect", zh: "若有多种接入方式（MCP / REST / Code Mode），同一操作的授权结果与业务效果一致"}
+    evidence: {en: "Eval report", zh: "评测报告"}
+    short: {en: "Consistent results across ingress paths", zh: "多接入方式结果一致"}
+  - id: L4-R1
+    level: L4
+    dimension: R
+    inspection_recommended: false
+    check: {en: "Test environments are isolated from production; write capabilities have a rollout plan, rollback method and owner", zh: "测试环境与生产隔离；写能力有灰度计划、回滚方式和负责人"}
+    evidence: {en: "Launch plan", zh: "上线计划"}
+    short: {en: "Environment isolation, rollout, rollback", zh: "环境隔离、灰度、回滚"}
+  - id: L4-R2
+    level: L4
+    dimension: R
+    inspection_recommended: false
+    check: {en: "At least one value review is complete, with conclusions written back to the value card", zh: "已完成至少一次价值复盘，结论回写价值卡片"}
+    evidence: {en: "Value review + value card §9", zh: "价值复盘 + 价值卡片第 9 节"}
+    short: {en: "Value review written back to the value card", zh: "价值复盘并回写价值卡片"}
+  - id: L4-R3
+    level: L4
+    dimension: R
+    inspection_recommended: false
+    check: {en: "Low-value capabilities have been shrunk or retired based on the review, or there is a written reason to keep them", zh: "根据复盘收缩或下线了低价值能力，或书面说明维持的理由"}
+    evidence: {en: "Value review §5", zh: "价值复盘第 5 节"}
+    short: {en: "Low-value capabilities shrunk / retired or kept with reasons", zh: "低价值能力已收缩 / 下线或有维持理由"}
+  - id: L4-R4
+    level: L4
+    dimension: R
+    inspection_recommended: false
+    check: {en: "There is a usage guide for agents: capability index, typical flows, error handling", zh: "有面向 Agent 的使用说明：能力索引、典型流程、错误处理"}
+    evidence: {en: "Documentation", zh: "文档"}
+    short: {en: "Usage guide for agents", zh: "面向 Agent 的使用说明"}

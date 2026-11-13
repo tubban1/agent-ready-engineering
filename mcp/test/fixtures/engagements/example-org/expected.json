@@ -1,0 +1,183 @@
+{
+  "organization": "Example Manufacturing Co. (fictional)",
+  "assessment_date": "2026-11-10",
+  "scenarios": {
+    "supplier-order-change": {
+      "level": "L2",
+      "exposure": "read-only",
+      "consistent": true,
+      "failed_checks": [
+        "L3-C3",
+        "L3-C4",
+        "L3-S2",
+        "L3-S3",
+        "L3-S4",
+        "L3-A1",
+        "L3-A2",
+        "L3-A3",
+        "L3-A4",
+        "L3-O1",
+        "L3-O2",
+        "L4-O1",
+        "L4-O2",
+        "L4-I1",
+        "L4-I2",
+        "L4-R1",
+        "L4-R2",
+        "L4-R3",
+        "L4-R4"
+      ],
+      "next_level": "L3",
+      "blocking_checks": [
+        "L3-C3",
+        "L3-C4",
+        "L3-S2",
+        "L3-S3",
+        "L3-S4",
+        "L3-A1",
+        "L3-A2",
+        "L3-A3",
+        "L3-A4",
+        "L3-O1",
+        "L3-O2"
+      ],
+      "documented_on_inspection_recommended": [
+        "L3-C2"
+      ],
+      "evidence_location_missing": [],
+      "not_applicable_without_reason": [],
+      "passes": {
+        "inspected": 18,
+        "documented": 1
+      }
+    },
+    "invoice-matching": {
+      "level": "L1",
+      "exposure": "write",
+      "consistent": false,
+      "failed_checks": [
+        "L2-X1",
+        "L2-A1",
+        "L3-C1",
+        "L3-C2",
+        "L3-C3",
+        "L3-C4",
+        "L3-S1",
+        "L3-S2",
+        "L3-S3",
+        "L3-S4",
+        "L3-A1",
+        "L3-A2",
+        "L3-A3",
+        "L3-A4",
+        "L3-O1",
+        "L3-O2",
+        "L4-O1",
+        "L4-O2",
+        "L4-I1",
+        "L4-I2",
+        "L4-R1",
+        "L4-R2",
+        "L4-R3",
+        "L4-R4"
+      ],
+      "next_level": "L2",
+      "blocking_checks": [
+        "L2-X1",
+        "L2-X2",
+        "L2-A1"
+      ],
+      "documented_on_inspection_recommended": [],
+      "evidence_location_missing": [
+        "L2-X2"
+      ],
+      "not_applicable_without_reason": [],
+      "passes": {
+        "inspected": 0,
+        "documented": 15
+      }
+    },
+    "maintenance-scheduling": {
+      "level": "L1",
+      "exposure": "none",
+      "consistent": true,
+      "failed_checks": [
+        "L2-A1",
+        "L2-A2",
+        "L3-C1",
+        "L3-C2",
+        "L3-C3",
+        "L3-C4",
+        "L3-S2",
+        "L3-S3",
+        "L3-S4",
+        "L3-A1",
+        "L3-A2",
+        "L3-A3",
+        "L3-A4",
+        "L3-O1",
+        "L3-O2",
+        "L4-O1",
+        "L4-O2",
+        "L4-I1",
+        "L4-I2",
+        "L4-R1",
+        "L4-R2",
+        "L4-R3",
+        "L4-R4"
+      ],
+      "next_level": "L2",
+      "blocking_checks": [
+        "L2-A1",
+        "L2-A2"
+      ],
+      "documented_on_inspection_recommended": [],
+      "evidence_location_missing": [],
+      "not_applicable_without_reason": [
+        "L3-S1"
+      ],
+      "passes": {
+        "inspected": 15,
+        "documented": 0
+      }
+    }
+  },
+  "portfolio": {
+    "high_risk_inconsistencies": [
+      "invoice-matching"
+    ],
+    "recurring_weak_dimensions_rule": "dimensions with checks blocking the next level in >= 2 scenarios",
+    "recurring_weak_dimensions": {
+      "A": [
+        "supplier-order-change",
+        "invoice-matching",
+        "maintenance-scheduling"
+      ]
+    },
+    "distribution": {
+      "L0": 0,
+      "L1": 2,
+      "L2": 1,
+      "L3": 0,
+      "L4": 0
+    }
+  },
+  "screening": {
+    "shortlist": [
+      "C1",
+      "C2",
+      "C3"
+    ],
+    "hand-back": [
+      "C4"
+    ],
+    "defer": [
+      "C5"
+    ]
+  },
+  "value_card_decisions": {
+    "supplier-order-change": "go",
+    "invoice-matching": "go",
+    "maintenance-scheduling": "read-only-first"
+  }
+}

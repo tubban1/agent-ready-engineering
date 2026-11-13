@@ -1,6 +1,6 @@
 # Portfolio Report and Roadmap
 > Document ID: ARE-T09
-> Template v0.1 | One per assessment round | Copy into the workspace before filling in (`portfolio/`)
+> Template v0.2 | One per assessment round | Copy into the workspace before filling in (`portfolio/`)
 > Built from the scenario maturity assessments (`ARE-T07-maturity-assessment.md`) of this round. Rules are in `../ARE-A02-agent-ready-maturity-model.md`.
 > Language: English (canonical). Chinese reading aid: `ARE-T09-portfolio-report.zh.md`.
 
@@ -40,7 +40,7 @@ Scenarios where what is exposed today goes beyond what the level allows (for exa
 | <> | | | | <e.g. switch to read-only until L3-A2 passes> | |
 
 ## 4. Recurring weak dimensions → platform-level recommendations
-A dimension that fails in several scenarios is better solved once at platform level.
+A dimension whose checks block the next level in several scenarios is better solved once at platform level.
 
 | Dimension | Scenarios affected | Failed checks | Proposed shared capability | Expected effect |
 | :--- | :--- | :--- | :--- | :--- |

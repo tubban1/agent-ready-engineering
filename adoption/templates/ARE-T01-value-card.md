@@ -1,6 +1,6 @@
 # Value Card — P0
 > Document ID: ARE-T01
-> Template v0.2 | One per candidate scenario | Copy into the project directory before filling in
+> Template v0.3 | One per candidate scenario | Copy into the project directory before filling in
 > Language: English (canonical). Chinese reading aid: `ARE-T01-value-card.zh.md`.
 
 ## Basic information
@@ -63,7 +63,7 @@
 - **Evidence location**: <path to records, logs or recordings>
 
 ## 8. Decision
-- **Decision**: <Go (including writes) / read-only first / not now>
+- **Decision**: <go / read-only-first / not-now> (`go` includes writes)
 - **First batch scope**: <business capabilities involved, passed to the capability matrix>
 - **Out-of-scope list**: <what is explicitly excluded, and why>
 - **Decided by / date**: <>

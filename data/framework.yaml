@@ -1,0 +1,50 @@
+# ARE framework vocabulary: stages, levels, dimensions, authorization levels and machine-readable values.
+# Names follow ARE-R03 (glossary); values follow "Machine-readable values" in ARE-T00.
+
+stages:
+  - {id: P0, name: {en: "Value Gate", zh: "价值关卡"}, template: ARE-T01}
+  - {id: P1, name: {en: "Capability Inventory and Prioritization", zh: "能力盘点与价值排序"}, template: ARE-T02}
+  - {id: P2, name: {en: "Domain Core Contract", zh: "领域内核契约"}, template: ARE-T03}
+  - {id: P3, name: {en: "State Machine and Long-running Operations", zh: "状态机与长任务"}, template: ARE-T03}
+  - {id: P4, name: {en: "Trust Boundary and Authorization", zh: "信任边界与授权"}, template: ARE-T04}
+  - {id: P5, name: {en: "Context Economy", zh: "上下文经济"}, template: ARE-T05}
+  - {id: P6, name: {en: "Ingress Adaptation", zh: "接入层适配"}, template: null}
+  - {id: P7, name: {en: "Observability and Evals", zh: "可观测与评测"}, template: ARE-T05}
+  - {id: P8, name: {en: "Launch, Operations and Value Review", zh: "上线运营与价值复盘"}, template: ARE-T06}
+
+levels:
+  - {id: L0, name: {en: "Not Ready", zh: "未就绪"}, allows: none}
+  - {id: L1, name: {en: "Value Defined", zh: "价值明确"}, allows: start-re-engineering}
+  - {id: L2, name: {en: "Read-Ready", zh: "只读可用"}, allows: read-only}
+  - {id: L3, name: {en: "Write-Safe", zh: "写入可控"}, allows: write}
+  - {id: L4, name: {en: "Verified Operations", zh: "可验证运营"}, allows: scale-up}
+
+# Minimum level required for each exposure value (used to detect high-risk inconsistencies).
+exposure_requires:
+  none: L0
+  read-only: L2
+  write: L3
+
+dimensions:
+  - {code: V, name: {en: "Value", zh: "价值"}}
+  - {code: C, name: {en: "Contract", zh: "契约"}}
+  - {code: S, name: {en: "State and Recovery", zh: "状态与恢复"}}
+  - {code: A, name: {en: "Authority and Trust", zh: "授权与信任"}}
+  - {code: X, name: {en: "Context Economy", zh: "上下文经济"}}
+  - {code: I, name: {en: "Ingress", zh: "接入层"}}
+  - {code: O, name: {en: "Observability and Evals", zh: "可观测与评测"}}
+  - {code: R, name: {en: "Run and Review", zh: "运营与复盘"}}
+
+authorization_levels:
+  - {id: A, name: {en: "Automatic", zh: "自动"}}
+  - {id: B, name: {en: "Confirmation", zh: "确认"}}
+  - {id: C, name: {en: "Human only", zh: "仅人类"}}
+
+values:
+  check_result: ["✅", "❌", "➖"]
+  evidence_type: [inspected, documented]
+  evidence_type_never_passes: [self-reported]
+  exposure: [none, read-only, write]
+  value_card_decision: [go, read-only-first, not-now]
+  screening_result: [shortlist, hand-back, defer]
+  date_format: "YYYY-MM-DD"

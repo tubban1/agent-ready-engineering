@@ -1,0 +1,117 @@
+# ARE document index. Paths are relative to the repository root.
+# Kept in sync with the README tables by the consistency test.
+documents:
+  - id: ARE-P01
+    path: "principles/ARE-P01-agent-ready-architecture.md"
+    path_zh: "principles/ARE-P01-agent-ready-architecture.zh.md"
+    title: {en: "Agent-Ready Architecture | The Architect's View", zh: "Agent-Ready Architecture | 架构师视角的 Agent-Ready"}
+    summary: {en: "Positioning and boundaries of Agent-Ready Engineering, the value premise, seven architecture dimensions", zh: "Agent-Ready Engineering 的定位与边界、价值前提、架构七个维度"}
+    reading_order: 1
+  - id: ARE-P02
+    path: "principles/ARE-P02-agent-native-interface-design.md"
+    path_zh: "principles/ARE-P02-agent-native-interface-design.zh.md"
+    title: {en: "Agent-Native Interface Design", zh: "Agent-Native Interface Design"}
+    summary: {en: "Agent-native interface design and principles 1–12", zh: "面向 Agent 的接口设计理念与原则 1–12"}
+    reading_order: 2
+  - id: ARE-R01
+    path: "references/ARE-R01-tool-calling-mcp-code-mode.md"
+    path_zh: "references/ARE-R01-tool-calling-mcp-code-mode.zh.md"
+    title: {en: "Tool Calling / MCP / Code Mode / A2A — Engineering Distinctions", zh: "Tool Calling / MCP / Code Mode / A2A — 工程区别"}
+    summary: {en: "Engineering distinctions between Tool Calling / MCP / Code Mode / A2A", zh: "Tool Calling / MCP / Code Mode / A2A 的技术区别"}
+    reading_order: 3
+  - id: ARE-R02
+    path: "references/ARE-R02-agent-ready-industry-landscape.md"
+    path_zh: "references/ARE-R02-agent-ready-industry-landscape.zh.md"
+    title: {en: "Agent-Ready Industry Landscape", zh: "Agent-Ready 行业参考与现状"}
+    summary: {en: "Industry sources on Agent-Ready, source reliability and practices adopted", zh: "行业中 Agent-Ready 相关资料、来源可信度与已吸收的做法"}
+    reading_order: 7
+  - id: ARE-R03
+    path: "references/ARE-R03-glossary.md"
+    path_zh: null
+    title: {en: "Glossary | 术语表", zh: null}
+    summary: {en: "English–Chinese glossary (English terms are canonical); the only bilingual file", zh: "中英术语表（英文为正式术语），唯一的中英对照文件"}
+    reading_order: null
+  - id: ARE-A01
+    path: "adoption/ARE-A01-agent-ready-implementation-checklist.md"
+    path_zh: "adoption/ARE-A01-agent-ready-implementation-checklist.zh.md"
+    title: {en: "Agent-Ready Engineering Implementation Checklist (with Value Gate and Implementation Order)", zh: "Agent-Ready Engineering 实施 Checklist（含价值判断与实施顺序）"}
+    summary: {en: "Implementation checklist: P0 Value Gate → P8 value review, with acceptance criteria", zh: "实施 Checklist：P0 价值关卡 → P8 价值复盘，含验收标准"}
+    reading_order: 4
+  - id: ARE-A02
+    path: "adoption/ARE-A02-agent-ready-maturity-model.md"
+    path_zh: "adoption/ARE-A02-agent-ready-maturity-model.zh.md"
+    title: {en: "Agent-Ready Engineering Maturity Model", zh: "Agent-Ready Engineering 成熟度分级"}
+    summary: {en: "Maturity model: L0–L4, assessed per scenario", zh: "成熟度分级：L0–L4，按场景评估"}
+    reading_order: 5
+  - id: ARE-A03
+    path: "adoption/ARE-A03-project-reference.md"
+    path_zh: "adoption/ARE-A03-project-reference.zh.md"
+    title: {en: "How Projects Use This Repository", zh: "各项目如何使用本知识库"}
+    summary: {en: "Referencing this repository from new or existing projects with minimal intrusion", zh: "在新 / 已有项目中低侵入引用本知识库"}
+    reading_order: null
+  - id: ARE-T00
+    path: "adoption/templates/README.md"
+    path_zh: "adoption/templates/README.zh.md"
+    title: {en: "Agent-Ready Engineering Standard Deliverable Templates", zh: "Agent-Ready Engineering 标准交付物模板"}
+    summary: {en: "Template overview and how the deliverables connect", zh: "模板总览与交付物之间的关系"}
+    reading_order: 6
+  - id: ARE-T01
+    path: "adoption/templates/ARE-T01-value-card.md"
+    path_zh: "adoption/templates/ARE-T01-value-card.zh.md"
+    title: {en: "Value Card — P0", zh: "价值卡片（Value Card）— P0"}
+    summary: {en: "Value Card (P0)", zh: "价值卡片（P0）"}
+    reading_order: 6
+  - id: ARE-T02
+    path: "adoption/templates/ARE-T02-capability-matrix.md"
+    path_zh: "adoption/templates/ARE-T02-capability-matrix.zh.md"
+    title: {en: "Capability Matrix — P1", zh: "能力矩阵（Capability Matrix）— P1"}
+    summary: {en: "Capability Matrix (P1)", zh: "能力矩阵（P1）"}
+    reading_order: 6
+  - id: ARE-T03
+    path: "adoption/templates/ARE-T03-operation-contract.md"
+    path_zh: "adoption/templates/ARE-T03-operation-contract.zh.md"
+    title: {en: "Operation Contract — P2–P3", zh: "操作契约卡（Operation Contract）— P2–P3"}
+    summary: {en: "Operation Contract (P2–P3)", zh: "操作契约卡（P2–P3）"}
+    reading_order: 6
+  - id: ARE-T04
+    path: "adoption/templates/ARE-T04-authorization-matrix.md"
+    path_zh: "adoption/templates/ARE-T04-authorization-matrix.zh.md"
+    title: {en: "Authorization Matrix — P4", zh: "授权矩阵（Authorization Matrix）— P4"}
+    summary: {en: "Authorization Matrix (P4)", zh: "授权矩阵（P4）"}
+    reading_order: 6
+  - id: ARE-T05
+    path: "adoption/templates/ARE-T05-eval-report.md"
+    path_zh: "adoption/templates/ARE-T05-eval-report.zh.md"
+    title: {en: "Eval Report — P5 / P7", zh: "评测报告（Eval Report）— P5 / P7"}
+    summary: {en: "Eval Report (P5 / P7)", zh: "评测报告（P5 / P7）"}
+    reading_order: 6
+  - id: ARE-T06
+    path: "adoption/templates/ARE-T06-value-review.md"
+    path_zh: "adoption/templates/ARE-T06-value-review.zh.md"
+    title: {en: "Value Review — P8", zh: "价值复盘（Value Review）— P8"}
+    summary: {en: "Value Review (P8)", zh: "价值复盘（P8）"}
+    reading_order: 6
+  - id: ARE-T07
+    path: "adoption/templates/ARE-T07-maturity-assessment.md"
+    path_zh: "adoption/templates/ARE-T07-maturity-assessment.zh.md"
+    title: {en: "Maturity Assessment", zh: "成熟度评估表（Maturity Assessment）"}
+    summary: {en: "Maturity Assessment", zh: "成熟度评估表"}
+    reading_order: 6
+  - id: ARE-T08
+    path: "adoption/templates/ARE-T08-scenario-screening.md"
+    path_zh: "adoption/templates/ARE-T08-scenario-screening.zh.md"
+    title: {en: "Scenario Screening — P0 (portfolio)", zh: "场景筛选表（Scenario Screening）— P0（组合）"}
+    summary: {en: "Scenario Screening (P0, many candidates)", zh: "场景筛选表（P0，多个候选场景）"}
+    reading_order: 6
+  - id: ARE-T09
+    path: "adoption/templates/ARE-T09-portfolio-report.md"
+    path_zh: "adoption/templates/ARE-T09-portfolio-report.zh.md"
+    title: {en: "Portfolio Report and Roadmap", zh: "组合报告与路线图（Portfolio Report and Roadmap）"}
+    summary: {en: "Portfolio Report and Roadmap (each assessment round)", zh: "组合报告与路线图（每轮评估）"}
+    reading_order: 6
+  - id: ARE-M01
+    path: "media/ARE-M01-claude-video-brief-20261111.md"
+    path_zh: null
+    title: {en: "Superseded brief — 2026-11-11", zh: null}
+    summary: {en: "Video brief (superseded, record only, Chinese only; not on the reading path)", zh: "视频任务书（已作废，仅作记录，只有中文；不在阅读路径中）"}
+    reading_order: null

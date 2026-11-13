@@ -1,6 +1,6 @@
 # Scenario Screening — P0 (portfolio)
 > Document ID: ARE-T08
-> Template v0.1 | One per engagement or screening round | Copy into the workspace before filling in (`portfolio/`)
+> Template v0.2 | One per engagement or screening round | Copy into the workspace before filling in (`portfolio/`)
 > Language: English (canonical). Chinese reading aid: `ARE-T08-scenario-screening.zh.md`.
 
 A light first pass of the Value Gate over many candidate ideas at once. Screening is **not** a value card: every shortlisted scenario still needs a full value card (`ARE-T01-value-card.md`) before it moves on.
@@ -30,10 +30,10 @@ A light first pass of the Value Gate over many candidate ideas at once. Screenin
 | ID | Candidate idea | Business owner | N | S | R | V | K | B | Result | Reason | Hand back to / revisit date |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | C1 | <example: handle supplier delivery-date changes> | <> | yes | no | yes | high | medium | interviews | shortlist | <> | — |
-| C2 | <example: weekly sales summary email> | <> | no | yes (report scheduler) | yes | low | low | documents | hand back | simpler alternative exists | <BI team> |
+| C2 | <example: weekly sales summary email> | <> | no | yes (report scheduler) | yes | low | low | documents | hand-back | simpler alternative exists | <BI team> |
 | C3 | <> | <> | | | | | | | defer | <> | <YYYY-MM-DD> |
 
-Result values: **shortlist** (gets a value card) / **hand back** (no agent needed; return to the appropriate workstream) / **defer** (revisit later).
+Result values: `shortlist` (gets a value card) / `hand-back` (no agent needed; return to the appropriate workstream) / `defer` (revisit later).
 
 ## Summary
 - **Shortlisted** (create a scenario folder and a value card for each): <IDs and names>
