@@ -63,7 +63,7 @@ function isValidPass(row: CheckRow, exists: (location: string) => boolean): bool
   );
 }
 
-function isSatisfied(row: CheckRow, exists: (location: string) => boolean): boolean {
+export function isSatisfied(row: CheckRow, exists: (location: string) => boolean): boolean {
   return isValidPass(row, exists) || (row.result === "➖" && row.location !== "");
 }
 
@@ -108,4 +108,19 @@ export function assess(parsed: ParsedAssessment, exists: (location: string) => b
       documented: rows.filter((r) => r.result === "✅" && r.evidenceType === "documented").length,
     },
   };
+}
+
+/** Highest level per dimension at which every check of that dimension (up to that level) is satisfied. */
+export function dimensionLevels(rows: CheckRow[], exists: (location: string) => boolean): Record<string, Level> {
+  const out: Record<string, Level> = {};
+  for (const dim of [...new Set(rows.map((r) => r.id[3]!))].sort()) {
+    let level: Level = "L0";
+    for (const candidate of LEVELS.slice(1)) {
+      const required = rows.filter((r) => r.id[3] === dim && r.id.slice(0, 2) <= candidate);
+      if (required.every((r) => isSatisfied(r, exists))) level = candidate;
+      else break;
+    }
+    out[dim] = level;
+  }
+  return out;
 }

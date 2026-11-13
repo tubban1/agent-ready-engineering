@@ -1,6 +1,6 @@
 # Agent-Ready Engineering Standard Deliverable Templates
 > Document ID: ARE-T00
-> v0.5 | 2026-11-13 | Related: `../ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `../ARE-A02-agent-ready-maturity-model.md` (L0–L4)
+> v0.6 | 2026-11-13 | Related: `../ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `../ARE-A02-agent-ready-maturity-model.md` (L0–L4)
 > Language: English (canonical). Chinese reading aid: `README.zh.md`. Each template also has a `.zh.md` reading aid. Terms follow `../../references/ARE-R03-glossary.md`.
 
 ## Rules of use
@@ -35,6 +35,7 @@ Local checks read filled templates, so some fields use fixed values. Use them in
 | Value card decision | `go` / `read-only-first` / `not-now` | ARE-T01 §8 |
 | Screening result | `shortlist` / `hand-back` / `defer` | ARE-T08 |
 | Dates | `YYYY-MM-DD` (also in file names) | all |
+| Evidence location | A file path relative to the scenario folder, optionally followed by a space and a section (e.g. `ARE-T01-value-card.md §4`, `evidence/load-test.md`). The file must exist inside the workspace | ARE-T07 |
 
 ## Workspace layout
 Local tools (and the MCP entry's local checks) find deliverables by these paths, so keep the names.
@@ -80,6 +81,7 @@ Value Review ◀──────────────── Eval Report ◀
 | Data dependencies in the capability matrix | Agreed with the data layer |
 
 ## Change log
+- **v0.6 (2026-11-13)**: defined the evidence location format used by local checks.
 - **v0.5 (2026-11-13)**: added machine-readable values (results, evidence types, exposure, decisions, screening results, dates); ARE-T07 gained the exposure field.
 - **v0.4 (2026-11-12)**: added ARE-T08 Scenario Screening and ARE-T09 Portfolio Report and Roadmap; added the workspace layout.
 - **v0.3 (2026-11-12)**: first English canonical version, translated from Chinese v0.2; added the rule on the language of filled-in templates. The Chinese text becomes `README.zh.md`.

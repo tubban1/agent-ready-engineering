@@ -1,22 +1,30 @@
 {
   "name": "are-mcp",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "private": true,
-  "description": "MCP server for the Agent-Ready Engineering framework (in development, milestone M1)",
+  "description": "MCP server for the Agent-Ready Engineering framework (milestone M4: knowledge, local workspace checks and workflow prompts over stdio)",
   "type": "module",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
+    "build": "tsc",
+    "start": "node dist/src/index.js",
+    "dev": "tsx src/index.ts",
     "test": "node --import tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "yaml": "2.6.1"
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "yaml": "2.6.1",
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@types/node": "20.17.6",
     "tsx": "4.19.2",
     "typescript": "5.6.3"
+  },
+  "bin": {
+    "are-mcp": "dist/src/index.js"
   }
 }

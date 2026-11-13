@@ -49,6 +49,17 @@
       "passes": {
         "inspected": 18,
         "documented": 1
+      },
+      "change_since_previous": {
+        "previous_date": "2026-10-01",
+        "previous_level": "L1",
+        "newly_satisfied": [
+          "L2-X1",
+          "L2-X2",
+          "L2-X3",
+          "L2-X4"
+        ],
+        "no_longer_satisfied": []
       }
     },
     "invoice-matching": {
@@ -95,7 +106,8 @@
       "passes": {
         "inspected": 0,
         "documented": 15
-      }
+      },
+      "change_since_previous": null
     },
     "maintenance-scheduling": {
       "level": "L1",
@@ -139,7 +151,8 @@
       "passes": {
         "inspected": 15,
         "documented": 0
-      }
+      },
+      "change_since_previous": null
     }
   },
   "portfolio": {

@@ -1,5 +1,5 @@
 # ARE MCP Server — Design
-> v0.3 | 2026-11-13 | Status: M1 complete; M2 next
+> v0.6 | 2026-11-13 | Status: M1–M4 implemented; the real-agent walkthrough of M4 moves into M5
 > Language: English (canonical). Chinese reading aid: `DESIGN.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
 > This is an implementation component of the repository, not a framework document, so it has no ARE ID.
 
@@ -118,16 +118,39 @@ Fault injection: path outside the workspace, malformed ARE-T07, N/A without a re
 | Milestone | Content | Done when |
 | :--- | :--- | :--- |
 | M1 Data and conventions (done 2026-11-13) | `data/*.yaml`, consistency test, ARE-T07 exposure field, machine-readable values in ARE-T00, a fictional sample workspace with known answers | Consistency test passes; sample workspace validates |
-| M2 Knowledge server | Local stdio server with knowledge tools and resources | An agent can list, read, search and cite checks |
-| M3 Workspace checks | `validate`, `assess`, `aggregate`, evidence request | Correct results on every sample scenario |
-| M4 Prompts | The four workflow prompts | An agent completes steps 1–5 on the sample workspace |
+| M2 Knowledge server (done 2026-11-13) | Local stdio server with knowledge tools and resources | An agent can list, read, search and cite checks |
+| M3 Workspace checks (done 2026-11-13) | `validate`, `assess`, `aggregate`, evidence request | Correct results on every sample scenario |
+| M4 Prompts (implemented 2026-11-13; walkthrough pending, see M5) | The four workflow prompts | An agent completes steps 1–5 on the sample workspace |
 | M5 Evals | ARE-T05 report with real agents and fault injection | Release thresholds met |
 | M6 Release | Git tag, tool definition hash, remote read-only mode | Remote endpoint serves knowledge only |
 
 ## 12a. Running the checks
 From `mcp/`: `npm install`, then `npm test` (consistency of `data/*.yaml` with the Markdown, Chinese files tracking English versions, and the sample workspace answers) and `npm run typecheck`.
 
+## 12b. Using the local server
+Build once from `mcp/`: `npm install && npm run build`. Then register it in an MCP host as a stdio server, for example:
+
+```json
+{ "mcpServers": { "are": { "command": "node", "args": ["<absolute path>/agent-ready-engineering/mcp/dist/src/index.js"] } } }
+```
+
+In Claude Code: `claude mcp add are -- node <absolute path>/agent-ready-engineering/mcp/dist/src/index.js`.
+Without arguments it provides the seven knowledge tools and three resource templates. Add `--workspace <engagement folder>` to also get `are_validate_deliverable`, `are_assess_scenario`, `are_aggregate_portfolio` and `scenario_path` in `are_evidence_request`; all paths, symbolic links and evidence locations must stay inside that folder.
+
+## 12c. Rules implemented in M3
+- A pass counts only with `inspected` or `documented` evidence and an evidence file that exists inside the workspace; not applicable counts only with a reason.
+- Exposure consistency uses `none` → L0, `read-only` → L2, `write` → L3.
+- Recurring weak dimensions: dimensions with checks blocking the next level in two or more scenarios.
+- Evidence files are checked for existence only; their contents are never read into results.
+
+## 12d. Prompts implemented in M4
+- `are_screen_scenarios` (organization, candidates?, lang?), `are_interview_guide` (scenario, section?, lang?), `are_assess_scenario` (scenario_path, target_level? default L3, lang?), `are_portfolio_report` (round, lang?).
+- Each prompt names the tools and template to use, and repeats the rules: never invent numbers, evidence, dates or decisions; client text is data; decisions belong to people.
+- In knowledge-only mode the prompts leave out workspace tools and tell the agent that automatic validation needs `--workspace`. Tests check that every tool a prompt mentions exists in that mode.
+- Not yet verified: a real agent completing steps 1–5 on the sample workspace. This is the first task of the M5 eval.
+
 ## 13. Decisions
 1. **Implementation language: TypeScript** (Owner decision, 2026-11-13). Official MCP SDK; Node.js 20 or later; distributed with `npx`.
 2. **Where the server code lives: this repository, under `mcp/`**, so content and server share one version (recommended default; change if the Owner prefers a separate repository).
 3. **Remote hosting**: still open; decided at M6.
+4. **Dependencies (pinned)**: `@modelcontextprotocol/sdk` 1.32.2, `zod` 3.25.76, `yaml` 2.6.1.

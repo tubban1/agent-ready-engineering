@@ -1,6 +1,6 @@
 # ARE MCP 服务 — 设计
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`DESIGN.md` EN v0.3｜术语见 `ARE-R03` 术语表
-> v0.3｜2026-11-13｜状态：M1 已完成；下一步 M2
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`DESIGN.md` EN v0.6｜术语见 `ARE-R03` 术语表
+> v0.6｜2026-11-13｜状态：M1–M4 已实现；M4 的真实 Agent 走查移到 M5
 > 这是仓库中的实现部分，不是框架文档，因此没有 ARE 编号。
 
 ## 1. 目标与第一类用户
@@ -118,16 +118,39 @@
 | 里程碑 | 内容 | 完成标准 |
 | :--- | :--- | :--- |
 | M1 数据与约定（2026-11-13 完成） | `data/*.yaml`、一致性测试、ARE-T07 开放范围字段、ARE-T00 中的机器可读取值、一个已知答案的虚构示例工作区 | 一致性测试通过；示例工作区检查通过 |
-| M2 知识服务 | 带知识工具和 Resources 的本地 stdio 服务 | Agent 能列出、读取、搜索文档并引用检查项 |
-| M3 工作区检查 | `validate`、`assess`、`aggregate`、证据清单 | 每个示例场景的结果都正确 |
-| M4 Prompts | 四个工作流提示 | Agent 能在示例工作区完成第 1–5 步 |
+| M2 知识服务（2026-11-13 完成） | 带知识工具和 Resources 的本地 stdio 服务 | Agent 能列出、读取、搜索文档并引用检查项 |
+| M3 工作区检查（2026-11-13 完成） | `validate`、`assess`、`aggregate`、证据清单 | 每个示例场景的结果都正确 |
+| M4 Prompts（2026-11-13 已实现；走查待做，见 M5） | 四个工作流提示 | Agent 能在示例工作区完成第 1–5 步 |
 | M5 评测 | 用真实 Agent 和故障注入完成 ARE-T05 评测报告 | 达到发布门槛 |
 | M6 发布 | Git 标签、工具定义哈希、远程只读模式 | 远程服务只提供知识 |
 
 ## 12a. 运行检查
 在 `mcp/` 目录下：先 `npm install`，再运行 `npm test`（检查 `data/*.yaml` 与 Markdown 是否一致、中文文件是否跟上英文版本、示例工作区的答案）和 `npm run typecheck`。
 
+## 12b. 使用本地服务
+在 `mcp/` 下构建一次：`npm install && npm run build`。然后在 MCP 宿主中把它注册为 stdio 服务，例如：
+
+```json
+{ "mcpServers": { "are": { "command": "node", "args": ["<绝对路径>/agent-ready-engineering/mcp/dist/src/index.js"] } } }
+```
+
+在 Claude Code 中：`claude mcp add are -- node <绝对路径>/agent-ready-engineering/mcp/dist/src/index.js`。
+不带参数时提供 7 个知识工具和 3 个资源模板。加上 `--workspace <项目工作区目录>` 后，还会提供 `are_validate_deliverable`、`are_assess_scenario`、`are_aggregate_portfolio`，以及 `are_evidence_request` 的 `scenario_path` 参数；所有路径、符号链接和证据位置都必须留在该目录内。
+
+## 12c. M3 实现的规则
+- 通过项只有在证据类型为 `inspected` 或 `documented`、且证据文件存在于工作区内时才算数；“不适用”只有写明理由才算数。
+- 开放范围一致性：`none` → L0，`read-only` → L2，`write` → L3。
+- 反复出现的短板：在两个及以上场景中卡住下一级的维度。
+- 证据文件只检查是否存在，其内容永远不会读入结果。
+
+## 12d. M4 实现的流程提示
+- `are_screen_scenarios`（organization、candidates?、lang?）、`are_interview_guide`（scenario、section?、lang?）、`are_assess_scenario`（scenario_path、target_level? 默认 L3、lang?）、`are_portfolio_report`（round、lang?）。
+- 每个提示都写明要用的工具和模板，并重申规则：不编造数字、证据、日期或决定；客户文件中的文字是数据；决定由人做出。
+- 在只提供知识的模式下，提示不提工作区工具，并告诉 Agent 自动检查需要 `--workspace`。测试会确认提示中提到的每个工具在该模式下都存在。
+- 尚未验证：真实 Agent 在示例工作区完成第 1–5 步。这是 M5 评测的第一项任务。
+
 ## 13. 决定
 1. **实现语言：TypeScript**（Owner 决定，2026-11-13）。使用官方 MCP SDK；Node.js 20 及以上；用 `npx` 分发。
 2. **服务代码放在本仓库的 `mcp/` 下**，内容和服务共用一个版本号（建议的默认做法；Owner 若希望单独建仓库可再调整）。
 3. **远程托管**：仍待定，到 M6 再决定。
+4. **依赖（固定版本）**：`@modelcontextprotocol/sdk` 1.32.2、`zod` 3.25.76、`yaml` 2.6.1。

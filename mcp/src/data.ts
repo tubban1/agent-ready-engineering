@@ -1,11 +1,20 @@
 // Loads the framework data (data/*.yaml) and gives helpers for reading the Markdown documents.
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 
-/** Repository root: the folder that contains `data/` and `mcp/`. */
-export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+/** Repository root: the nearest ancestor folder that contains `data/checks.yaml` (works from src/ and dist/). */
+function findRepoRoot(start: string): string {
+  let dir = start;
+  for (;;) {
+    if (existsSync(resolve(dir, "data", "checks.yaml"))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) throw new Error("ARE repository root not found (no data/checks.yaml above " + start + ")");
+    dir = parent;
+  }
+}
+export const REPO_ROOT = findRepoRoot(dirname(fileURLToPath(import.meta.url)));
 
 export type Lang = "en" | "zh";
 export type Bilingual = { en: string; zh: string };
@@ -44,6 +53,7 @@ export interface Framework {
     screening_result: string[];
     date_format: string;
   };
+  workspace_paths: Record<string, string>;
 }
 
 export function readRepoFile(relPath: string): string {

@@ -48,3 +48,16 @@ values:
   value_card_decision: [go, read-only-first, not-now]
   screening_result: [shortlist, hand-back, defer]
   date_format: "YYYY-MM-DD"
+
+# Where each template is saved in an engagement workspace (ARE-T00 "Workspace layout").
+# In a single project repository, the scenario files go directly in docs/agent-ready/.
+workspace_paths:
+  ARE-T01: "scenarios/<scenario-slug>/ARE-T01-value-card.md"
+  ARE-T02: "scenarios/<scenario-slug>/ARE-T02-capability-matrix.md"
+  ARE-T03: "scenarios/<scenario-slug>/ARE-T03-operation-contract-<operation>.md"
+  ARE-T04: "scenarios/<scenario-slug>/ARE-T04-authorization-matrix.md"
+  ARE-T05: "scenarios/<scenario-slug>/ARE-T05-eval-report-<date>.md"
+  ARE-T06: "scenarios/<scenario-slug>/ARE-T06-value-review-<date>.md"
+  ARE-T07: "scenarios/<scenario-slug>/ARE-T07-maturity-assessment-<date>.md"
+  ARE-T08: "portfolio/ARE-T08-scenario-screening.md"
+  ARE-T09: "portfolio/ARE-T09-portfolio-report-<round>.md"

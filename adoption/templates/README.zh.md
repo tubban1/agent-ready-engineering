@@ -1,6 +1,6 @@
 # Agent-Ready Engineering 标准交付物模板
 > 文档编号：ARE-T00
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN v0.5｜术语见 `ARE-R03` 术语表
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN v0.6｜术语见 `ARE-R03` 术语表
 > v0.2｜2026-11-12｜配套：`../ARE-A01-agent-ready-implementation-checklist.zh.md`（P0–P8）、`../ARE-A02-agent-ready-maturity-model.zh.md`（L0–L4）
 
 ## 使用规则
@@ -34,6 +34,7 @@
 | 价值卡片决定 | `go` / `read-only-first` / `not-now` | ARE-T01 第 8 节 |
 | 筛选结果 | `shortlist` / `hand-back` / `defer` | ARE-T08 |
 | 日期 | `YYYY-MM-DD`（文件名中也用此格式） | 全部 |
+| 证据位置 | 相对于场景文件夹的文件路径，后面可加空格和章节（如 `ARE-T01-value-card.md §4`、`evidence/load-test.md`）。文件必须存在于工作区内 | ARE-T07 |
 
 ## 工作区目录约定
 本地工具（以及 MCP 入口的本地检查）按以下路径查找交付物，请保持文件名不变。
