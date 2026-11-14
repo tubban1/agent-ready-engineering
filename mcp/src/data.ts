@@ -52,8 +52,18 @@ export interface Framework {
     value_card_decision: string[];
     screening_result: string[];
     date_format: string;
+    operation_type: string[];
+    side_effects: string[];
+    undoable: string[];
+    risk_level: string[];
+    capability_decision: string[];
+    authorization_level: string[];
+    confirmation_form: string[];
+    yes_no: string[];
+    acceptance_result: string[];
   };
   workspace_paths: Record<string, string>;
+  dimension_stage: Record<string, string>;
 }
 
 export function readRepoFile(relPath: string): string {

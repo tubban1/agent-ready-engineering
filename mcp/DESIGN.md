@@ -1,5 +1,5 @@
 # ARE MCP Server — Design
-> v0.6 | 2026-11-13 | Status: M1–M4 implemented; the real-agent walkthrough of M4 moves into M5
+> v0.7 | 2026-11-13 | Status: M1–M4 implemented for all four roles; the real-agent walkthrough moves into M5
 > Language: English (canonical). Chinese reading aid: `DESIGN.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
 > This is an implementation component of the repository, not a framework document, so it has no ARE ID.
 
@@ -16,6 +16,19 @@ What it deliberately does **not** do:
 - Store any client data, or send it anywhere.
 - Make decisions (Go / no-go, authorization approvals stay with people).
 - Write files (the agent writes deliverables; the server stays read-only).
+
+## 1b. Other roles (added 2026-11-13)
+| Role | Where they work | Prompts | Tools beyond knowledge |
+| :--- | :--- | :--- | :--- |
+| Architect / consultant (first persona) | Engagement workspace, many scenarios | `are_screen_scenarios`, `are_interview_guide`, `are_assess_scenario`, `are_portfolio_report` | validate, assess, aggregate |
+| Implementation engineer | One repository; `--workspace <repo>/docs/agent-ready`, scenario path `.` | `are_quick_triage`, `are_capability_inventory`, `are_operation_contract` | validate (T02, T03), `are_next_steps`, assess |
+| Governance / approver | Scenario folder with ARE-T04 and ARE-T02 | `are_authorization_review` | validate (T04 with the ARE-T02 cross-check) |
+| Decision maker | Reads a brief prepared by the agent | `are_decision_brief` | assess or aggregate |
+
+- `are_quick_triage` reads code and claims no level; it is labeled “Preliminary triage — not an assessment”.
+- `are_next_steps` groups the checks blocking the target level by stage (dimension → stage: V→P0, C→P2, S→P3, A→P4, X→P5, I→P6, O→P7, R→P8) with the template and evidence to produce. Without an assessment it starts at the Value Gate.
+- Validators: ARE-T02 (values, reads without side effects, risk not understated, Owner and approver for the first batch), ARE-T03 (all nine sections, idempotency key and expected_revision for writes, values in errors and acceptance), ARE-T04 (values, high risk never automatic, confirmation form and channel for level B, audit fields, revocation, every first-batch operation of ARE-T02 present with the same risk).
+- Approvals and decisions stay with people: the governance prompt never marks a matrix approved; the decision brief lists options and consequences without deciding.
 
 ## 2. Division of labor
 | Party | Responsibility |

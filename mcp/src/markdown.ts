@@ -37,3 +37,33 @@ export function zhTracksVersion(markdown: string): string | null {
   const m = markdown.match(/对应英文版：`[^`]+` EN v?(\d+\.\d+(?:\.\d+)?)/);
   return m?.[1] ?? null;
 }
+
+/** Data rows of the first table after a heading matching `heading` (header and separator rows skipped). */
+export function tableUnder(markdown: string, heading: RegExp): { line: number; cells: string[] }[] {
+  const lines = markdown.split("\n");
+  const start = lines.findIndex((l) => /^#{2,3} /.test(l) && heading.test(l));
+  if (start < 0) return [];
+  const out: { line: number; cells: string[] }[] = [];
+  let seenTable = false;
+  let header = true;
+  for (let i = start + 1; i < lines.length; i++) {
+    const l = lines[i]!;
+    if (/^#{2,3} /.test(l)) break;
+    const cells = tableCells(l);
+    if (!cells) {
+      if (seenTable) break;
+      continue;
+    }
+    seenTable = true;
+    if (header) {
+      header = false;
+      continue;
+    }
+    if (cells.every((c) => /^:?-+:?$/.test(c))) continue;
+    out.push({ line: i + 1, cells });
+  }
+  return out;
+}
+
+/** First word of a cell, lower-cased (e.g. "no (re-read first)" → "no"). */
+export const firstWord = (cell: string | undefined) => (cell ?? "").trim().split(/[\s（(]/)[0]!.toLowerCase();

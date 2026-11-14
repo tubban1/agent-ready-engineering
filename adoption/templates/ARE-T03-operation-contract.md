@@ -1,6 +1,6 @@
 # Operation Contract — P2–P3
 > Document ID: ARE-T03
-> Template v0.2 | One per first-batch operation | Copy into the project directory before filling in
+> Template v0.3 | One per first-batch operation | Copy into the project directory before filling in
 > The contract lives in the domain core; MCP / REST / Code Mode only map it and never change it.
 > Language: English (canonical). Chinese reading aid: `ARE-T03-operation-contract.zh.md`.
 
@@ -10,8 +10,8 @@
 | Operation name | <e.g. confirm_order_change> |
 | Contract version / date | <v1 / YYYY-MM-DD> |
 | Business intent | <one sentence: what business outcome this operation achieves> |
-| Type | read-only query / validation / draft / final commit |
-| Risk level | <same as the capability matrix> |
+| Type | <read / validate / draft / commit> |
+| Risk level | <low / medium / high, same as the capability matrix> |
 | Responsible | <> |
 
 ## 1. When to use / when not to use
@@ -22,8 +22,8 @@
 ## 2. Input
 | Field | Type | Required | Unit / range / enum | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| `idempotency_key` | string | required for writes | | see section 4 |
-| `expected_revision` | integer | required for mutable resources | | see section 4 |
+| `idempotency_key` | string | yes | | required for writes; see section 4 |
+| `expected_revision` | integer | yes | | required for mutable resources; see section 4 |
 | <> | | | | |
 
 ## 3. Output

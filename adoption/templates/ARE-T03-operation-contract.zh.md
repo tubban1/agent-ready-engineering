@@ -1,6 +1,6 @@
 # 操作契约卡（Operation Contract）— P2–P3
 > 文档编号：ARE-T03
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`ARE-T03-operation-contract.md` EN v0.2｜术语见 `ARE-R03` 术语表
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`ARE-T03-operation-contract.md` EN v0.3｜术语见 `ARE-R03` 术语表
 > 模板 v0.1｜每个首批改造的操作一张｜复制到项目目录后填写
 > 契约写在领域内核层；MCP / REST / Code Mode 只做映射，不改变契约。
 
@@ -10,8 +10,8 @@
 | 操作名称 | <例：confirm_order_change> |
 | 契约版本 / 日期 | <v1 / YYYY-MM-DD> |
 | 业务意图 | <一句话：这个操作完成什么业务结果> |
-| 类型 | 只读查询 / 校验 / 草稿 / 正式提交 |
-| 风险等级 | <与能力矩阵一致> |
+| 类型 | <read / validate / draft / commit>（只读查询 / 校验 / 草稿 / 正式提交） |
+| 风险等级 | <low / medium / high，与能力矩阵一致> |
 | 负责人 | <> |
 
 ## 1. 何时使用 / 何时不该使用
@@ -22,8 +22,8 @@
 ## 2. 输入
 | 字段 | 类型 | 必填 | 单位 / 取值范围 / 枚举 | 说明 |
 | :--- | :--- | :--- | :--- | :--- |
-| `idempotency_key` | string | 写操作必填 | | 见第 4 节 |
-| `expected_revision` | integer | 可变资源必填 | | 见第 4 节 |
+| `idempotency_key` | string | yes | | 写操作必填；见第 4 节 |
+| `expected_revision` | integer | yes | | 可变资源必填；见第 4 节 |
 | <> | | | | |
 
 ## 3. 输出
@@ -48,9 +48,9 @@
 ## 5. 错误
 | `code` | 含义 | `retryable` | `retry_after` | `hint`（需要补充什么 / 怎么修） |
 | :--- | :--- | :--- | :--- | :--- |
-| `revision_conflict` | 资源已被修改 | 否（需重新读取） | — | 重新读取后基于最新版本决定 |
-| `needs_input` | 信息不足 | 否（补充后再提交） | — | 列出缺少的字段 |
-| `rate_limited` | 超出配额 | 是 | <秒> | — |
+| `revision_conflict` | 资源已被修改 | no（需重新读取） | — | 重新读取后基于最新版本决定 |
+| `needs_input` | 信息不足 | no（补充后再提交） | — | 列出缺少的字段 |
+| `rate_limited` | 超出配额 | yes | <秒> | — |
 | <> | | | | |
 
 ## 6. 副作用与撤销

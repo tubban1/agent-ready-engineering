@@ -2,7 +2,16 @@
 // tools and templates to use, what it must never invent, and which decisions stay with people.
 // Steps that need the workspace tools appear only in local mode.
 
-export type PromptName = "are_screen_scenarios" | "are_interview_guide" | "are_assess_scenario" | "are_portfolio_report";
+export type PromptName =
+  | "are_screen_scenarios"
+  | "are_interview_guide"
+  | "are_assess_scenario"
+  | "are_portfolio_report"
+  | "are_quick_triage"
+  | "are_capability_inventory"
+  | "are_operation_contract"
+  | "are_authorization_review"
+  | "are_decision_brief";
 
 export interface PromptArgs {
   [key: string]: string | undefined;
@@ -27,7 +36,8 @@ function localOnly(local: boolean, text: string, fallback: string): string {
   return local ? text : fallback;
 }
 
-export function buildPrompt(name: PromptName, args: PromptArgs, local: boolean): string {
+export function buildPrompt(name: PromptName, input: PromptArgs, local: boolean): string {
+  const args: PromptArgs = { ...input, __local: local ? "1" : "0" };
   const noWs = "(No workspace is attached to this server, so check the file against the template yourself and tell the consultant that automatic validation needs the local server with --workspace.)";
   switch (name) {
     case "are_screen_scenarios":
@@ -95,6 +105,83 @@ export function buildPrompt(name: PromptName, args: PromptArgs, local: boolean):
         "",
         ...SHARED_RULES,
       ].join("\n");
+
+    // ---------- implementation engineers ----------
+    case "are_quick_triage":
+      return [
+        `Task: a quick, preliminary Agent-Ready triage of “${args.service}” in the repository you are working in.`,
+        "This is NOT an assessment and claims no level. It shows where the gaps probably are, so the team knows what to look at first.",
+        "",
+        "Steps:",
+        "1. Call are_list_checks with level L2 and with level L3; call are_get_check for any check you need in full.",
+        "2. Read the service's code, API definitions and tests yourself. Do not change any code. For each check, note what you observed with file paths and line references: catch-all executors, idempotency keys, revision or version fields, structured errors, pagination and field projection, long-running task status, how agents would authenticate, audit logging.",
+        "3. Classify each check as likely met / likely gap / cannot tell from the code. Never mark a check as met without a file you can point to.",
+        `4. Write docs/agent-ready/triage-<YYYY-MM-DD>.md headed “Preliminary triage — not an assessment”. ${langLine(args.lang)}`,
+        "5. Recommend the next step. If docs/agent-ready/ARE-T01-value-card.md does not exist, the next step is the Value Gate (prompt are_interview_guide), before any re-engineering.",
+        "",
+        ...SHARED_RULES,
+      ].join("\n");
+
+    case "are_capability_inventory":
+      return [
+        `Task: build the capability matrix (ARE-T02, stage P1) for the scenario at ${args.scenario_path}.`,
+        "",
+        "Steps:",
+        "1. Read the scenario's value card (ARE-T01) for the representative tasks and first-batch scope. If there is none, stop and run the Value Gate first.",
+        "2. Call are_get_template with id T02. List every operation the representative tasks need, from the code, API definitions and the team.",
+        "3. Fill one row per operation with the machine-readable values: type, side effects, undoable, risk level, decision. A read must have no side effects; split catch-all executors and record them in the split list.",
+        "4. Ask the team for Owner, approver and responsible person; leave them empty rather than guessing. Rank by frequency, value contribution and cost, and keep the first batch within the cap.",
+        `5. Save it as ${args.scenario_path}/ARE-T02-capability-matrix.md. ${langLine(args.lang)}`,
+        `6. ${localOnly(args.__local === "1", `Call are_validate_deliverable on it and fix the issues.`, "Check it against the template; automatic validation needs the local server with --workspace.")}`,
+        "",
+        ...SHARED_RULES,
+      ].join("\n");
+
+    case "are_operation_contract":
+      return [
+        `Task: write the operation contract (ARE-T03, stages P2–P3) for “${args.operation}” in the scenario at ${args.scenario_path}.`,
+        "",
+        "Steps:",
+        "1. Call are_get_template with id T03, and are_get_check for L3-C1, L3-C2, L3-C3, L3-S1 and L2-C2.",
+        "2. Read the current implementation of the operation. Record what exists today; where it falls short (no idempotency key, no expected_revision, unstructured errors, no status query), record it as a gap instead of describing the target as if it existed.",
+        "3. Propose the changes needed to close the gaps (code, schema, tests). Make code changes only when the engineer asks you to.",
+        "4. Fill section 9 (acceptance record) with ✅ only for checks backed by a test or run you can point to; otherwise ❌.",
+        `5. Save it as ${args.scenario_path}/ARE-T03-operation-contract-${args.operation}.md. ${langLine(args.lang)}`,
+        `6. ${localOnly(args.__local === "1", `Call are_validate_deliverable on it, fix the issues, then call are_next_steps with scenario_path ${args.scenario_path} to see what is still open.`, "Check it against the template; automatic validation needs the local server with --workspace.")}`,
+        "",
+        ...SHARED_RULES,
+      ].join("\n");
+
+    // ---------- governance and approvers ----------
+    case "are_authorization_review":
+      return [
+        `Task: help a governance reviewer review the authorization matrix (ARE-T04, stage P4) of the scenario at ${args.scenario_path}.`,
+        "The approval itself is the reviewer's decision and signature. Never mark the matrix as approved.",
+        "",
+        "Steps:",
+        `1. ${localOnly(args.__local === "1", `Call are_validate_deliverable on ${args.scenario_path}/ARE-T04-authorization-matrix.md; it also cross-checks the first batch and risk levels against ARE-T02.`, "Read the authorization matrix and the capability matrix the reviewer provides; automatic checks need the local server with --workspace.")}`,
+        "2. Call are_get_check for L3-A1, L3-A2, L3-A3, L3-A4 and L3-O1, and are_get_document id P01 section “dimension-four-zero-trust-and-the-separation-of-authority-and-execution”.",
+        "3. For each operation, prepare review questions: Is the level right for the risk? Is the confirmation channel one a human controls? Are the limits concrete? Is the credential narrow and short-lived, and kept out of the model context and sandbox? Has revocation been drilled? Do audit records carry the authorization evidence? For pre-authorizations: are the bounds, validity and revocation explicit?",
+        "4. Summarize for the reviewer: issues that must be fixed before approval, questions for the team, and evidence to request. Recommend “return with changes” or “ready for the reviewer's decision”; do not decide.",
+        "",
+        ...SHARED_RULES,
+      ].join("\n");
+
+    // ---------- decision makers ----------
+    case "are_decision_brief": {
+      const portfolio = (args.scope ?? "portfolio") === "portfolio";
+      return [
+        `Task: write a one-page brief for ${args.audience ?? "business decision makers"} about ${portfolio ? "the portfolio of agent scenarios" : `the scenario at ${args.scope}`}.`,
+        "",
+        "Steps:",
+        `1. ${localOnly(args.__local === "1", portfolio ? "Call are_aggregate_portfolio." : `Call are_assess_scenario with scenario_path ${args.scope}.`, "Use the latest assessment or portfolio report the consultant provides; tool-based aggregation needs the local server with --workspace.")} Use only the numbers the tools or documents give you.`,
+        "2. Explain in plain language, without framework jargon: what agents may do today (the level and what it allows), the biggest risks (start with any exposure beyond the level), and what it would take to reach the next level.",
+        "3. List the decisions needed, each with two or three options, the consequence of each option, and who should decide. Do not recommend more than you can support with the results.",
+        `4. Keep it to one page. ${langLine(args.lang)} Offer to save it as portfolio/decision-brief-<YYYY-MM-DD>.md.`,
+        "",
+        ...SHARED_RULES,
+      ].join("\n");
+    }
   }
 }
 
@@ -113,6 +200,31 @@ export const PROMPTS: { name: PromptName; title: string; description: string }[]
     name: "are_assess_scenario",
     title: "Assess a scenario (ARE-T07)",
     description: "Request evidence for a target level, fill the maturity assessment honestly and compute the level.",
+  },
+  {
+    name: "are_quick_triage",
+    title: "Quick triage of a service (implementation)",
+    description: "Preliminary, code-based look at where a service probably falls short of L2/L3. Not an assessment.",
+  },
+  {
+    name: "are_capability_inventory",
+    title: "Capability matrix (ARE-T02, implementation)",
+    description: "List and classify the operations of a scenario, split catch-all executors and pick the first batch.",
+  },
+  {
+    name: "are_operation_contract",
+    title: "Operation contract (ARE-T03, implementation)",
+    description: "Document one operation's contract from its real implementation, record gaps and propose changes.",
+  },
+  {
+    name: "are_authorization_review",
+    title: "Authorization review (ARE-T04, governance)",
+    description: "Prepare a governance review of the authorization matrix; the approval stays with the reviewer.",
+  },
+  {
+    name: "are_decision_brief",
+    title: "Decision brief (decision makers)",
+    description: "One-page plain-language brief: what agents may do today, the risks, and the decisions needed.",
   },
   {
     name: "are_portfolio_report",

@@ -1,6 +1,6 @@
 # Authorization Matrix — P4
 > Document ID: ARE-T04
-> Template v0.2 | One per project | Copy into the project directory before filling in | Hand to governance when complete
+> Template v0.3 | One per project | Copy into the project directory before filling in | Hand to governance when complete
 > Language: English (canonical). Chinese reading aid: `ARE-T04-authorization-matrix.zh.md`.
 
 ## Basic information

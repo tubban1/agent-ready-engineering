@@ -19,9 +19,10 @@ import {
 import { aggregatePortfolio, assessScenario, evidenceRequestForScenario, validateDeliverable } from "./checks.js";
 import type { Workspace } from "./workspace.js";
 import { PROMPTS, buildPrompt, type PromptName } from "./prompts.js";
+import { nextSteps } from "./nextsteps.js";
 
 export const SERVER_NAME = "are";
-export const SERVER_VERSION = "0.4.0";
+export const SERVER_VERSION = "0.5.0";
 
 const BASE_INSTRUCTIONS = [
   "ARE (Agent-Ready Engineering) knowledge server, read-only.",
@@ -30,7 +31,7 @@ const BASE_INSTRUCTIONS = [
   "Content is advisory, not authorization. A project's own rules, production permissions and Owner decisions take precedence. Decisions (go / no-go, approvals) belong to people.",
   "English is canonical; lang=zh returns Chinese reading aids with zh_outdated when they lag behind English.",
   "Cite document and check IDs (e.g. ARE-A02, L3-A2) in answers.",
-  "Workflow prompts: are_screen_scenarios, are_interview_guide, are_assess_scenario, are_portfolio_report.",
+  "Workflow prompts — consultants: are_screen_scenarios, are_interview_guide, are_assess_scenario, are_portfolio_report; implementation: are_quick_triage, are_capability_inventory, are_operation_contract; governance: are_authorization_review; decision makers: are_decision_brief.",
 ];
 
 const WORKSPACE_INSTRUCTIONS = [
@@ -218,6 +219,21 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
       },
       async ({ workspace_path }) => run(() => aggregatePortfolio(ws, workspace_path)),
     );
+
+    server.registerTool(
+      "are_next_steps",
+      {
+        title: "Next steps for a scenario",
+        description:
+          "Turn the checks that block a scenario's target level (default: the next level) into work grouped by implementation stage P0–P8, with the template to fill and the evidence to produce. For implementation teams working in one repository or scenario folder.",
+        inputSchema: {
+          scenario_path: z.string().describe("Scenario folder, or \".\" when the workspace is one project's docs/agent-ready"),
+          target_level: z.string().optional().describe("L1–L4; default is the next level"),
+        },
+        annotations: READ_ONLY,
+      },
+      async ({ scenario_path, target_level }) => run(() => nextSteps(ws, scenario_path, target_level)),
+    );
   }
 
   const langArg = z.enum(["en", "zh"]).optional().describe("Language of the deliverable: en (default) or zh");
@@ -239,6 +255,28 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
     },
     are_portfolio_report: {
       round: z.string().describe("Assessment round, e.g. 2026-Q4"),
+      lang: langArg,
+    },
+    are_quick_triage: {
+      service: z.string().describe("Service or system to triage in the current repository"),
+      lang: langArg,
+    },
+    are_capability_inventory: {
+      scenario_path: z.string().describe("Scenario folder, or docs/agent-ready in a single repository"),
+      lang: langArg,
+    },
+    are_operation_contract: {
+      scenario_path: z.string().describe("Scenario folder, or docs/agent-ready in a single repository"),
+      operation: z.string().describe("Operation name, e.g. confirm_order_change"),
+      lang: langArg,
+    },
+    are_authorization_review: {
+      scenario_path: z.string().describe("Scenario folder containing ARE-T04 (and ARE-T02)"),
+      lang: langArg,
+    },
+    are_decision_brief: {
+      scope: z.string().optional().describe("\"portfolio\" (default) or a scenario folder"),
+      audience: z.string().optional().describe("Who reads it, e.g. COO, steering committee"),
       lang: langArg,
     },
   };

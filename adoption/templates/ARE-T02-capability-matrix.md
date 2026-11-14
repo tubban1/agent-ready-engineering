@@ -1,6 +1,6 @@
 # Capability Matrix — P1
 > Document ID: ARE-T02
-> Template v0.2 | One per project, optionally sectioned by scenario | Copy into the project directory before filling in
+> Template v0.3 | One per project, optionally sectioned by scenario | Copy into the project directory before filling in
 > Language: English (canonical). Chinese reading aid: `ARE-T02-capability-matrix.zh.md`.
 
 ## Basic information
@@ -14,21 +14,21 @@
 ## Field definitions
 | Field | Values |
 | :--- | :--- |
-| Type | read-only query / validation (dry-run) / draft / final commit |
-| Side effects | none / internal write / outbound sending / involves money |
-| Undoable | yes / compensable / irreversible |
-| Risk level | low / medium / high (sets the level in the authorization matrix) |
+| Type | `read` (read-only query) / `validate` (dry-run) / `draft` / `commit` (final commit) |
+| Side effects | `none` / `internal-write` / `outbound` (outbound sending) / `money` (involves money) |
+| Undoable | `yes` / `compensable` / `irreversible` / `n/a` (no side effects) |
+| Risk level | `low` / `medium` / `high` (sets the level in the authorization matrix) |
 | Frequency of use | times used in representative tasks or real call records; “not measured” if there is no data |
 | Value contribution | which value-card metric it contributes to: high / medium / low |
 | Re-engineering cost | high / medium / low (with a short reason) |
 | Current problems | catch-all executor / no idempotency / no revision / errors not interpretable / responses too large / no status query, etc. |
-| Decision | first batch / waiting pool / not exposed to agents |
+| Decision | `first-batch` / `waiting-pool` / `not-exposed` (not exposed to agents) |
 
 ## Matrix
 | Operation | Type | Side effects | Undoable | Risk level | Frequency of use | Value contribution | Re-engineering cost | Current problems | Owner | Approver | Responsible | Data dependencies | Decision |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| <example: search_orders> | read-only query | none | — | low | <> | high | low | fixed pagination, too many fields returned | <> | — | <> | order database | first batch |
-| <example: update_order> | final commit | outbound sending | compensable | high | <> | high | high | catch-all executor, no idempotency | <> | <> | <> | order database, supplier interface | first batch (needs split) |
+| <example: search_orders> | read | none | n/a | low | <> | high | low | fixed pagination, too many fields returned | <> | — | <> | order database | first-batch |
+| <example: update_order> | commit | outbound | compensable | high | <> | high | high | catch-all executor (needs split), no idempotency | <> | <> | <> | order database, supplier interface | first-batch |
 | <> | | | | | | | | | | | | | |
 
 ## Split list (catch-all executors)

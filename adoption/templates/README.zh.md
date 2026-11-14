@@ -1,6 +1,6 @@
 # Agent-Ready Engineering 标准交付物模板
 > 文档编号：ARE-T00
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN v0.6｜术语见 `ARE-R03` 术语表
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN v0.7｜术语见 `ARE-R03` 术语表
 > v0.2｜2026-11-12｜配套：`../ARE-A01-agent-ready-implementation-checklist.zh.md`（P0–P8）、`../ARE-A02-agent-ready-maturity-model.zh.md`（L0–L4）
 
 ## 使用规则
@@ -33,6 +33,15 @@
 | 等级 | `L0`–`L4` | ARE-T07、ARE-T09 |
 | 价值卡片决定 | `go` / `read-only-first` / `not-now` | ARE-T01 第 8 节 |
 | 筛选结果 | `shortlist` / `hand-back` / `defer` | ARE-T08 |
+| 操作类型 | `read` / `validate` / `draft` / `commit` | ARE-T02、ARE-T03 |
+| 副作用 | `none` / `internal-write` / `outbound` / `money` | ARE-T02 |
+| 可撤销 | `yes` / `compensable` / `irreversible` / `n/a` | ARE-T02 |
+| 风险等级 | `low` / `medium` / `high` | ARE-T02、ARE-T03、ARE-T04 |
+| 能力决定 | `first-batch` / `waiting-pool` / `not-exposed` | ARE-T02 |
+| 授权级别 | `A` / `B` / `C` | ARE-T04 |
+| 确认形态 | `—` / `claim` / `pre-authorization` | ARE-T04 |
+| 必填、可重试 | 第一个词为 `yes` / `no` | ARE-T03 |
+| 验收结果 | `✅` / `❌` | ARE-T03 第 9 节 |
 | 日期 | `YYYY-MM-DD`（文件名中也用此格式） | 全部 |
 | 证据位置 | 相对于场景文件夹的文件路径，后面可加空格和章节（如 `ARE-T01-value-card.md §4`、`evidence/load-test.md`）。文件必须存在于工作区内 | ARE-T07 |
 

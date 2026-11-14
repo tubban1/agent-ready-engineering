@@ -35,6 +35,11 @@ const ARGS: Record<string, Record<string, string>> = {
   are_interview_guide: { scenario: "Supplier delivery-date changes", section: "4", lang: "zh" },
   are_assess_scenario: { scenario_path: "scenarios/supplier-order-change", target_level: "L3" },
   are_portfolio_report: { round: "2026-Q4" },
+  are_quick_triage: { service: "order service" },
+  are_capability_inventory: { scenario_path: "scenarios/supplier-order-change" },
+  are_operation_contract: { scenario_path: "scenarios/supplier-order-change", operation: "confirm_order_change" },
+  are_authorization_review: { scenario_path: "scenarios/supplier-order-change" },
+  are_decision_brief: { audience: "COO" },
 };
 
 async function text(client: Client, name: string, args: Record<string, string>) {
@@ -43,7 +48,7 @@ async function text(client: Client, name: string, args: Record<string, string>) 
   return (r.messages[0]!.content as { text: string }).text;
 }
 
-test("four workflow prompts are listed with their arguments", async () => {
+test("nine workflow prompts are listed with their arguments", async () => {
   const { prompts } = await local.listPrompts();
   assert.deepEqual(prompts.map((p) => p.name).sort(), Object.keys(ARGS).sort());
   const assess = prompts.find((p) => p.name === "are_assess_scenario")!;

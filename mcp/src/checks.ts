@@ -7,18 +7,13 @@ import { loadChecks, loadFramework } from "./data.js";
 import { KnowledgeError, META } from "./knowledge.js";
 import { CHECK_ID, tableCells } from "./markdown.js";
 import type { Workspace } from "./workspace.js";
+import { validateAuthorizationMatrix, validateCapabilityMatrix, validateOperationContract, type Issue } from "./validators.js";
 
 const framework = loadFramework();
 const checks = loadChecks();
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-export interface Issue {
-  code: string;
-  line?: number;
-  check?: string;
-  message: string;
-  hint: string;
-}
+export type { Issue };
 
 const quote = (s: string) => (s.length > 80 ? s.slice(0, 77) + "…" : s);
 
@@ -158,12 +153,15 @@ export function validateDeliverable(ws: Workspace, userPath: string) {
     ...(type === "ARE-T07" ? validateAssessment(ws, file, text) : []),
     ...(type === "ARE-T01" ? validateValueCard(ws, file, text) : []),
     ...(type === "ARE-T08" ? validateScreening(text) : []),
+    ...(type === "ARE-T02" ? validateCapabilityMatrix(text) : []),
+    ...(type === "ARE-T03" ? validateOperationContract(text) : []),
+    ...(type === "ARE-T04" ? validateAuthorizationMatrix(ws, file, text) : []),
   ];
   return {
     ...META,
     path: ws.rel(file),
     deliverable: type,
-    checked: type === "ARE-T01" || type === "ARE-T07" || type === "ARE-T08" ? "full" : "placeholders only",
+    checked: ["ARE-T01", "ARE-T02", "ARE-T03", "ARE-T04", "ARE-T07", "ARE-T08"].includes(type) ? "full" : "placeholders only",
     ok: issues.length === 0,
     issue_count: issues.length,
     issues,
