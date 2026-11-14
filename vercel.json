@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci --prefix mcp",
+  "buildCommand": "npm run build --prefix mcp",
+  "outputDirectory": "public",
+  "rewrites": [{ "source": "/mcp", "destination": "/api/mcp" }],
+  "functions": {
+    "api/mcp.mjs": {
+      "includeFiles": "{README.md,data/**,principles/**,references/**,adoption/**,media/**}",
+      "maxDuration": 30
+    }
+  }
+}

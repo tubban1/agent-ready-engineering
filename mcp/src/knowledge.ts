@@ -36,6 +36,8 @@ const checkById = new Map(checks.map((c) => [c.id, c]));
 const docById = new Map(documents.map((d) => [d.id, d]));
 
 function gitCommit(): string | null {
+  // Deployments have no .git folder; Vercel provides the commit instead.
+  if (process.env.VERCEL_GIT_COMMIT_SHA) return process.env.VERCEL_GIT_COMMIT_SHA;
   try {
     return execFileSync("git", ["-C", REPO_ROOT, "rev-parse", "HEAD"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
   } catch {

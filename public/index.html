@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent-Ready Engineering MCP</title>
+<style>
+  :root { color-scheme: light dark; --fg:#1a1a1a; --bg:#fff; --muted:#666; --code:#f3f3f3; }
+  @media (prefers-color-scheme: dark) { :root { --fg:#eee; --bg:#121212; --muted:#999; --code:#222; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui, sans-serif; }
+  main { max-width:44rem; margin:0 auto; padding:3rem 1rem; }
+  code, pre { background:var(--code); border-radius:6px; font-size:.9em; }
+  code { padding:.1em .35em; } pre { padding:1rem; overflow-x:auto; }
+  p.muted { color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Agent-Ready Engineering — MCP endpoint</h1>
+  <p>Public, read-only knowledge server for the Agent-Ready Engineering framework: documents, maturity checks, templates, evidence requests and workflow prompts.</p>
+  <p>Endpoint (Streamable HTTP, no sign-in):</p>
+  <pre>https://are.fde.fan/mcp</pre>
+  <p>Example client configuration:</p>
+  <pre>{
+  "mcpServers": {
+    "are": { "type": "http", "url": "https://are.fde.fan/mcp" }
+  }
+}</pre>
+  <p class="muted">Checks of your own engagement workspace (validate deliverables, assess scenarios, aggregate a portfolio) are not available here so client files never leave your machine. Run the local server with <code>--workspace</code> for those.</p>
+  <p><a href="https://github.com/tubban1/agent-ready-engineering">Source and documents on GitHub</a></p>
+</main>
+</body>
+</html>

@@ -42,6 +42,7 @@ Every document has an English canonical file `<name>.md` and a Chinese reading a
 | ARE-M01 | `media/ARE-M01-claude-video-brief-20261111.md` | Video brief (superseded, record only, Chinese only; not on the reading path) |
 
 Implementation: the MCP server is in `mcp/`; design, status and setup are in `mcp/DESIGN.md` (no ARE ID; it is an implementation component, not a framework document).
+Public endpoint: `https://are.fde.fan/mcp` (Streamable HTTP, read-only, knowledge only, no sign-in). Workspace checks of client deliverables are only in the local stdio server, so client files stay on your machine.
 
 When adding a document, take the next unused ID under the right prefix and update this table and the reading order.
 
