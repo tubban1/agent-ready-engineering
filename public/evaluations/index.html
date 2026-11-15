@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#10283a"/>
+  <meta name="description" content="Agent-Ready Engineering 证据驱动的跨项目预评估看板。"/>
+  <title>ARE | 项目评估与证据看板</title>
+  <link rel="stylesheet" href="/evaluations/styles.css"/>
+  <script src="/evaluations/app.js" defer></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Agent-Ready Engineering 首页">
+      <span class="brand-mark">A<span>R</span>E</span>
+      <span class="brand-desc">AGENT-READY<br>ENGINEERING</span>
+    </a>
+    <div class="navlabel">WORKSPACE</div>
+    <nav aria-label="主菜单">
+      <a class="navitem active" href="#overview"><span>▦</span> 评估总览</a>
+      <a class="navitem" href="#assessments"><span>☷</span> 项目评估</a>
+      <a class="navitem" href="#batches"><span>◷</span> 批次进度</a>
+      <a class="navitem" href="#methodology"><span>◈</span> 评估方法</a>
+    </nav>
+    <div class="sidebottom">
+      <div class="smalltag">ARE Framework <b>v0.18</b></div>
+      <p>Public Research / Evidence-first</p>
+      <a href="/mcp">Explore MCP ↗</a>
+    </div>
+  </aside>
+  <main id="overview">
+    <header class="topbar">
+      <div class="crumb">ARE <span>/</span> Research <span>/</span> <strong>Assessment Portfolio</strong></div>
+      <div class="topactions"><span id="liveIndicator" class="live-dot">加载中</span><button id="refreshBtn" type="button">↻ 刷新</button></div>
+    </header>
+    <div class="maincontent">
+      <div class="eyebrow">RESEARCH PORTFOLIO <span>2026 · NOV 15</span></div>
+      <section class="hero">
+        <div>
+          <h1>Agent-Ready<br><em>评估看板</em></h1>
+          <p>把 Agent 接入能力转换为可审阅的工程证据。逐项目呈现契约、授权、状态恢复、上下文效率与运行验证，不用单一分数掩盖未知风险。</p>
+          <div class="hero-foot"><span class="hbadge">8 ARE dimensions</span><span class="hbadge">39 evidence checks</span><span class="hbadge">Source-linked findings</span></div>
+        </div>
+        <div class="hero-shape" aria-hidden="true"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="center">ARE<span>°</span></div></div>
+      </section>
+      <section class="metrics" aria-label="评估统计">
+        <article><span>已收录项目</span><strong id="totalCount">—</strong><small>包括初步评估和源码核查</small></article>
+        <article><span>源码已核查</span><strong id="sourceCount">—</strong><small>与仅公开材料的预评估分开</small></article>
+        <article><span>今日新分析</span><strong id="todayCount">—</strong><small>只统计实际写入数据</small></article>
+        <article><span>独立正式认证</span><strong id="verifiedCount">—</strong><small>未达到完整证据要求不得授予等级</small></article>
+      </section>
+      <section id="assessments" class="section">
+        <div class="headingrow"><div><span class="section-no">01 / RESULTS</span><h2>项目评估</h2><p>点击项目查看证据、重要发现和待验证问题。支持筛选、检索、追溯来源。</p></div><div class="legend"><span><i class="key inspected"></i> 源码检查</span><span><i class="key preliminary"></i> 初步研究</span></div></div>
+        <div class="table-panel">
+          <div class="filters"><label class="searchbox">⌕ <input id="searchInput" aria-label="搜索项目" placeholder="搜索项目、类别或发现…" autocomplete="off"/></label><select id="statusFilter" aria-label="按阶段筛选"><option value="">全部阶段</option><option value="source_review">源码核查</option><option value="preliminary">自动预评估</option><option value="verified">正式验证</option></select><select id="categoryFilter" aria-label="按类别筛选"><option value="">全部类别</option></select><span id="shownCount" class="resultcount"></span></div>
+          <div class="table-scroll"><table><thead><tr><th>项目 / 来源</th><th>领域</th><th>证据阶段</th><th>ARE 维度</th><th>重要发现</th><th>最近分析</th><th></th></tr></thead><tbody id="assessmentRows"><tr><td colspan="7" class="empty">正在读取评估记录…</td></tr></tbody></table></div>
+        </div>
+      </section>
+      <section id="batches" class="section">
+        <div class="headingrow"><div><span class="section-no">02 / COLLECTION</span><h2>每小时研究批次</h2><p>2026-11-15 · Europe/Zurich · 02:45–09:45，每小时目标 30 个项目，实际数量以完成记录为准。</p></div></div>
+        <div class="batch-summary"><div><strong id="batchDone">0</strong><span>/ 240 目标项目</span></div><div id="batchProgress" class="batch-progress"><span style="width:0%"></span></div><p id="batchHint">计划 8 批 · 每批目标 30 · 待实际执行数据</p></div>
+        <div class="batchgrid" id="batchGrid"></div>
+      </section>
+      <section id="methodology" class="section method">
+        <div class="headingrow"><div><span class="section-no">03 / METHODOLOGY</span><h2>ARE 如何判断</h2><p>评估不是排行榜，也不把工具调用成功等同于业务目标完成。</p></div></div>
+        <div class="dimensions" id="dimensionLegend"></div>
+        <div class="principles"><div><b>证据优先</b><p>源码、可重放测试、历史文档及待核实信息分别呈现；README 自述不能代替实测。</p></div><div><b>等级不猜测</b><p>L0–L4 需要完整且有效的 39 项检查记录。自动预扫描只产生发现与下一步建议，不发正式等级。</p></div><div><b>可追溯 / 可复测</b><p>保留项目 URL、审阅版本、证据引用、更新时间和问题类别；缺失数据明确标注。</p></div></div>
+      </section>
+      <footer>© 2026 Agent-Ready Engineering · <a href="/">返回首页</a> · <a href="/mcp">ARE MCP</a><span>Evidence-based, not self-certified.</span></footer>
+    </div>
+  </main>
+</div>
+<dialog id="detailDialog" aria-label="项目评估详情"><div class="dialog-inner"><div class="dialoghead"><div><span class="section-no">ASSESSMENT DETAIL</span><h2 id="detailName"></h2></div><button id="closeDetail" aria-label="关闭详情">✕</button></div><div id="detailContent"></div></div></dialog>
+</body>
+</html>

@@ -1,0 +1,304 @@
+{
+  "generated_at": "2026-11-15T01:45:00Z",
+  "snapshot_kind": "local-fallback-not-live",
+  "assessments": [
+    {
+      "project_key": "local/owl-runtime",
+      "display_name": "OWL Runtime",
+      "source_kind": "local_repo",
+      "repo_url": null,
+      "source_ref": "cd7f954",
+      "category": "Agent Execution Runtime",
+      "status": "source_review",
+      "assessment_level": null,
+      "title": "",
+      "summary": "持久任务、重放状态、计划摘要与本机授权边界已在源码中确认；旧版43/43验收不等于当前SHA验收。",
+      "strengths": [
+        "持久请求重放记录和不确定状态（requestReplayStore）",
+        "Execution Revision Digest 避免过期计划直接启动",
+        "控制平面与本地执行权限分离"
+      ],
+      "findings": [
+        "当前 commit 尚缺对应独立 RC/soak 验收证据",
+        "生产配置中真实启用的授权闸门需复核",
+        "缺实际任务 ROI 基线与恢复率前后对照"
+      ],
+      "dimensions": {
+        "A": "源码证据",
+        "C": "源码证据",
+        "I": "源码证据",
+        "O": "历史记录",
+        "R": "版本待复验",
+        "S": "源码证据",
+        "V": "待基线",
+        "X": "待测量"
+      },
+      "evidence": [
+        {
+          "path": "README.md",
+          "type": "inspected",
+          "label": "README.md（本地源码核查）"
+        },
+        {
+          "path": "src/runtime/requestReplayStore.ts",
+          "type": "inspected",
+          "label": "src/runtime/requestReplayStore.ts"
+        },
+        {
+          "path": "docs/security/CLOUD_AUTHORIZATION_BOUNDARY_V1.md",
+          "type": "inspected",
+          "label": "docs/security/CLOUD_AUTHORIZATION_BOUNDARY_V1.md"
+        }
+      ],
+      "metrics": {
+        "method": "read-only repository inspection",
+        "source_checks": 4
+      },
+      "checked_at": "2026-11-15T01:48:09.321Z"
+    },
+    {
+      "project_key": "local/world2-play",
+      "display_name": "World2",
+      "source_kind": "local_repo",
+      "repo_url": null,
+      "source_ref": "e2135ff",
+      "category": "Agent Data & Collaboration",
+      "status": "source_review",
+      "assessment_level": null,
+      "title": "",
+      "summary": "52项独立工具合同与20任务跨宿主沙箱基准具有实测价值；当前生产入口仍保留路由工具，且Agent声称的同意不能等价于独立可信批准。",
+      "strengths": [
+        "52个按业务动作命名的待推广MCP契约",
+        "Claude与Codex各20任务的可追踪沙箱测试",
+        "schema与幂等字段结合操作权限设计"
+      ],
+      "findings": [
+        "现行实际MCP工具面与52工具候选面未完全统一",
+        "owner_confirmed 是Agent声明，非独立授权证明",
+        "生产跨账户任务缺同等条件的端到端复测"
+      ],
+      "dimensions": {
+        "A": "源码证据",
+        "C": "源码证据",
+        "I": "现行路由混合",
+        "O": "历史测试",
+        "R": "发布事故证据",
+        "S": "源码证据",
+        "V": "待效益数据",
+        "X": "沙箱测量"
+      },
+      "evidence": [
+        {
+          "path": "docs/qa/WORLD2_TOOL_BENCHMARK_20261109.md",
+          "type": "documented",
+          "label": "docs/qa/WORLD2_TOOL_BENCHMARK_20261109.md"
+        },
+        {
+          "path": "api/mcp.js",
+          "type": "inspected",
+          "label": "api/mcp.js"
+        },
+        {
+          "path": "lib/world2-agent-native-publication.js",
+          "type": "inspected",
+          "label": "lib/world2-agent-native-publication.js"
+        }
+      ],
+      "metrics": {
+        "task_count": 20,
+        "codex_completed": 16,
+        "claude_completed": 20
+      },
+      "checked_at": "2026-11-15T01:48:09.321Z"
+    },
+    {
+      "project_key": "local/interior",
+      "display_name": "Interior",
+      "source_kind": "local_repo",
+      "repo_url": null,
+      "source_ref": "265309b",
+      "category": "3D Agent Interface",
+      "status": "source_review",
+      "assessment_level": null,
+      "title": "",
+      "summary": "以语义关系驱动3D场景布局，具备独立对象和结构化冲突验证；105个资产的发布证据需与正式生产别名和真实Agent Viewer链路分开验证。",
+      "strengths": [
+        "语义墙面/家具锚点代替像素定位",
+        "9工具MCP协议记录与独立Scene读取",
+        "105模型Stage4及浏览器QA审计材料"
+      ],
+      "findings": [
+        "需要验证当前105个模型是否确实已通过生产端到端上线",
+        "需要跨ChatGPT、Claude、Codex的同场景对照",
+        "匿名设计密钥的泄露与撤权应做负向测试"
+      ],
+      "dimensions": {
+        "A": "实现待负测",
+        "C": "源码证据",
+        "I": "9工具记录",
+        "O": "历史测试",
+        "R": "上线待核",
+        "S": "源码证据",
+        "V": "待对照",
+        "X": "精简发现"
+      },
+      "evidence": [
+        {
+          "path": "docs/RELEASE_105_20261114.md",
+          "type": "documented",
+          "label": "docs/RELEASE_105_20261114.md"
+        },
+        {
+          "path": "cloud/anonymous_access.py",
+          "type": "inspected",
+          "label": "cloud/anonymous_access.py"
+        },
+        {
+          "path": "docs/evidence/interior_live_mcp_20261113.json",
+          "type": "documented",
+          "label": "docs/evidence/interior_live_mcp_20261113.json"
+        }
+      ],
+      "metrics": {
+        "protocol_tools": 9,
+        "asset_admission": 105
+      },
+      "checked_at": "2026-11-15T01:48:09.321Z"
+    },
+    {
+      "project_key": "local/bloomroom",
+      "display_name": "Bloomroom",
+      "source_kind": "local_repo",
+      "repo_url": null,
+      "source_ref": "a451c05",
+      "category": "Creative MCP",
+      "status": "source_review",
+      "assessment_level": null,
+      "title": "",
+      "summary": "花艺MCP工具契约、草稿鉴权、数据库事务和历史验收记录较完整；当前创建非幂等且编辑可覆盖，需在隔离环境重放验证。",
+      "strengths": [
+        "编译与验证操作分别暴露",
+        "基于临时凭据、TTL和RLS的草稿模型",
+        "隔离PostgreSQL及Chrome历史多进程验收"
+      ],
+      "findings": [
+        "创建成功后响应丢失可能导致重复草稿",
+        "同一草稿覆盖式编辑无完整版本历史和Undo",
+        "最新生产SHA与现存验收报告仍需重新对齐"
+      ],
+      "dimensions": {
+        "A": "源码证据",
+        "C": "源码证据",
+        "I": "MCP源码",
+        "O": "历史测试",
+        "R": "发布待核",
+        "S": "事务证据",
+        "V": "待价值数据",
+        "X": "Schema按需读"
+      },
+      "evidence": [
+        {
+          "path": "lib/mcp/server.ts",
+          "type": "inspected",
+          "label": "lib/mcp/server.ts"
+        },
+        {
+          "path": "db/008_mcp_drafts.sql",
+          "type": "inspected",
+          "label": "db/008_mcp_drafts.sql"
+        },
+        {
+          "path": "docs/acceptance/remote-mcp-review-round3-2026-10-09.md",
+          "type": "documented",
+          "label": "docs/acceptance/remote-mcp-review-round3-2026-10-09.md"
+        }
+      ],
+      "metrics": {
+        "claim_database_tx": true
+      },
+      "checked_at": "2026-11-15T01:48:09.321Z"
+    }
+  ],
+  "batches": [
+    {
+      "slot_at": "2026-11-15T01:45:00.000Z",
+      "target_count": 30,
+      "status": "scheduled",
+      "discovered_count": 0,
+      "analyzed_count": 0,
+      "error_count": 0,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "slot_at": "2026-11-15T02:45:00.000Z",
+      "target_count": 30,
+      "status": "scheduled",
+      "discovered_count": 0,
+      "analyzed_count": 0,
+      "error_count": 0,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "slot_at": "2026-11-15T03:45:00.000Z",
+      "target_count": 30,
+      "status": "scheduled",
+      "discovered_count": 0,
+      "analyzed_count": 0,
+      "error_count": 0,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "slot_at": "2026-11-15T04:45:00.000Z",
+      "target_count": 30,
+      "status": "scheduled",
+      "discovered_count": 0,
+      "analyzed_count": 0,
+      "error_count": 0,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "slot_at": "2026-11-15T05:45:00.000Z",
+      "target_count": 30,
+      "status": "scheduled",
+      "discovered_count": 0,
+      "analyzed_count": 0,
+      "error_count": 0,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "slot_at": "2026-11-15T06:45:00.000Z",
+      "target_count": 30,
+      "status": "scheduled",
+      "discovered_count": 0,
+      "analyzed_count": 0,
+      "error_count": 0,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "slot_at": "2026-11-15T07:45:00.000Z",
+      "target_count": 30,
+      "status": "scheduled",
+      "discovered_count": 0,
+      "analyzed_count": 0,
+      "error_count": 0,
+      "started_at": null,
+      "finished_at": null
+    },
+    {
+      "slot_at": "2026-11-15T08:45:00.000Z",
+      "target_count": 30,
+      "status": "scheduled",
+      "discovered_count": 0,
+      "analyzed_count": 0,
+      "error_count": 0,
+      "started_at": null,
+      "finished_at": null
+    }
+  ]
+}
