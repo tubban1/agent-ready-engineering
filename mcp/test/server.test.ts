@@ -24,7 +24,7 @@ async function call(name: string, args: Record<string, unknown>) {
   return { isError: Boolean(res.isError), data: JSON.parse(text) };
 }
 
-test("exposes seven read-only knowledge tools and one explicit opt-in scoring tool", async () => {
+test("exposes framework tools, local self-audit guidance and explicit opt-in remote scoring", async () => {
   const { tools } = await client.listTools();
   assert.deepEqual(tools.map((t) => t.name).sort(), [
     "are_evidence_request",
@@ -33,6 +33,7 @@ test("exposes seven read-only knowledge tools and one explicit opt-in scoring to
     "are_get_template",
     "are_list_checks",
     "are_list_documents",
+    "are_local_mcp_audit_guide",
     "are_score_mcp",
     "are_search",
   ]);
@@ -49,6 +50,23 @@ test("exposes seven read-only knowledge tools and one explicit opt-in scoring to
   assert.equal(props.properties?.target_url, undefined, "old target_url input must not be accepted");
   assert.doesNotMatch(scoring.description ?? "", /GitHub repository URL or/);
   assert.match(client.getInstructions() ?? "", /advisory, not authorization/);
+});
+
+test("local stdio audit guide is read-only and never creates official assessment", async () => {
+  const { isError, data } = await call("are_local_mcp_audit_guide", {service:"Vibe Monitor", lang:"zh"});
+  assert.equal(isError,false);
+  assert.equal(data.mode,"local_stdio_developer_audit");
+  assert.equal(data.registry.eligible,false);
+  assert.equal(data.registry.official_benchmark_run_id,null);
+  assert.equal(data.reporting.official_score,null);
+  assert.equal(data.reporting.expected_check_count,39);
+  assert.equal(data.reporting.publish_status,"local_only");
+  assert.equal(data.steps[0].id,"P0_VALUE");
+  assert.ok(data.steps.some((s: {id:string}) => s.id==="LOCAL_RUNTIME"));
+  assert.ok(data.steps.some((s: {id:string}) => s.id==="MATURITY"));
+  assert.match(JSON.stringify(data), /explicit user permission/);
+  const invalid = await client.callTool({name:"are_local_mcp_audit_guide",arguments:{service:""}});
+  assert.equal(Boolean(invalid.isError),true);
 });
 
 test("are_get_check returns the full check with version metadata", async () => {
