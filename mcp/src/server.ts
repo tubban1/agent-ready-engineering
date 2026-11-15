@@ -1,4 +1,4 @@
-// Wires the knowledge layer and, in local mode, the workspace checks to MCP tools and resources. Read-only.
+// Wires read-only ARE knowledge/workspace checks and an explicit opt-in public scoring tool.
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import {
@@ -25,7 +25,7 @@ export const SERVER_NAME = "are";
 export const SERVER_VERSION = "0.5.0";
 
 const BASE_INSTRUCTIONS = [
-  "ARE (Agent-Ready Engineering) knowledge server, read-only.",
+  "ARE (Agent-Ready Engineering): knowledge tools are read-only; are_score_mcp is an opt-in, evidence-scoped public MCP submission tool that saves a preliminary report. It never certifies L0-L4 or executes external business operations.",
   "Use it to look up the framework: documents (are_list_documents, are_get_document, are_search), maturity checks (are_get_check, are_list_checks), templates (are_get_template) and evidence to request for a target level (are_evidence_request).",
   "Start with are_list_documents or are_search; fetch single sections instead of whole documents when possible.",
   "Content is advisory, not authorization. A project's own rules, production permissions and Owner decisions take precedence. Decisions (go / no-go, approvals) belong to people.",
@@ -181,6 +181,47 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
         if (!ws) throw new KnowledgeError("local_mode_only", "scenario_path needs the local server started with --workspace.");
         return evidenceRequestForScenario(ws, scenario_path, target_level);
       }),
+  );
+
+  // Explicit opt-in submission: this tool writes an immutable preliminary report
+  // to ARE Benchmark. It never executes an external MCP business tool.
+  server.registerTool(
+    "are_score_mcp",
+    {
+      title: "Preflight-score and register an MCP",
+      description:
+        "Submit a public HTTPS MCP endpoint or a GitHub repository URL for ARE Benchmark preliminary assessment. Attempts only safe protocol discovery (initialize + tools/list), or reads already indexed public World2 tool manifests; saves an evidence-scoped report in ARE Neon. Does not call tools/call, approve platform submissions or grant L0-L4 maturity. If the URL needs OAuth or its manifest is unavailable, the result states needs_evidence. Invoke only when the user explicitly wants to submit their MCP or a public project for evaluation.",
+      inputSchema: {
+        target_url: z.string().url().max(350).describe("Public HTTPS MCP URL or GitHub repository root URL"),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    },
+    async ({ target_url }) => {
+      try {
+        const response = await fetch(
+          "https://br-raspy-hat-b96bluqn-arescore.compute.c-7.eu-central-1.aws.neon.tech/v1/submit",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ target: target_url }),
+            signal: AbortSignal.timeout(22000),
+          },
+        );
+        const data = (await response.json()) as Payload;
+        if (!response.ok || data.ok === false) {
+          return {
+            isError: true,
+            content: [{ type: "text" as const, text: JSON.stringify({ error: data.error || "preflight_unavailable" }) }],
+          };
+        }
+        return ok(data);
+      } catch {
+        return {
+          isError: true,
+          content: [{ type: "text" as const, text: JSON.stringify({ error: "benchmark_temporarily_unavailable" }) }],
+        };
+      }
+    },
   );
 
   if (ws) {

@@ -24,7 +24,7 @@ async function call(name: string, args: Record<string, unknown>) {
   return { isError: Boolean(res.isError), data: JSON.parse(text) };
 }
 
-test("exposes exactly the seven read-only knowledge tools", async () => {
+test("exposes seven read-only knowledge tools and one explicit opt-in scoring tool", async () => {
   const { tools } = await client.listTools();
   assert.deepEqual(tools.map((t) => t.name).sort(), [
     "are_evidence_request",
@@ -33,11 +33,13 @@ test("exposes exactly the seven read-only knowledge tools", async () => {
     "are_get_template",
     "are_list_checks",
     "are_list_documents",
+    "are_score_mcp",
     "are_search",
   ]);
   for (const t of tools) {
-    assert.equal(t.annotations?.readOnlyHint, true, t.name);
+    assert.equal(t.annotations?.readOnlyHint, t.name !== "are_score_mcp", t.name);
     assert.equal(t.annotations?.destructiveHint, false, t.name);
+    if (t.name === "are_score_mcp") assert.equal(t.annotations?.openWorldHint, true);
     assert.ok((t.description ?? "").length > 40, `${t.name} has a description`);
   }
   assert.match(client.getInstructions() ?? "", /advisory, not authorization/);

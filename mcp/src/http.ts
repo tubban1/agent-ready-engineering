@@ -1,4 +1,4 @@
-// Stateless Streamable HTTP entry for the public, knowledge-only ARE MCP endpoint.
+// Stateless Streamable HTTP entry: read-only knowledge plus opt-in benchmark submission.
 // No workspace is ever attached here: client deliverables are checked only by the local stdio server.
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createServer } from "./server.js";

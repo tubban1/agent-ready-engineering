@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10283a">
+<meta name="description" content="ARE Benchmark: 对 MCP 工具定义进行证据分级的自评、认领和复评，提供价值优先的工程改进建议。">
+<title>ARE Benchmark — MCP Preflight & Creator Reports</title>
+<link rel="icon" href="/evaluations/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/evaluations/styles.css">
+<link rel="stylesheet" href="/benchmark/styles.css">
+<script defer src="/benchmark/app.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+<a class="brand" href="/"><span class="brand-mark">A<span>R</span>E</span><span class="brand-desc">AGENT-READY<br>ENGINEERING</span></a>
+<div class="navlabel">BENCHMARK</div>
+<nav aria-label="主菜单">
+<a class="navitem active" href="#overview"><span>◉</span> 研究概览</a>
+<a class="navitem" href="#submit"><span>⊕</span> MCP 自助预检</a>
+<a class="navitem" href="#cohort"><span>▦</span> 百项研究样本</a>
+<a class="navitem" href="#published"><span>☷</span> 公开报告</a>
+<a class="navitem" href="#method"><span>◈</span> 方法与边界</a>
+</nav>
+<div class="sidebottom"><div class="smalltag">ARE <b>Benchmark</b></div><p>Value-first · Evidence-scoped</p><a href="/evaluations/">Portfolio ↗</a><p><a href="/mcp">ARE MCP ↗</a></p></div>
+</aside>
+<main id="overview">
+<header class="topbar"><div class="crumb">ARE <span>/</span> Benchmark <span>/</span> <strong>MCP Edition</strong></div><div class="topactions"><span class="live-dot" id="liveStatus">连接中</span><button id="refreshBtn" type="button">↻ 刷新</button></div></header>
+<div class="maincontent">
+<div class="eyebrow">MCP ENGINEERING QUALITY <span>VALUE FIRST · 2026</span></div>
+<section class="hero bench-hero"><div>
+<h1>让 MCP 真正<br><em>适合 Agent 使用</em></h1>
+<p>从 World2 MCP 目录寻找值得评估的服务。提供可复现的工具预检、源码与运行证据、整改建议和版本复评。未通过验证的信号不会被包装成成熟度认证。</p>
+<div class="hero-foot"><span class="hbadge">Creator-first</span><span class="hbadge">39 ARE checks</span><span class="hbadge">Unverified ≠ Failed</span></div>
+<a href="#submit" class="primary-link">提交你的 MCP 进行自评</a>
+</div><div class="hero-shape" aria-hidden="true"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="center">ARE<span>°</span></div></div></section>
+<section class="metrics" aria-label="研究统计">
+<article><span>首轮研究样本</span><strong id="cohortCount">—</strong><small>100 个不同 GitHub owner，仓库关联尚待验证</small></article>
+<article><span>样本工具定义</span><strong id="cohortTools">—</strong><small>World2 已观察到的 tools/list</small></article>
+<article><span>Creator 公开报告</span><strong id="publicReports">—</strong><small>仅展示经认领后主动公开的结果</small></article>
+<article><span>正式 L0–L4 认证</span><strong>0</strong><small>静态评分不等于 39 项独立验收</small></article>
+</section>
+<section id="submit" class="section">
+<div class="headingrow"><div><span class="section-no">01 / SELF ASSESSMENT</span><h2>提交 MCP · 即时静态预检</h2><p>支持 GitHub 仓库及 HTTPS MCP URL。关联到 World2 既有工具列表时自动评分；其他项目可附工具清单。不会调用任何第三方写工具。</p></div></div>
+<div class="bench-columns">
+<div class="bench-card">
+<form id="submitForm">
+<label class="fieldlabel" for="targetInput">MCP URL 或 GitHub 仓库地址</label>
+<input id="targetInput" required type="url" spellcheck="false" placeholder="https://github.com/owner/repository 或 https://service.example/mcp" maxlength="350" autocomplete="off">
+<details class="manifest-option"><summary>有 tools/list JSON？可选提供以补充证据</summary>
+<p>粘贴 MCP 协议 <code>tools/list</code> 的 JSON 响应或 <code>{"tools":[...]}</code>。上传内容只作为提交者提供的未核验证据，不会授予正式等级。</p>
+<textarea id="manifestInput" rows="5" spellcheck="false" placeholder='{"tools":[{"name":"search","description":"Search ...","inputSchema":{"type":"object","properties":{}}}]}'>
+</textarea>
+</details>
+<div class="submit-disclaimer"><strong>证据分级：</strong> Registry 数据 / 用户提供的 Manifest / 独立运行验证必须分别标记。一次预检无法自动证明 39 项成熟度检查。</div>
+<button id="submitBtn" class="primary-btn" type="submit">执行非破坏性预检</button>
+<p id="submitStatus" class="status-note" role="status" aria-live="polite"></p>
+</form>
+</div>
+<div class="bench-card bench-value">
+<h3>对 Creator 的价值假设</h3>
+<div class="value-row"><span>01</span><div><b>提交审核前发现问题</b><p>减少无效工具描述、Schema 或风险声明引起的返工；不保证任何平台通过审核。</p></div></div>
+<div class="value-row"><span>02</span><div><b>降低 Agent 的任务成本</b><p>检查工具列表体积及契约表达，给出待实测的上下文优化假设。</p></div></div>
+<div class="value-row"><span>03</span><div><b>保留可追溯的改进历史</b><p>所有者认领后可复评、提交证据并自主决定是否公开报告。</p></div></div>
+</div>
+</div>
+<section class="report-panel" id="reportPanel" hidden aria-live="polite">
+<div class="report-heading"><div><span class="section-no">PRELIMINARY / NOT CERTIFIED</span><h3 id="reportTitle">ARE 预检结果</h3></div><span id="reportStage" class="stage preliminary">—</span></div>
+<div class="report-score"><div><span class="report-num" id="scoreNumber">—</span><span id="scoreTag">静态预检 / 100</span></div><p id="reportTrust"></p></div>
+<div id="scoreBreakdown" class="breakdown"></div><div id="reportFindings" class="report-findings"></div>
+<div class="submit-disclaimer">所有 39 项 ARE 成熟度检查仍为待独立验证状态；不因为工具定义齐全而授予 L2、L3 或 L4。</div>
+<div class="report-actions"><button id="copyReportBtn" type="button">复制报告摘要</button><button id="claimBtn" type="button">认领仓库 / MCP 域名</button></div>
+<p class="status-note" id="targetId"></p>
+</section>
+<section class="report-panel" id="claimPanel" hidden>
+<h3>自主认领与复评</h3><p class="small-help">GitHub 仓库请在默认分支放置验证文件；HTTPS MCP 服务请在同一域名提供验证文件。仅证明对应仓库或域名控制权，不能证明工程质量。</p>
+<div class="report-actions"><button id="startClaimBtn" type="button">获取认领挑战</button></div>
+<div id="claimChallenge" hidden><p>将下面内容放到仓库 <code>.well-known/are-verification.txt</code>，或 MCP 域名的 <code>/.well-known/are-verification.txt</code>：</p><pre id="challengeText"></pre><button id="verifyClaimBtn" type="button">我已提交文件，验证控制权</button></div>
+<div id="ownerArea" hidden>
+<p class="small-help">验证成功后会收到一次性 Owner Token。请自行妥善保存，不在浏览器长期存储。</p>
+<label class="fieldlabel" for="ownerToken">Owner Token</label><input id="ownerToken" type="password" autocomplete="off" placeholder="粘贴你的 Owner Token">
+<div class="report-actions"><button id="retestBtn" type="button">重新预检并保留历史</button><button id="publishBtn" type="button">自愿公开当前报告</button></div>
+<label class="fieldlabel" for="evidenceId">提交额外 ARE 证据（待独立复核）</label>
+<div class="evidence-inputs"><input id="evidenceId" placeholder="L2-X3"><select id="evidenceType"><option value="documented">文档</option><option value="inspected">源码检查</option><option value="tested">测试记录</option><option value="self_reported">自述</option></select></div>
+<input id="evidenceUrl" type="url" placeholder="https://github.com/.../blob/...">
+<textarea id="evidenceNote" rows="2" placeholder="描述证据与可复现步骤（不要提交凭据）"></textarea>
+<button id="evidenceBtn" type="button">提交证据待复核</button>
+</div><p id="claimStatus" class="status-note" aria-live="polite"></p>
+</section>
+</section>
+<section id="cohort" class="section"><div class="headingrow"><div><span class="section-no">02 / WORLD2 RESEARCH</span><h2>100 个 MCP 研究样本</h2><p>分层抽样，不是排名。工具定义来自 World2 Registry 的观察记录；GitHub 关联、运行效果和 Creator 身份尚需进一步核实。</p></div></div>
+<div class="table-panel"><div class="filters"><label class="searchbox">⌕ <input id="cohortSearch" aria-label="搜索样本" placeholder="搜索项目或仓库…" /></label><select id="cohortBucket" aria-label="工具数量分类"><option value="">全部工具规模</option><option value="1-3">1–3 工具</option><option value="4-8">4–8 工具</option><option value="9-20">9–20 工具</option><option value="21-60">21–60 工具</option></select><span id="cohortShown" class="resultcount"></span></div>
+<div class="table-scroll"><table><thead><tr><th>服务与声明仓库</th><th>工具数</th><th>Manifest</th><th>证据阶段</th><th>来源</th></tr></thead><tbody id="cohortRows"><tr><td colspan="5" class="empty">读取 World2 样本…</td></tr></tbody></table></div></div></section>
+<section id="published" class="section"><div class="headingrow"><div><span class="section-no">03 / CREATOR REPORTS</span><h2>自愿公开的自评记录</h2><p>只有完成仓库认领且主动选择公开的报告才在这里出现。分数仅表示静态预检，不是官方认证。</p></div></div><div id="publicList" class="public-grid"><p class="small-help">加载中…</p></div></section>
+<section id="method" class="section"><div class="headingrow"><div><span class="section-no">04 / VALUE & METHODOLOGY</span><h2>为什么需要 ARE Benchmark</h2><p>先证明工程建议对 Creator 有价值，再开展大规模排名。</p></div></div>
+<div class="principles"><div><b>P0 · 价值判断</b><p>先识别 Creator 的真实任务：过审准备、Agent 成功率、成本和信任。记录修改前基线；未经测试的收益只是可验证假设。</p></div><div><b>证据分级</b><p>目录元数据、Manifest、自述、源码、真实 Agent 任务和独立复核具有不同可信度。缺失信息保持未知，不自动判为失败。</p></div><div><b>P8 · 效果回顾</b><p>保留版本、整改记录和再测试，重点测量已确认问题、有效修复、实际任务效果、Creator 后续参与。</p></div></div>
+<p class="method-note">本页不是 OpenAI / Anthropic 官方审核服务，不承诺通过审核。匿名预检不调用外部工具的业务动作；授权运行、故障注入、L0–L4 成熟度验证需要独立测试与证据。未经 Creator 授权不把匿名提交当作正式公开认可。</p></section>
+<footer>© 2026 Agent-Ready Engineering · <a href="/evaluations/">项目研究库</a> · <a href="/">首页</a><span>Evidence first · Improve what matters.</span></footer>
+</div></main>
+</div>
+</body></html>

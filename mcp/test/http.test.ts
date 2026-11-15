@@ -24,10 +24,11 @@ test("HTTP endpoint initializes statelessly", async () => {
   assert.doesNotMatch(result.instructions, /Local mode/);
 });
 
-test("HTTP endpoint is knowledge-only: no workspace tools", async () => {
+test("HTTP endpoint exposes opt-in scoring but no local workspace tools", async () => {
   const { result } = await rpc("tools/list");
   const names = result.tools.map((t: { name: string }) => t.name);
   assert.ok(names.includes("are_search"));
+  assert.ok(names.includes("are_score_mcp"));
   for (const local of ["are_validate_deliverable", "are_assess_scenario", "are_aggregate_portfolio"]) {
     assert.ok(!names.includes(local), `${local} must not be exposed over HTTP`);
   }

@@ -1,4 +1,4 @@
-// Vercel Function: public, knowledge-only ARE MCP endpoint (Streamable HTTP, stateless, read-only).
+// Vercel Function: public ARE MCP endpoint (read-only knowledge, explicit opt-in benchmark submission).
 // The workspace checks are deliberately not exposed here; run the local stdio server for those.
 import { handleMcpRequest } from "../mcp/dist/src/http.js";
 
