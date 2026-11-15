@@ -38,7 +38,7 @@
  }
  function publicRender(){
   $("publicList").innerHTML=publicReports.length?publicReports.map(x=>
-   '<article class="public-item"><h3>'+esc(x.display_name)+'</h3><p>'+'HTTPS MCP · '++esc(x.status||"等待证据")+
+   '<article class="public-item"><h3>'+esc(x.display_name)+'</h3><p>'+ 'HTTPS MCP · '+esc(x.status||"等待证据")+
    '</p><div class="report-score"><b>'+ (x.score===null||x.score===undefined?"未评分":Number(x.score)+"/100")+
    '</b><span class="preflight-tag">静态预评估</span></div><p>已观察工具：'+esc(x.observed_tools??"未知")+
    '</p><a href="/benchmark/?report='+encodeURIComponent(x.id)+'">查看公开报告 ↗</a></article>'
