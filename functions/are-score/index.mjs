@@ -173,7 +173,7 @@ async function claimStart(id){
  if(!t)throw Error("unknown_target");
  if(t.proof!=="unclaimed")throw Error("claim_already_started_or_verified");
  const challenge="are-verification="+randomBytes(18).toString("hex");
- const q="WITH c AS (INSERT INTO are_eval.benchmark_claims(target_id,challenge_hash,challenge_expires_at) VALUES($1::uuid,$2,now()+interval '30 minutes') ON CONFLICT(target_id) DO UPDATE SET challenge_hash=EXCLUDED.challenge_hash,challenge_expires_at=EXCLUDED.challenge_expires_at WHERE are_eval.benchmark_claims.challenge_expires_at<now() AND verified_at IS NULL RETURNING target_id) SELECT json_build_object('issued',EXISTS(SELECT 1 FROM c))::text";
+ const q="WITH c AS (INSERT INTO are_eval.benchmark_claims(target_id,challenge_hash,challenge_expires_at) VALUES($1::uuid,$2,now()+interval '30 minutes') ON CONFLICT(target_id) DO UPDATE SET challenge_hash=EXCLUDED.challenge_hash,challenge_expires_at=EXCLUDED.challenge_expires_at WHERE are_eval.benchmark_claims.challenge_expires_at<now() AND are_eval.benchmark_claims.verified_at IS NULL RETURNING target_id) SELECT json_build_object('issued',EXISTS(SELECT 1 FROM c))::text";
  const result=await sql(q,[id,sha(challenge)]);
  if(!result.issued)throw Error("active_claim_challenge_exists");
  return {target_id:id,challenge,expires_in_minutes:30,
