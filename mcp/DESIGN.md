@@ -162,6 +162,12 @@ Without arguments it provides the seven knowledge tools and three resource templ
 - In knowledge-only mode the prompts leave out workspace tools and tell the agent that automatic validation needs `--workspace`. Tests check that every tool a prompt mentions exists in that mode.
 - Not yet verified: a real agent completing steps 1–5 on the sample workspace. This is the first task of the M5 eval.
 
+## 12e. P0 assessment integrity hardening (2026-11-15)
+
+The assessment engine now scores against all 39 authoritative ARE-A02 checks rather than only rows supplied by a caller. Missing rows block their level; duplicate or unknown IDs make the assessment fail closed at L0. Read-only validation reports missing/duplicate/unknown checks, and downstream evidence requests use the same unique-check pass semantics. A claimed pass with a nonexistent evidence file is excluded from the pass count.
+
+Limitations: file existence is **not** verification of the artifact's claims. N/A reasons are machine-checked for presence, not independently approved. L0–L4 are provisional ARE-defined assessment levels, not external certifications. The seven P0 regression cases exercise malformed/partial checklists and the original one-row-to-L4 issue.
+
 ## 13. Decisions
 1. **Implementation language: TypeScript** (Owner decision, 2026-11-13). Official MCP SDK; Node.js 20 or later; distributed with `npx`.
 2. **Where the server code lives: this repository, under `mcp/`**, so content and server share one version (recommended default; change if the Owner prefers a separate repository).

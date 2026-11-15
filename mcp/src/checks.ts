@@ -2,10 +2,12 @@
 // aggregate a portfolio. Rule-based and deterministic. Results report codes, line numbers
 // and short quotes only; text inside client files is never followed as an instruction.
 import { basename, dirname } from "node:path";
-import { assess, dimensionLevels, isSatisfied, parseAssessment, type CheckRow } from "./assessment.js";
+import { assess, dimensionLevels, isSatisfied, parseAssessment, satisfiedCheckIds, type CheckRow } from "./assessment.js";
 import { loadChecks, loadFramework } from "./data.js";
 import { KnowledgeError, META } from "./knowledge.js";
-import { CHECK_ID, tableCells } from "./markdown.js";
+import { tableCells } from "./markdown.js";
+
+const CHECK_ROW = /^L\d+-[A-Z]\d+$/;
 import type { Workspace } from "./workspace.js";
 import { validateAuthorizationMatrix, validateCapabilityMatrix, validateOperationContract, type Issue } from "./validators.js";
 
@@ -62,9 +64,15 @@ function validateAssessment(ws: Workspace, file: string, text: string): Issue[] 
   const lineOf = new Map<string, number>();
   text.split("\n").forEach((l, i) => {
     const c = tableCells(l);
-    if (c && CHECK_ID.test(c[0] ?? "")) lineOf.set(c[0]!, i + 1);
+    if (c && CHECK_ROW.test(c[0] ?? "")) lineOf.set(c[0]!, i + 1);
   });
   const present = new Set(parsed.rows.map((r) => r.id));
+  const counts = new Map<string, number>();
+  for (const row of parsed.rows) counts.set(row.id, (counts.get(row.id) ?? 0) + 1);
+  for (const [id, count] of counts) {
+    if (count > 1) issues.push({ code: "duplicate_check", check: id, message: `Check ${id} appears ${count} times.`, hint: "Keep exactly one row per check." });
+    if (!checks.some((c) => c.id === id)) issues.push({ code: "unknown_check", check: id, message: `Unknown check ${id}.`, hint: "Use only IDs from the 39-check ARE-A02 catalog." });
+  }
   for (const c of checks)
     if (!present.has(c.id))
       issues.push({ code: "missing_check", check: c.id, message: `Check ${c.id} is missing.`, hint: "Keep all 39 rows from the template." });
@@ -86,7 +94,7 @@ function validateAssessment(ws: Workspace, file: string, text: string): Issue[] 
         if (e) issues.push(e);
       }
     }
-    if (r.result === "➖" && !r.location)
+    if (r.result === "➖" && (!r.location.trim() || ["-", "—"].includes(r.location.trim()) || /^<.*>$/.test(r.location.trim())))
       issues.push({ code: "not_applicable_without_reason", line, check: r.id, message: "Not applicable without a reason.", hint: "State why the check does not apply; it needs review." });
   }
   return issues;
@@ -203,6 +211,8 @@ export function assessScenario(ws: Workspace, userPath: string) {
     };
   }
   const warnings: string[] = [];
+  if (f.missingChecks.length || f.duplicateChecks.length || f.unknownChecks.length)
+    warnings.push(`Assessment integrity: ${f.missingChecks.length} missing, ${f.duplicateChecks.length} duplicated and ${f.unknownChecks.length} unknown checks. Scoring is based only on authoritative checks.`);
   if (f.consistent === false)
     warnings.push(`High-risk inconsistency: “${f.exposure}” is exposed to agents but the level is ${f.level}. Reduce exposure or close the blocking checks first.`);
   if (f.evidenceLocationMissing.length) warnings.push(`Passes whose evidence file is missing do not count: ${f.evidenceLocationMissing.join(", ")}.`);
@@ -227,6 +237,10 @@ export function assessScenario(ws: Workspace, userPath: string) {
     blocking_checks: f.blockingChecks,
     dimension_levels: dimensionLevels(parsed.rows, exists),
     failed_checks: f.failedChecks,
+    missing_checks: f.missingChecks,
+    duplicate_checks: f.duplicateChecks,
+    unknown_checks: f.unknownChecks,
+    invalid_values: f.invalidValues,
     evidence_location_missing: f.evidenceLocationMissing,
     evidence_location_outside_workspace: outside,
     not_applicable_without_reason: f.notApplicableWithoutReason,
@@ -299,7 +313,7 @@ export function evidenceRequestForScenario(ws: Workspace, userPath: string, targ
   const files = ws.assessmentFiles(dir);
   const exists = (loc: string) => ws.evidenceStatus(dir, loc) === "ok";
   const done = new Set<string>();
-  if (files.length) for (const r of rowsOf(ws, files.at(-1)!.path).rows) if (isSatisfied(r, exists)) done.add(r.id);
+  if (files.length) for (const id of satisfiedCheckIds(rowsOf(ws, files.at(-1)!.path), exists)) done.add(id);
   return {
     ...META,
     scenario: ws.scenarioName(dir),

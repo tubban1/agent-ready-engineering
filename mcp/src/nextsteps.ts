@@ -1,7 +1,7 @@
 // are_next_steps (local mode): turn the checks that block a scenario's target level into
 // concrete work, grouped by the implementation stage (P0–P8) that usually closes them.
 import { readdirSync } from "node:fs";
-import { assess, isSatisfied, parseAssessment } from "./assessment.js";
+import { assess, parseAssessment, satisfiedCheckIds } from "./assessment.js";
 import { loadChecks, loadFramework } from "./data.js";
 import { KnowledgeError, META } from "./knowledge.js";
 import type { Workspace } from "./workspace.js";
@@ -31,8 +31,8 @@ export function nextSteps(ws: Workspace, scenarioPath: string, targetLevel?: str
   const f = assess(parsed, exists);
   const target = (targetLevel ?? f.nextLevel ?? "L4").trim().toUpperCase();
   if (!["L1", "L2", "L3", "L4"].includes(target)) throw new KnowledgeError("unknown_level", "Use L1, L2, L3 or L4.");
-  const row = new Map(parsed.rows.map((r) => [r.id, r]));
-  const open = checks.filter((c) => c.level <= target && !(row.has(c.id) && isSatisfied(row.get(c.id)!, exists)));
+  const passed = satisfiedCheckIds(parsed, exists);
+  const open = checks.filter((c) => c.level <= target && !passed.has(c.id));
 
   const byStage = new Map<string, typeof open>();
   for (const c of open) {
