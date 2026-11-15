@@ -5,7 +5,7 @@
  * evidence-scoped preliminary findings, never an ARE certification.
  */
 const TOPICS = [
-  '"model context protocol" in:readme stars:>=20 archived:false',
+  'topic:model-context-protocol stars:>=20 archived:false',
   '"agent framework" in:description stars:>=50 archived:false',
   '"AI agent" in:description stars:>=50 archived:false',
   '"tool calling" in:readme stars:>=20 archived:false',
@@ -16,7 +16,6 @@ const TOPICS = [
 ];
 const LIMIT = 30;
 const DIMS = ["V","C","S","A","X","I","O","R"];
-const token = {};
 function dbEndpoint() {
  const conn = process.env.DATABASE_URL;
  if (!conn) throw Error("db_not_configured");
@@ -106,6 +105,21 @@ function safeRepo(r) {
  return r && typeof r.full_name==="string" && /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(r.full_name)
  && r.html_url==="https://github.com/"+r.full_name && !r.private && !r.archived && !r.fork;
 }
+function isSoftwareProject(r) {
+  const name=String(r.name||"").toLowerCase();
+  const description=String(r.description||"").toLowerCase();
+  return !/^awesome[-_]/.test(name) &&
+    !/(curated list|collection of (awesome|links|resources)|list of (awesome|resources)|free (api|dataset) list|learning resources|course to get into)/.test(description);
+}
+function projectCategory(r,topicIndex) {
+  const name=String(r.name||"");
+  const txt=(name+" "+String(r.description||"")).toLowerCase();
+  if (/\bmcp\b|model context protocol/.test(txt)) return "MCP / Tooling";
+  if (/browser|playwright|devtools|web scraping|automation/.test(txt)) return "Developer Tooling";
+  if (/agent|autonomous|multi-agent|agents|ai assistant/.test(txt)) return "AI Agents";
+  if (/workflow|orchestrat|pipeline/.test(txt)) return "Workflow Infrastructure";
+  return ["General Software","AI Agents","AI Agents","Tool Contracts","Workflow Infrastructure","MCP / Tooling","Developer Tooling","AI Developer Tools"][topicIndex];
+}
 function excerptAnalysis(r,readme,manifest,readmeUrl,manifestUrl,topicIndex){
  const body=readme.slice(0,80000);
  const ls=body.toLowerCase();
@@ -138,7 +152,7 @@ function excerptAnalysis(r,readme,manifest,readmeUrl,manifestUrl,topicIndex){
  return {
   project_key:"github/"+r.full_name.toLowerCase(),display_name:r.name,
   repo_url:r.html_url,source_ref:"branch:"+r.default_branch,
-  category:["MCP ecosystem","Agent frameworks","Autonomous agents","Tool contracts","Workflow automation","MCP servers","Browser agents","Developer agents"][topicIndex],
+  category:projectCategory(r,topicIndex),
   title:r.description?.slice(0,250)||"Public project",
   summary:"自动初步评估（非ARE成熟度认证）：检查 GitHub 公开元数据"+
      (body?"、README":"")+(manifest?"、配置文件":"")+
@@ -174,7 +188,7 @@ async function collect(slot) {
  const result=await response.json();
  if(!Array.isArray(result.items))throw Error("github_search_unavailable");
  const existing=new Set((await sql(EXISTING)||[]).map(x=>String(x).toLowerCase()));
- const selected=result.items.filter(safeRepo).filter(r=>!existing.has("github/"+r.full_name.toLowerCase())).slice(0,LIMIT);
+ const selected=result.items.filter(safeRepo).filter(isSoftwareProject).filter(r=>!existing.has("github/"+r.full_name.toLowerCase())).slice(0,LIMIT);
  const completed=[];
  let errors=0;
  for(let i=0;i<selected.length;i+=6){
