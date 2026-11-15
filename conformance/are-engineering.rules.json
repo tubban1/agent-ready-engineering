@@ -1,0 +1,19 @@
+{
+  "schema": "are.engineering-evidence.v1",
+  "frameworkVersion": "0.18.0",
+  "source":"adoption/ARE-A02-agent-ready-maturity-model.md",
+  "normativeStatus":"ARE project-defined engineering recommendations, NOT MCP protocol MUSTs",
+  "unitOfAssessment":"one business scenario with independently checkable outcome",
+  "levels":["L0","L1","L2","L3","L4"],
+  "dimensions":["Value","Contract","State and Recovery","Authority and Trust","Context Economy","Ingress","Observability and Evals","Run and Review"],
+  "mechanisms":[
+    {"id":"ARE-ENG-01","label":"business outcome oracle","evidence":"independently observed final business state"},
+    {"id":"ARE-ENG-02","label":"retries and idempotency","evidence":"request-bound idempotency key and failure-injection logs"},
+    {"id":"ARE-ENG-03","label":"authorization","evidence":"human approval receipt and server-side enforcement proof"},
+    {"id":"ARE-ENG-04","label":"concurrent edits","evidence":"expected_revision / conflict checks"},
+    {"id":"ARE-ENG-05","label":"context efficiency","evidence":"measured tokens, tool calls, response size and latency"},
+    {"id":"ARE-ENG-06","label":"reproducible regressions","evidence":"same task, pinned variants, pre/post test run"}
+  ],
+  "neverInferMcpProtocolComplianceFromThisAssessment":true,
+  "neverInferBusinessReadinessFromHandshake":true
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "are.mcp-spec-conformance.v1",
+  "specVersion": "2026-07-28",
+  "profile": "public-readonly-streamable-http",
+  "authoritativeSource": "https://modelcontextprotocol.io/specification/2026-07-28/",
+  "distinctFrom": "ARE engineering maturity checks (L0–L4). Passing these probes is NOT a full conformance certification.",
+  "rules": [
+    {"id":"MCP26-01","level":"MUST","subject":"transport","claim":"The endpoint accepts single JSON-RPC requests via HTTP POST and appropriate Accept header","probe":"http_post","source":"basic/transports/streamable-http"},
+    {"id":"MCP26-02","level":"MUST","subject":"version","claim":"Modern requests include protocolVersion and clientCapabilities in _meta; HTTP version agrees with body","probe":"version_header_and_meta","source":"basic/versioning"},
+    {"id":"MCP26-03","level":"MUST","subject":"discovery","claim":"server/discover advertises modern supportedVersions, capabilities, and identity","probe":"server_discover","source":"server/discover"},
+    {"id":"MCP26-04","level":"MUST","subject":"result","claim":"Results include resultType=complete or input_required as appropriate","probe":"result_type","source":"changelog"},
+    {"id":"MCP26-05","level":"MUST","subject":"cache","claim":"Cacheable lists include ttlMs and cacheScope","probe":"cacheable_lists","source":"server/tools"},
+    {"id":"MCP26-06","level":"MUST","subject":"headers","claim":"Mcp-Method and applicable Mcp-Name match request body; reject disagreements with 400 and -32020","probe":"header_validation","source":"basic/transports/streamable-http"},
+    {"id":"MCP26-07","level":"MUST","subject":"http_origin","claim":"Invalid Origin is rejected with 403","probe":"invalid_origin","source":"basic/transports/streamable-http"},
+    {"id":"MCP26-08","level":"SHOULD","subject":"tool_order","claim":"Tool listing uses stable order to aid caching","probe":"list_stability","source":"server/tools"},
+    {"id":"MCP26-09","level":"MUST","subject":"unknown_version","claim":"UnsupportedProtocolVersionError code -32022 lists supported versions","probe":"unsupported_version","source":"basic/versioning"},
+    {"id":"MCP26-10","level":"MUST","subject":"auth","claim":"When authorization is enabled, HTTP auth follows MCP authorization requirements","probe":"not_applicable_public_anonymous_only","source":"basic/authorization"},
+    {"id":"MCP26-11","level":"MUST","subject":"subscriptions","claim":"Servers advertising change notification support implement subscriptions/listen semantics","probe":"not_tested_streaming_optional","source":"basic/transports/streamable-http"}
+  ],
+  "reporting": {"status":["PASS","FAIL","UNKNOWN","NOT_APPLICABLE"],"evidenceRequired":true,"noOverallOfficialCertification":true}
+}

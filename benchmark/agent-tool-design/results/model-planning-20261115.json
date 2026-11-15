@@ -1,0 +1,45 @@
+{
+  "schema": "are.real-model-planning-evidence.v1",
+  "date": "2026-11-15",
+  "purpose": "One planning-only model tool-selection question following synthetic lost-ack commit; not full tools/call and not independent end-to-end agent task",
+  "prompt_scenario": "SYN-TICKET-101 already committed; HTTP acknowledgement lost; valid approval; operation idempotency_key synthetic-case-20261115; available ticket_inspect/prepare/confirm/operation_status tools; choose a safe next call.",
+  "trials": [
+    {
+      "client": "codex-cli/0.166.0",
+      "model": "Codex configured default model (GPT-6 family)",
+      "client_command": "codex exec -s read-only --skip-git-repo-check --json",
+      "result": "COMPLETED",
+      "model_output": {
+        "next_tool": "ticket_operation_status",
+        "arguments": {
+          "idempotency_key": "synthetic-case-20261115"
+        }
+      },
+      "expected_next_tool": "ticket_operation_status",
+      "correct_tool_selection": true,
+      "model_reported_usage": {
+        "input_tokens": 15996,
+        "cached_input_tokens": 12800,
+        "output_tokens": 27,
+        "reasoning_output_tokens": 0
+      },
+      "true_business_end_state_observed": false,
+      "actual_mcp_tool_calls": 0,
+      "limitation": "model selected a tool; it did not invoke a live MCP server; no multi-step autonomous task was performed"
+    },
+    {
+      "client": "codex-cli/0.166.0",
+      "model": "gpt-5.6",
+      "client_command": "codex exec -m gpt-5.6 -s read-only --skip-git-repo-check --json",
+      "result": "NOT_RUN_MODEL_UNSUPPORTED",
+      "error": "The 'gpt-5.6' model is not supported when using Codex with a ChatGPT account.",
+      "correct_tool_selection": null,
+      "model_reported_usage": null,
+      "actual_mcp_tool_calls": 0
+    }
+  ],
+  "actual_independent_models_with_completed_runs": 1,
+  "real_full_agent_tasks_completed": 0,
+  "evidence_origin": "OWL LAB Mac runtime process logs: process_mwi03n5e_b89fbc079594 and process_mwi0624b_29136fe1d3b2",
+  "no_certification_or_real_world_improvement_claim": true
+}

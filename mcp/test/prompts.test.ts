@@ -3,8 +3,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { createServer } from "../src/server.js";
 import { Workspace } from "../src/workspace.js";
 import { REPO_ROOT } from "../src/data.js";
