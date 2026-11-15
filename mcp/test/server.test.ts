@@ -1,8 +1,7 @@
 // M2 tests: the knowledge server answers through a real MCP client (in-memory transport).
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { createServer } from "../src/server.js";
 import { DEFAULT_MAX_CHARS } from "../src/knowledge.js";
 import { loadFramework, readRepoFile } from "../src/data.js";

@@ -1,17 +1,15 @@
-// Stateless Streamable HTTP entry: read-only knowledge plus opt-in benchmark submission.
-// No workspace is ever attached here: client deliverables are checked only by the local stdio server.
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+// Dual-era MCP Streamable HTTP entry, 2026-07-28 + legacy 2025 clients.
+// Official v2 SDK owns server/discover, per-request metadata validation and result codecs.
+// Source of truth remains createServer(): public entry never receives a local workspace.
+import { createMcpHandler, originValidationResponse } from "@modelcontextprotocol/server";
 import { createServer } from "./server.js";
 
-export async function handleMcpRequest(req: Request): Promise<Response> {
-  const server = createServer();
-  const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
-  await server.connect(transport);
-  try {
-    return await transport.handleRequest(req);
-  } finally {
-    // JSON responses are complete once returned; release per-request state.
-    void transport.close();
-    void server.close();
-  }
+const handler = createMcpHandler(() => createServer(), { legacy: "stateless", responseMode: "json" });
+
+export async function handleMcpRequest(request: Request): Promise<Response> {
+  // Reject cross-origin browser requests from untrusted origins, per MCP HTTP spec.
+  // Requests without an Origin header (e.g. ordinary MCP clients) are permitted.
+  const rejected = originValidationResponse(request, ["are.fde.fan"]);
+  if (rejected) return rejected;
+  return handler.fetch(request);
 }

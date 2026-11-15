@@ -46,6 +46,14 @@ For coding Agents auditing their own local **stdio** MCP, use the read-only `are
 
 Public ARE knowledge endpoint: `https://are.fde.fan/mcp` (Streamable HTTP, no sign-in). Knowledge tools remain read-only. The separate opt-in `are_score_mcp({endpoint})` accepts **only a live, public HTTPS MCP Endpoint**, obtains its real `tools/list`, and saves a preliminary ARE Benchmark v2 score. There is **no GitHub-only, stdio, uploaded-manifest or offline-score registration**, nor a v1 API compatibility layer. A GitHub URL may still be provided later as source evidence. This is not L0–L4 certification and executes no third-party business tools. Workspace document checks via the separate local ARE stdio server do not register a Benchmark target and remain on the user's machine. See `functions/are-score/README.md`.
 
+### MCP protocol compatibility vs ARE assessment (implementation v0.8, 2026-11-15)
+
+The ARE MCP implementation uses the official TypeScript SDK v2 to support both **MCP 2026-07-28** (`server/discover`, per-request metadata, result types and list caching) and older **2025-era clients** over Streamable HTTP and stdio. **Verify deployed support with a live probe**: `node mcp/conformance/probe.mjs https://are.fde.fan/mcp`. Source changes or local tests alone do not prove a live deployment.
+
+- [Official protocol conformance profile](conformance/README.md): a version-pinned subset of protocol MUST/SHOULD checks. It is **not** an official MCP conformance certification.
+- [ARE engineering readiness](conformance/are-engineering.rules.json): separate scenario-based L0–L4 checks from [ARE-A02](adoption/ARE-A02-agent-ready-maturity-model.md), based on business outcomes, recovery, authorization and evidence. A protocol PASS does not certify a business as L3/L4.
+- [Synthetic tool-interface comparison](benchmark/agent-tool-design/README.md): reproducible controlled fixtures inspired by normal API wrapping, Anthropic tool-design recommendations and ARE operation contracts; includes explicit limitations on real LLM results.
+
 When adding a document, take the next unused ID under the right prefix and update this table and the reading order.
 
 ## Reading order

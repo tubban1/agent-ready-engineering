@@ -1,5 +1,5 @@
 // Wires read-only ARE knowledge/workspace checks and an explicit opt-in public scoring tool.
-import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import {
   CHECK_IDS,
@@ -22,7 +22,7 @@ import { PROMPTS, buildPrompt, type PromptName } from "./prompts.js";
 import { nextSteps } from "./nextsteps.js";
 
 export const SERVER_NAME = "are";
-export const SERVER_VERSION = "0.7.0";
+export const SERVER_VERSION = "0.8.0";
 
 const BASE_INSTRUCTIONS = [
   "ARE (Agent-Ready Engineering): knowledge tools are read-only; are_score_mcp accepts ONLY a publicly reachable HTTPS MCP Endpoint and saves an evidence-scoped preliminary report after a successful live tools/list. It never certifies L0-L4 or executes external business operations.",
@@ -82,7 +82,7 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
       title: "List ARE documents",
       description:
         "List every Agent-Ready Engineering document with ID, title, one-line summary, version, reading order and whether a Chinese reading aid exists or is outdated. Use first to find the right document ID.",
-      inputSchema: { lang },
+      inputSchema: z.object({ lang }),
       annotations: READ_ONLY,
     },
     async ({ lang }) => run(() => listDocuments(lang)),
@@ -94,12 +94,12 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
       title: "Read an ARE document",
       description:
         "Read one document by ID (e.g. ARE-P01, A02, T07). Without `section` it returns the document start plus a list of section slugs; pass `section` (slug or heading) to read only that part. Long content is paged: when `truncated` is true, call again with `cursor` = `next`.",
-      inputSchema: {
-        id: z.string().describe("Document ID such as ARE-P01 or P01"),
-        lang,
-        section: z.string().optional().describe("Section slug or exact heading"),
-        cursor,
-      },
+      inputSchema: z.object({
+              id: z.string().describe("Document ID such as ARE-P01 or P01"),
+              lang,
+              section: z.string().optional().describe("Section slug or exact heading"),
+              cursor,
+            }),
       annotations: READ_ONLY,
     },
     async ({ id, lang, section, cursor }) => run(() => getDocument(id, lang, section, cursor)),
@@ -111,11 +111,11 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
       title: "Search ARE documents",
       description:
         "Keyword search across all documents. Returns document IDs, section headings and short snippets only; read the matching section with are_get_document.",
-      inputSchema: {
-        query: z.string().min(2).describe("Keywords"),
-        lang,
-        limit: z.number().int().min(1).max(SEARCH_LIMIT_MAX).default(5),
-      },
+      inputSchema: z.object({
+              query: z.string().min(2).describe("Keywords"),
+              lang,
+              limit: z.number().int().min(1).max(SEARCH_LIMIT_MAX).default(5),
+            }),
       annotations: READ_ONLY,
     },
     async ({ query, lang, limit }) => run(() => search(query, lang, limit)),
@@ -127,7 +127,7 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
       title: "Get a maturity check",
       description:
         "Full definition of one maturity check from ARE-A02 (e.g. L3-A2): level, dimension, what must be true, evidence expected, and whether direct inspection is recommended.",
-      inputSchema: { id: z.string().describe("Check ID such as L3-A2"), lang },
+      inputSchema: z.object({ id: z.string().describe("Check ID such as L3-A2"), lang }),
       annotations: READ_ONLY,
     },
     async ({ id, lang }) => run(() => getCheck(id, lang)),
@@ -138,11 +138,11 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
     {
       title: "List maturity checks",
       description: "Compact list of the 39 maturity checks, optionally filtered by level (L1–L4) or dimension (V, C, S, A, X, I, O, R).",
-      inputSchema: {
-        level: z.string().optional().describe("L1, L2, L3 or L4"),
-        dimension: z.string().optional().describe("V, C, S, A, X, I, O or R"),
-        lang,
-      },
+      inputSchema: z.object({
+              level: z.string().optional().describe("L1, L2, L3 or L4"),
+              dimension: z.string().optional().describe("V, C, S, A, X, I, O or R"),
+              lang,
+            }),
       annotations: READ_ONLY,
     },
     async ({ level, dimension, lang }) => run(() => listChecks(level, dimension, lang)),
@@ -154,7 +154,7 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
       title: "Get a deliverable template",
       description:
         "Get a deliverable template (T00 overview and workspace layout; T01 value card … T09 portfolio report) and the path where it belongs in an engagement workspace. Copy it there and fill it in; this server never writes files.",
-      inputSchema: { id: z.string().describe("Template ID T00–T09"), lang, cursor },
+      inputSchema: z.object({ id: z.string().describe("Template ID T00–T09"), lang, cursor }),
       annotations: READ_ONLY,
     },
     async ({ id, lang, cursor }) => run(() => getTemplate(id, lang, cursor)),
@@ -166,14 +166,14 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
       title: "Evidence to request for a level",
       description:
         "List every check needed to reach a target level (L1–L4) with the evidence to request from the team. Use it to prepare an evidence request list before an assessment.",
-      inputSchema: {
-        target_level: z.string().describe("L1, L2, L3 or L4"),
-        lang,
-        scenario_path: z
-          .string()
-          .optional()
-          .describe(ws ? "Optional scenario folder in the workspace: list only checks not yet satisfied" : "Local mode only; not available here"),
-      },
+      inputSchema: z.object({
+              target_level: z.string().describe("L1, L2, L3 or L4"),
+              lang,
+              scenario_path: z
+                .string()
+                .optional()
+                .describe(ws ? "Optional scenario folder in the workspace: list only checks not yet satisfied" : "Local mode only; not available here"),
+            }),
       annotations: READ_ONLY,
     },
     async ({ target_level, lang, scenario_path }) =>
@@ -193,10 +193,10 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
       title: "Plan an evidence-first local MCP engineering audit",
       description:
         "For a creator's local stdio MCP project with source code accessible to the calling coding Agent (Antigravity, Claude Code, Codex, etc.). Returns a value-first local inspection and real-task test plan with ARE maturity evidence requirements and safe artifact format. Does NOT read the user's local files, run local MCP tools, calculate a certification, submit data, create a run_id, or register a Benchmark target. Public Benchmark scoring remains HTTPS Endpoint ONLY.",
-      inputSchema: {
-        service: z.string().min(1).max(100).describe("Human-readable MCP project name; do not provide a local path, source code or secrets"),
-        lang: z.enum(["zh", "en"]).default("zh"),
-      },
+      inputSchema: z.object({
+              service: z.string().min(1).max(100).describe("Human-readable MCP project name; do not provide a local path, source code or secrets"),
+              lang: z.enum(["zh", "en"]).default("zh"),
+            }),
       annotations: READ_ONLY,
     },
     async ({ service, lang }) => ok({
@@ -290,9 +290,9 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
       title: "Preflight-score and register an MCP",
       description:
          "Submit ONLY a public, unauthenticated HTTPS MCP Endpoint for ARE Benchmark preliminary assessment. Performs real initialize + tools/list, never tools/call; scores the observed live tool contract and saves a private preliminary report with run_id only when discovery succeeds. GitHub repository links, local stdio servers, supplied manifest JSON and offline scores cannot be registered. Does not approve platform submissions or grant L0-L4 maturity. Invoke only after the user explicitly requests assessment of the endpoint.",
-      inputSchema: {
-        endpoint: z.string().url().max(350).startsWith("https://").describe("Public HTTPS MCP Endpoint, e.g. https://service.example/mcp (not a repository URL)"),
-      },
+      inputSchema: z.object({
+              endpoint: z.string().url().max(350).startsWith("https://").describe("Public HTTPS MCP Endpoint, e.g. https://service.example/mcp (not a repository URL)"),
+            }),
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     },
     async ({ endpoint }) => {
@@ -330,7 +330,7 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
         title: "Validate a filled deliverable",
         description:
           "Check one filled deliverable in the workspace (ARE-T01 value card, ARE-T07 maturity assessment, ARE-T08 screening fully; others for unfilled fields). Returns issues with line, code and fix hint. Path is relative to the workspace root.",
-        inputSchema: { path: z.string().describe("e.g. scenarios/<scenario>/ARE-T07-maturity-assessment-2026-11-10.md") },
+        inputSchema: z.object({ path: z.string().describe("e.g. scenarios/<scenario>/ARE-T07-maturity-assessment-2026-11-10.md") }),
         annotations: READ_ONLY,
       },
       async ({ path }) => run(() => validateDeliverable(ws, path)),
@@ -342,7 +342,7 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
         title: "Assess a scenario",
         description:
           "Compute a scenario's maturity level from its latest ARE-T07 by the ARE-A02 rules: level, checks blocking the next level, per-dimension levels, evidence problems, exposure consistency and changes since the previous assessment. Deterministic; reads files only.",
-        inputSchema: { scenario_path: z.string().describe("Scenario folder, e.g. scenarios/supplier-order-change") },
+        inputSchema: z.object({ scenario_path: z.string().describe("Scenario folder, e.g. scenarios/supplier-order-change") }),
         annotations: READ_ONLY,
       },
       async ({ scenario_path }) => run(() => assessScenario(ws, scenario_path)),
@@ -354,7 +354,7 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
         title: "Aggregate the portfolio",
         description:
           "Aggregate every scenario in the workspace: level distribution, high-risk inconsistencies (exposure beyond level), dimensions blocking the next level in two or more scenarios, evidence mix and the screening summary. Never an averaged score. Use the result to write ARE-T09.",
-        inputSchema: { workspace_path: z.string().optional().describe("Omit, or \".\" for the workspace root") },
+        inputSchema: z.object({ workspace_path: z.string().optional().describe("Omit, or \".\" for the workspace root") }),
         annotations: READ_ONLY,
       },
       async ({ workspace_path }) => run(() => aggregatePortfolio(ws, workspace_path)),
@@ -366,10 +366,10 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
         title: "Next steps for a scenario",
         description:
           "Turn the checks that block a scenario's target level (default: the next level) into work grouped by implementation stage P0–P8, with the template to fill and the evidence to produce. For implementation teams working in one repository or scenario folder.",
-        inputSchema: {
-          scenario_path: z.string().describe("Scenario folder, or \".\" when the workspace is one project's docs/agent-ready"),
-          target_level: z.string().optional().describe("L1–L4; default is the next level"),
-        },
+        inputSchema: z.object({
+                  scenario_path: z.string().describe("Scenario folder, or \".\" when the workspace is one project's docs/agent-ready"),
+                  target_level: z.string().optional().describe("L1–L4; default is the next level"),
+                }),
         annotations: READ_ONLY,
       },
       async ({ scenario_path, target_level }) => run(() => nextSteps(ws, scenario_path, target_level)),
@@ -423,9 +423,9 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
   for (const p of PROMPTS) {
     server.registerPrompt(
       p.name,
-      { title: p.title, description: p.description, argsSchema: promptArgs[p.name] },
-      (args: Record<string, string | undefined>) => ({
-        messages: [{ role: "user" as const, content: { type: "text" as const, text: buildPrompt(p.name, args, Boolean(ws)) } }],
+      { title: p.title, description: p.description, argsSchema: z.object(promptArgs[p.name]) },
+      (args) => ({
+        messages: [{ role: "user" as const, content: { type: "text" as const, text: buildPrompt(p.name, args as Record<string, string | undefined>, Boolean(ws)) } }],
       }),
     );
   }

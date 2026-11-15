@@ -42,7 +42,16 @@
 本表列出中文阅读版路径；每份文档旁边都有同名的英文正式版（去掉 `.zh`）。ARE-R03 是中英对照文件，ARE-M01 只有中文。
 
 实现部分：MCP 服务在 `mcp/` 中；设计、进度与安装方法见 `mcp/DESIGN.zh.md`（没有 ARE 编号，它是实现部分，不是框架文档）。
-公共 endpoint：`https://are.fde.fan/mcp`（Streamable HTTP，只读，只提供知识，无需登录）。对客户交付物的工作区检查只在本地 stdio 服务中提供，客户文件不离开本机。
+公共 endpoint：`https://are.fde.fan/mcp`（Streamable HTTP，知识查询工具只读、另有显式提交的 Benchmark 工具，无需登录）。对客户交付物的工作区检查只在本地 stdio 服务中提供，客户文件不离开本机。
+
+### MCP 2026 协议与 ARE 评估明确分离（实现 v0.8，2026-11-15）
+
+本地实现采用官方 MCP TypeScript SDK v2，同时兼容 `2026-07-28` 的新版无状态协议及旧版 `2025-*` 客户端（HTTP、stdio）。**源码通过不等于已部署，必须通过线上 `node mcp/conformance/probe.mjs https://are.fde.fan/mcp` 核实。**
+
+- [MCP 官方协议一致性检查](conformance/README.md)：按版本检查一部分 MUST/SHOULD，不代表官方认证。
+- [ARE 自有工程成熟度](conformance/are-engineering.rules.json)：场景级 L0–L4，业务真实结果、授权、重试恢复与证据；通过 MCP 连接不能推导为 L3/L4。
+- [工具接口对照实验](benchmark/agent-tool-design/README.md)：同一合成业务任务对比三种工具设计，明确区分确定性脚本与真实模型测试。
+
 
 新增文档时，在对应前缀下取下一个未使用的编号，并同步更新本表与阅读顺序。
 

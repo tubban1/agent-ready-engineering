@@ -2,7 +2,7 @@
 // Local stdio entry point of the ARE MCP server.
 //   are-mcp                       knowledge only
 //   are-mcp --workspace <folder>  knowledge + read-only checks of that engagement workspace
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { createServer } from "./server.js";
 import { Workspace } from "./workspace.js";
 
@@ -23,7 +23,6 @@ if (i >= 0) {
   }
 }
 
-const server = createServer({ workspace });
-await server.connect(new StdioServerTransport());
+await serveStdio(() => createServer({ workspace }));
 // stdout carries the MCP protocol; diagnostics go to stderr only.
 console.error(`are-mcp: running on stdio (read-only)${workspace ? `, workspace ${workspace.root}` : ", knowledge only"}`);

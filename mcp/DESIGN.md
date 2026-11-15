@@ -1,5 +1,5 @@
 # ARE MCP Server — Design
-> v0.7 | 2026-11-13 | Status: M1–M4 implemented for all four roles; the real-agent walkthrough moves into M5
+> v0.8 | 2026-11-15 | Status: MCP SDK v2, HTTP/stdio dual-era `2026-07-28` + `2025-*`; protocol conformance tests and synthetic tool-design benchmark added. Real cross-model task evaluation remains separate evidence.
 > Language: English (canonical). Chinese reading aid: `DESIGN.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
 > This is an implementation component of the repository, not a framework document, so it has no ARE ID.
 
@@ -57,7 +57,7 @@ What it deliberately does **not** do:
 | Client data | read locally, never leaves the machine | never received |
 | Network | none required | inbound only |
 
-Phase one ships **local mode only**. Remote mode comes after evals pass (milestone M6).
+**Both modes are implemented.** The public remote endpoint is `https://are.fde.fan/mcp`; its production deployment must be verified separately from this local source. HTTP serves modern `2026-07-28` and legacy `2025-*` through official v2 `createMcpHandler`; local stdio uses `serveStdio`. Both modes share the same read-only framework server factory; benchmark submission remains an explicit opt-in exception.
 
 ## 5. Tools
 All tool names use the `are_` prefix. All tools are read-only and declare `readOnlyHint: true`, `idempotentHint: true`; knowledge tools declare `openWorldHint: false`.

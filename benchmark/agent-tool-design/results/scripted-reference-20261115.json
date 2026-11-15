@@ -1,0 +1,434 @@
+{
+  "schema": "are.synthetic-tool-evaluation.v1",
+  "date": "2026-11-15T15:35:50.214Z",
+  "independent_oracle": "direct fixture state, never agent's claimed tool result",
+  "real_agent_model_evaluations": 0,
+  "actual_model_tokens_measured": false,
+  "variants": [
+    "api-wrapper",
+    "anthropic-principles",
+    "are-operation-contract"
+  ],
+  "task_count": 5,
+  "results": [
+    {
+      "variant": "api-wrapper",
+      "task_id": "T01-normal",
+      "expected": "resolved_once",
+      "verified": true,
+      "oracle": {
+        "status": "resolved",
+        "notifications": 1,
+        "topic": "duplicate invoice",
+        "revision": 8,
+        "externalEdit": false
+      },
+      "tool_call_count": 3,
+      "tool_payload_bytes": 4660,
+      "catalogue_bytes": 328,
+      "tool_trace": [
+        "get_ticket",
+        "update_ticket",
+        "notify_customer"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "anthropic-principles",
+      "task_id": "T01-normal",
+      "expected": "resolved_once",
+      "verified": true,
+      "oracle": {
+        "status": "resolved",
+        "notifications": 1,
+        "topic": "duplicate invoice",
+        "revision": 8,
+        "externalEdit": false
+      },
+      "tool_call_count": 2,
+      "tool_payload_bytes": 419,
+      "catalogue_bytes": 445,
+      "tool_trace": [
+        "ticket_get_resolution_context",
+        "ticket_resolve_and_notify"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "are-operation-contract",
+      "task_id": "T01-normal",
+      "expected": "resolved_once",
+      "verified": true,
+      "oracle": {
+        "status": "resolved",
+        "notifications": 1,
+        "topic": "duplicate invoice",
+        "revision": 8,
+        "externalEdit": false
+      },
+      "tool_call_count": 3,
+      "tool_payload_bytes": 700,
+      "catalogue_bytes": 778,
+      "tool_trace": [
+        "ticket_inspect",
+        "ticket_prepare_resolution",
+        "ticket_confirm_resolution"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "api-wrapper",
+      "task_id": "T02-ack-lost",
+      "expected": "resolved_once",
+      "verified": false,
+      "oracle": {
+        "status": "resolved",
+        "notifications": 2,
+        "topic": "duplicate invoice",
+        "revision": 9,
+        "externalEdit": false
+      },
+      "tool_call_count": 5,
+      "tool_payload_bytes": 4871,
+      "catalogue_bytes": 328,
+      "tool_trace": [
+        "get_ticket",
+        "update_ticket",
+        "notify_customer",
+        "update_ticket",
+        "notify_customer"
+      ],
+      "network_exception": "Error: transport_lost_after_commit",
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "anthropic-principles",
+      "task_id": "T02-ack-lost",
+      "expected": "resolved_once",
+      "verified": false,
+      "oracle": {
+        "status": "resolved",
+        "notifications": 2,
+        "topic": "duplicate invoice",
+        "revision": 9,
+        "externalEdit": false
+      },
+      "tool_call_count": 3,
+      "tool_payload_bytes": 612,
+      "catalogue_bytes": 445,
+      "tool_trace": [
+        "ticket_get_resolution_context",
+        "ticket_resolve_and_notify",
+        "ticket_resolve_and_notify"
+      ],
+      "network_exception": "Error: transport_lost_after_commit",
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "are-operation-contract",
+      "task_id": "T02-ack-lost",
+      "expected": "resolved_once",
+      "verified": true,
+      "oracle": {
+        "status": "resolved",
+        "notifications": 1,
+        "topic": "duplicate invoice",
+        "revision": 8,
+        "externalEdit": false
+      },
+      "tool_call_count": 4,
+      "tool_payload_bytes": 897,
+      "catalogue_bytes": 778,
+      "tool_trace": [
+        "ticket_inspect",
+        "ticket_prepare_resolution",
+        "ticket_confirm_resolution",
+        "ticket_operation_status"
+      ],
+      "network_exception": "Error: transport_lost_after_commit",
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "api-wrapper",
+      "task_id": "T03-stale-revision",
+      "expected": "preserve_revision",
+      "verified": false,
+      "oracle": {
+        "status": "resolved",
+        "notifications": 1,
+        "topic": "updated by concurrent worker",
+        "revision": 9,
+        "externalEdit": true
+      },
+      "tool_call_count": 3,
+      "tool_payload_bytes": 4660,
+      "catalogue_bytes": 328,
+      "tool_trace": [
+        "get_ticket",
+        "update_ticket",
+        "notify_customer"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "anthropic-principles",
+      "task_id": "T03-stale-revision",
+      "expected": "preserve_revision",
+      "verified": true,
+      "oracle": {
+        "status": "open",
+        "notifications": 0,
+        "topic": "updated by concurrent worker",
+        "revision": 8,
+        "externalEdit": true
+      },
+      "tool_call_count": 2,
+      "tool_payload_bytes": 379,
+      "catalogue_bytes": 445,
+      "tool_trace": [
+        "ticket_get_resolution_context",
+        "ticket_resolve_and_notify"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "are-operation-contract",
+      "task_id": "T03-stale-revision",
+      "expected": "preserve_revision",
+      "verified": true,
+      "oracle": {
+        "status": "open",
+        "notifications": 0,
+        "topic": "updated by concurrent worker",
+        "revision": 8,
+        "externalEdit": true
+      },
+      "tool_call_count": 2,
+      "tool_payload_bytes": 368,
+      "catalogue_bytes": 778,
+      "tool_trace": [
+        "ticket_inspect",
+        "ticket_prepare_resolution"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "api-wrapper",
+      "task_id": "T04-no-approval",
+      "expected": "deny",
+      "verified": false,
+      "oracle": {
+        "status": "resolved",
+        "notifications": 1,
+        "topic": "duplicate invoice",
+        "revision": 8,
+        "externalEdit": false
+      },
+      "tool_call_count": 3,
+      "tool_payload_bytes": 4660,
+      "catalogue_bytes": 328,
+      "tool_trace": [
+        "get_ticket",
+        "update_ticket",
+        "notify_customer"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "anthropic-principles",
+      "task_id": "T04-no-approval",
+      "expected": "deny",
+      "verified": true,
+      "oracle": {
+        "status": "open",
+        "notifications": 0,
+        "topic": "duplicate invoice",
+        "revision": 7,
+        "externalEdit": false
+      },
+      "tool_call_count": 2,
+      "tool_payload_bytes": 380,
+      "catalogue_bytes": 445,
+      "tool_trace": [
+        "ticket_get_resolution_context",
+        "ticket_resolve_and_notify"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "are-operation-contract",
+      "task_id": "T04-no-approval",
+      "expected": "deny",
+      "verified": true,
+      "oracle": {
+        "status": "open",
+        "notifications": 0,
+        "topic": "duplicate invoice",
+        "revision": 7,
+        "externalEdit": false
+      },
+      "tool_call_count": 3,
+      "tool_payload_bytes": 622,
+      "catalogue_bytes": 778,
+      "tool_trace": [
+        "ticket_inspect",
+        "ticket_prepare_resolution",
+        "ticket_confirm_resolution"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "api-wrapper",
+      "task_id": "T05-investigate",
+      "expected": "read_only",
+      "verified": true,
+      "oracle": {
+        "status": "open",
+        "notifications": 0,
+        "topic": "duplicate invoice"
+      },
+      "tool_call_count": 1,
+      "tool_payload_bytes": 4449,
+      "catalogue_bytes": 328,
+      "tool_trace": [
+        "get_ticket"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "anthropic-principles",
+      "task_id": "T05-investigate",
+      "expected": "read_only",
+      "verified": true,
+      "oracle": {
+        "status": "open",
+        "notifications": 0,
+        "topic": "duplicate invoice"
+      },
+      "tool_call_count": 1,
+      "tool_payload_bytes": 226,
+      "catalogue_bytes": 445,
+      "tool_trace": [
+        "ticket_get_resolution_context"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    },
+    {
+      "variant": "are-operation-contract",
+      "task_id": "T05-investigate",
+      "expected": "read_only",
+      "verified": true,
+      "oracle": {
+        "status": "open",
+        "notifications": 0,
+        "topic": "duplicate invoice"
+      },
+      "tool_call_count": 1,
+      "tool_payload_bytes": 211,
+      "catalogue_bytes": 778,
+      "tool_trace": [
+        "ticket_inspect"
+      ],
+      "network_exception": null,
+      "model_id": null,
+      "client_id": "deterministic-reference-controller",
+      "measured_tokens": null,
+      "classification": "synthetic_fixture_no_llm",
+      "side_effects_verified": true
+    }
+  ],
+  "summary": [
+    {
+      "variant": "api-wrapper",
+      "pass": 2,
+      "total": 5,
+      "mean_tool_calls": 3,
+      "total_tool_bytes": 23300,
+      "catalogue_bytes": 328
+    },
+    {
+      "variant": "anthropic-principles",
+      "pass": 4,
+      "total": 5,
+      "mean_tool_calls": 2,
+      "total_tool_bytes": 2016,
+      "catalogue_bytes": 445
+    },
+    {
+      "variant": "are-operation-contract",
+      "pass": 5,
+      "total": 5,
+      "mean_tool_calls": 2.6,
+      "total_tool_bytes": 2798,
+      "catalogue_bytes": 778
+    }
+  ],
+  "caveat": "This verifies fixture contract behaviour, not Anthropic product behaviour, model reasoning, or external production task success. Variant outcomes depend on intentional implementation differences."
+}
