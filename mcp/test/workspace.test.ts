@@ -39,8 +39,8 @@ async function call(c: Client, name: string, args: Record<string, unknown>) {
 
 test("workspace tools appear only in local mode", async () => {
   const names = (await client.listTools()).tools.map((t) => t.name);
-  for (const t of ["are_validate_deliverable", "are_assess_scenario", "are_aggregate_portfolio", "are_next_steps"]) assert.ok(names.includes(t), t);
-  assert.equal(names.length, 13);
+  for (const t of ["are_validate_deliverable", "are_validate_local_mcp_audit", "are_assess_scenario", "are_aggregate_portfolio", "are_next_steps"]) assert.ok(names.includes(t), t);
+  assert.equal(names.length, 14);
   const knowledgeOnly = await connect();
   const k = (await knowledgeOnly.listTools()).tools.map((t) => t.name);
   assert.equal(k.length, 9);

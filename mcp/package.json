@@ -13,7 +13,8 @@
     "dev": "tsx src/index.ts",
     "test": "node --import tsx --test test/*.test.ts conformance/*.test.mjs ../benchmark/agent-tool-design/runner.test.mjs",
     "protocol:probe": "node conformance/probe.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "audit:local": "node dist/src/audit-gate-cli.js"
   },
   "dependencies": {
     "@modelcontextprotocol/client": "^2.4.0",

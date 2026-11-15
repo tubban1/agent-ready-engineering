@@ -58,7 +58,7 @@ test("P0 public HTTP exposes only public tools", async () => {
   const { result } = await rpc("tools/list");
   const names = result.tools.map((t: { name: string }) => t.name);
   for (const name of ["are_search", "are_score_mcp", "are_local_mcp_audit_guide"]) assert.ok(names.includes(name));
-  for (const local of ["are_validate_deliverable", "are_assess_scenario", "are_aggregate_portfolio"]) {
+  for (const local of ["are_validate_deliverable", "are_validate_local_mcp_audit", "are_assess_scenario", "are_aggregate_portfolio"]) {
     assert.ok(!names.includes(local), `${local} must remain local-only`);
   }
 });

@@ -1,5 +1,5 @@
 # ARE — Local stdio MCP Self-Audit (NOT Benchmark registration)
-> v0.1 | 2026-11-15 | Status: public read-only self-audit guidance
+> v0.2 | 2026-11-15 | Status: public read-only self-audit guidance
 > English canonical. Chinese reading aid: `LOCAL_STDIO_SELF_AUDIT.zh.md`.
 
 ## Scope and separation of responsibilities
@@ -17,7 +17,26 @@ A coding Agent (Antigravity, Claude Code, Codex or equivalent) can inspect the s
 2. **Source and actual runtime:** Pin Git commit, published package version, entrypoint and transport. Inspect registered tools, descriptions, schemas, observed runtime tools/list, sources and tests. Identify local writes, persistence, configuration updates, network access, telemetry, business side effects and trust/authorization boundaries.
 3. **Controlled task tests:** In an isolated, developer-authorized test workspace, measure agent tool discovery, task success, independently verifiable end state, request/response bytes, number of calls, latency and token cost only when available. Ask for explicit permission before any state-changing tool invocation, cloud submission or telemetry change. No destructive live testing.
 4. **39 check evidence mapping:** Use `are_list_checks` / `are_get_check` and ARE-A02 / ARE-T07. Classify each applicable criterion as VERIFIED_PASS, VERIFIED_FAIL, UNKNOWN or NOT_APPLICABLE, citing concrete source lines or reproducible execution evidence. Never infer official L3/L4 from static fields or a subjective score.
-5. **Value-linked improvement and retest:** Propose P0/P1/P2 improvements, including verified problems, hypotheses, no-change alternatives and false-positive reversals. Measure before/after against identical real tasks in equivalent environments, then save the Value Card, evidence matrix and local report.
+5. **Evidence Quality Gate (mandatory before any level claim):** Run the standalone local CLI shown below (or connect the local ARE MCP with --workspace and call are_validate_local_mcp_audit). Check file/line references, all 39 rows, full-scope coverage, required value/authorization documents, and tool retirement safety. A passing static gate still does NOT independently verify semantics or certify any level.
+6. **Value-linked improvement and retest:** Propose P0/P1/P2 improvements, including verified problems, hypotheses, no-change alternatives and false-positive reversals. Measure before/after against identical real tasks in equivalent environments, then save the Value Card, evidence matrix and local report.
+
+## Run the independent local evidence-quality gate (no uploads)
+
+The public ARE MCP can explain the assessment but cannot verify the developer's local file paths. For a real local evidence gate, clone ARE to a separate read-only reference checkout and run:
+
+```sh
+git clone https://github.com/tubban1/agent-ready-engineering.git /tmp/are-review
+cd /tmp/are-review
+npm ci --prefix mcp
+npm run build --prefix mcp
+node mcp/dist/src/audit-gate-cli.js --workspace /ABSOLUTE/PATH/TO/PROJECT --report ARE_LOCAL_AUDIT_REPORT.md
+```
+
+- Exit 0: no structural evidence blockers found; **NOT a maturity certification**.
+- Exit 2: review blockers; exit 3: invalid input or execution failure.
+- The validator checks 39 check IDs, referenced local evidence files and line numbers, required artifact types and certain incomplete-coverage or regression-danger patterns. It cannot prove evidence semantics, actual execution success, human authorization approval or complete tool/task coverage.
+- With ARE installed as a local MCP using an authorized `--workspace` root, the same read-only check is available as `are_validate_local_mcp_audit({path:"ARE_LOCAL_AUDIT_REPORT.md"})`. This tool is **not exposed** from ARE's public remote MCP.
+- Neither path sends the code or report to ARE servers. All report and source paths must remain within the authorized project root.
 
 ## Example: Vibe Monitor
 

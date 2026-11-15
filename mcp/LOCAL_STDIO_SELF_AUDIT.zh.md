@@ -1,6 +1,6 @@
 # ARE：本地 stdio MCP 的独立工程自测（不进入 Benchmark）
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`LOCAL_STDIO_SELF_AUDIT.md` EN v0.1
-> v0.1 | 2026-11-15 | 状态：已提供公开只读自测引导工具
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`LOCAL_STDIO_SELF_AUDIT.md` EN v0.2
+> v0.2 | 2026-11-15 | 状态：已提供公开只读自测引导工具
 
 适用：在 Antigravity、Claude Code、Codex 或其他具备本地仓库访问和 MCP 调用能力的 coding Agent 中，由开发者评估自己的本地 stdio MCP。
 
@@ -20,7 +20,28 @@
 3. 固定 Git Commit、软件版本、运行入口，读取实际源码和构建/发布清单。列出 MCP 工具列表，并从代码核实描述、Schema、权限与**真实副作用**，不可只信任注释或 README。
 4. 仅在获得用户许可后运行相应安全测试；任何会写本地历史、修改用户配置、发出外部请求或产生 Cloud 遥测的工具，都不应仅因为“不是 HTTP 写接口”就当作无副作用操作。
 5. 调用 `are_list_checks`、按需 `are_get_check` 与 `are_get_template(T01/T07)`。对 39 项标记 VERIFIED_PASS、VERIFIED_FAIL、UNKNOWN、NOT_APPLICABLE，并保存证据位置、测试时间和不能验证的原因。
-6. 输出本地报告、可复现问题和 P0/P1/P2 建议；要证明效果需在同等任务和环境下复测。不要上传或公开无独立证据的评分。
+6. 在声明成熟度之前，先执行下述 ARE 本地证据质量门禁，确保 39 项覆盖、引用文件及行号有效、价值卡/授权矩阵证据对应，且不会因删除工具破坏已有功能。静态门禁通过也不代表正式认证。
+7. 输出本地报告、可复现问题和 P0/P1/P2 建议；要证明效果需在同等任务和环境下复测。不要上传或公开无独立证据的评分。
+
+## 可独立运行的本地证据质量门禁
+
+由于远程 ARE MCP 无法读取 Antigravity 本地代码，开发者在隔离的 ARE 源码目录运行以下**不上传数据**的命令：
+
+```sh
+git clone https://github.com/tubban1/agent-ready-engineering.git /tmp/are-review
+cd /tmp/are-review
+npm ci --prefix mcp
+npm run build --prefix mcp
+node mcp/dist/src/audit-gate-cli.js --workspace /绝对路径/项目目录 --report ARE_LOCAL_AUDIT_REPORT.md
+```
+
+- **退出码 0**：未检测到结构性的证据阻断，但仍需要人工复核证据语义，**不是 L0–L4 认证**。
+- **退出码 2**：发现缺失证据、引用无效、覆盖范围不足或高风险改造建议，需修正、复核后重跑。
+- **退出码 3**：输入或执行错误，不能解读为通过。
+- 该程序不会执行目标项目代码，不上传文件或报告，也不会自动登记 Benchmark。
+- 若 ARE 以本地工作区 MCP 方式配置，也能调用 `are_validate_local_mcp_audit({"path":"ARE_LOCAL_AUDIT_REPORT.md"})`；**这个文件校验工具不会暴露在公开 ARE MCP 服务器上**。
+
+所有 PASS 必须证明 ARE 原文要求的**全部范围**，例如 L2-X4 要覆盖所有只读工具，L3-C1 要覆盖所有相关写操作，L4-O2 需要真实的发布阻断记录。一个文件或三个工具的样本不能代表整个系统。
 
 ## Vibe Monitor 项目具体检查重点
 

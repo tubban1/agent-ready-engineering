@@ -20,6 +20,7 @@ import { aggregatePortfolio, assessScenario, evidenceRequestForScenario, validat
 import type { Workspace } from "./workspace.js";
 import { PROMPTS, buildPrompt, type PromptName } from "./prompts.js";
 import { nextSteps } from "./nextsteps.js";
+import { validateLocalMcpAudit } from "./audit-gate.js";
 
 export const SERVER_NAME = "are";
 export const SERVER_VERSION = "0.8.0";
@@ -254,6 +255,8 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
           actions: [
             "Call are_list_checks and are_get_check to obtain canonical ARE-A02 criteria, then retrieve ARE-T07 template.",
             "For all 39 applicable checks classify VERIFIED_PASS, VERIFIED_FAIL, UNKNOWN or NOT_APPLICABLE (with explicit reason). Cite source+line or reproducible test for each verified claim.",
+            "Before granting PASS verify the cited artifact satisfies the *whole* check: ARE-T01 Owner decision for L1-V1; ARE-T02 first batch and responsible persons for L1-V4/A1; all read tools measured for L2-X4; actual task outcomes for L2-O2; all in-scope writes with replay and revision conflicts for L3-C1/C2; approved authorization matrix for L3-A1; actual CI release-blocking proof for L4-O2.",
+            "Use the local are_validate_local_mcp_audit tool or the CLI to catch missing paths and overclaimed coverage before writing final maturity. Structural validation alone is not semantic proof.",
             "Treat static source evidence, declared schemas and task-runtime observations as separate confidence classes. Never infer L3/L4 from missing evidence or from a 0–100 static heuristic.",
           ],
           evidence: "Local check-by-check evidence register and draft ARE-T07, without claiming official certified maturity.",
@@ -264,12 +267,30 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
           actions: [
             "Prioritize P0/P1/P2 changes by actual user impact, reproducibility and engineering cost; note alternatives including do nothing.",
             "For each confirmed issue provide source location, steps to reproduce, concrete change and outcome metric.",
+            "Before recommending deletion or merging of tools, compare all behavior including cancellation of active calls, approval, event sources, diagnostics, and versioned consumers.",
+            "Before recommending annotations, inspect whether each operation writes files, modifies configuration, queues telemetry or makes external requests; do not bulk-set readOnlyHint=true.",
+            "Measure token counts from actual host usage when available. Mark bytes-to-tokens conversion as hypothesis, not a verified saving.",
             "Where permission exists, repeat the same three tasks before/after on matched environments. Distinguish fixed defects, hypotheses and false-positive reversals.",
             "Save the Value Card, evidence matrix, T07 and report in the local authorized workspace. Do not publish or register automatically.",
           ],
           evidence: "Local report with verdicts, confidence, unresolved tests, measured effects and candidate developer feedback.",
         },
       ],
+      evidence_quality_gate: {
+        local_cli: "node /path/to/agent-ready-engineering/mcp/dist/src/audit-gate-cli.js --workspace /authorized/project --report ARE_LOCAL_AUDIT_REPORT.md",
+        optional_local_mcp_tool: "are_validate_local_mcp_audit({path:'ARE_LOCAL_AUDIT_REPORT.md'}) only when ARE is also configured locally with --workspace",
+        must_pass_before_final_maturity_claim: true,
+        maturity_certification: "NEVER automatic: reviewable evidence does not prove semantic correctness",
+        nonnegotiable: [
+          "A PASS requires evidence of exactly the ARE-A02 requirement, not adjacent product behavior.",
+          "For 'all' or 'every' requirements, include a denominator and evidence covering each relevant operation, not a sample.",
+          "Validate every local citation and referenced test actually exists at the pinned commit.",
+          "An annotation is a hint and must match the operation's real persistence/network side effects; it does not ensure host auto-approval.",
+          "Do not remove a tool until task-level behavioral equivalence is demonstrated, including in-flight cancellation.",
+          "A response byte count is observed size, NOT measured token count; predictions and measured outcomes must remain separate.",
+          "A single missing L1 Value Card/owner approval is enough to make a reported L1 unverified.",
+        ],
+      },
       reporting: {
         statuses: ["VERIFIED_PASS", "VERIFIED_FAIL", "UNKNOWN", "NOT_APPLICABLE"],
         issue_classes: ["CONFIRMED_FINDING", "IMPROVEMENT_HYPOTHESIS", "EVIDENCE_GAP", "FALSE_POSITIVE_DISMISSED"],
@@ -324,6 +345,18 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
   );
 
   if (ws) {
+    // Local-only independent evidence integrity check. Never exposed over HTTP.
+    server.registerTool(
+      "are_validate_local_mcp_audit",
+      {
+        title: "Validate local MCP audit evidence quality",
+        description:
+          "Inspect a Markdown ARE local stdio audit report inside the attached workspace. Check 39 ARE items, missing/mismatched evidence paths and line citations, scope-incomplete passes, dangerous tool removal, and unproven benefits. This is a static REVIEW gate, not proof of business outcomes or maturity certification; no upload and no writes.",
+        inputSchema: { path: z.string().min(1).max(350).describe("Report path inside authorized workspace, e.g. ARE_LOCAL_AUDIT_REPORT.md") },
+        annotations: READ_ONLY,
+      },
+      async ({ path }) => run(() => validateLocalMcpAudit(ws, path)),
+    );
     server.registerTool(
       "are_validate_deliverable",
       {

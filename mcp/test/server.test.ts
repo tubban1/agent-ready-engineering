@@ -64,6 +64,7 @@ test("local stdio audit guide is read-only and never creates official assessment
   assert.ok(data.steps.some((s: {id:string}) => s.id==="LOCAL_RUNTIME"));
   assert.ok(data.steps.some((s: {id:string}) => s.id==="MATURITY"));
   assert.match(JSON.stringify(data), /explicit user permission/);
+  assert.match(JSON.stringify(data.evidence_quality_gate), /evidence/);
   const invalid = await client.callTool({name:"are_local_mcp_audit_guide",arguments:{service:""}});
   assert.equal(Boolean(invalid.isError),true);
 });
