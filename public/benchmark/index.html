@@ -74,12 +74,12 @@
 </section>
 <section class="report-panel" id="claimPanel" hidden>
 <h3>自主认领与复评</h3><p class="small-help">GitHub 仓库请在默认分支放置验证文件；HTTPS MCP 服务请在同一域名提供验证文件。仅证明对应仓库或域名控制权，不能证明工程质量。</p>
-<div class="report-actions"><button id="startClaimBtn" type="button">获取认领挑战</button></div>
+<div class="report-actions"><button id="startClaimBtn" type="button">获取认领或 Token 找回挑战</button></div><p class="small-help">如果曾经验证但丢失 Owner Token，可在旧挑战失效后重新证明相同仓库或域名控制权，旧 Token 会在新验证完成后失效。</p>
 <div id="claimChallenge" hidden><p>将下面内容放到仓库 <code>.well-known/are-verification.txt</code>，或 MCP 域名的 <code>/.well-known/are-verification.txt</code>：</p><pre id="challengeText"></pre><button id="verifyClaimBtn" type="button">我已提交文件，验证控制权</button></div>
 <div id="ownerArea" hidden>
 <p class="small-help">验证成功后会收到一次性 Owner Token。请自行妥善保存，不在浏览器长期存储。</p>
-<label class="fieldlabel" for="ownerToken">Owner Token</label><input id="ownerToken" type="password" autocomplete="off" placeholder="粘贴你的 Owner Token">
-<div class="report-actions"><button id="retestBtn" type="button">重新预检并保留历史</button><button id="publishBtn" type="button">自愿公开当前报告</button></div>
+<label class="fieldlabel" for="ownerToken">Owner Token</label><input id="ownerToken" type="password" autocomplete="off" placeholder="粘贴你的 Owner Token"><div class="report-actions"><button id="copyOwnerBtn" type="button">复制一次性 Token</button></div>
+<div class="report-actions"><button id="retestBtn" type="button">重新预检并保留历史</button><button id="publishBtn" type="button">自愿公开当前报告</button><button id="historyBtn" type="button">查看提交与复评历史</button></div><div id="historyResults" class="history-results" aria-live="polite"></div>
 <label class="fieldlabel" for="evidenceId">提交额外 ARE 证据（待独立复核）</label>
 <div class="evidence-inputs"><input id="evidenceId" placeholder="L2-X3"><select id="evidenceType"><option value="documented">文档</option><option value="inspected">源码检查</option><option value="tested">测试记录</option><option value="self_reported">自述</option></select></div>
 <input id="evidenceUrl" type="url" placeholder="https://github.com/.../blob/...">

@@ -12,6 +12,8 @@ Production Neon Function: project \`are-evaluations\`, slug \`arescore\`, Node 2
 - \`POST /v1/claim/start\`: \`{"target_id":"..." }\` -> 30-minute random challenge.
 - \`POST /v1/claim/verify\`: \`{"target_id":"...", "challenge":"are-verification=..."}\` -> once-only Owner token, stored by hash. GitHub claimant commits \`.well-known/are-verification.txt\` in public default branch; MCP URL claimant provides \`/.well-known/are-verification.txt\` on same host. Proof is ONLY repository or domain control, not full service ownership or formal quality.
 - \`POST /v1/reassess\`: owner token + target id (+ optional manifest) -> immutable new preliminary run. Failing or changed sources do not silently preserve the old score.
+- \`POST /v1/history\`: owner token + target id -> private submission events and immutable re-assessment version list.
+- Lost Owner Token: after a prior challenge has expired, \`/v1/claim/start\` permits a new proof challenge for the same verified repository or MCP domain; successfully responding rotates the token and invalidates the previous token. Used challenges cannot be replayed.
 - \`POST /v1/evidence\`: owner token + target id + 1–12 evidence rows (\`check_id\`, \`kind\`, HTTPS \`url\`, \`note\`). Saved as unverified creator evidence, never auto-passed in ARE 39 checks.
 - \`POST /v1/publish\`: owner token + target id + \`public\`: boolean; only verified controllers can opt into the public list or withdraw it.
 

@@ -112,7 +112,7 @@
    const d=await call("/v1/claim/verify",{target_id:active.target_id,challenge});
    $("ownerToken").value=d.owner_token;
    $("claimChallenge").hidden=true;
-   status("claimStatus","仓库控制权验证成功。请立即复制保存 Owner Token（只显示一次），然后可重新评估或公开报告。");
+   status("claimStatus","控制权验证成功。请立即复制并安全保存 Owner Token（只显示一次）；可重新评估、查阅自己的历史或公开报告。");
   }catch(e){status("claimStatus","核实失败："+e.message,true);}
  }
  async function owned(path,payload){
@@ -149,6 +149,26 @@
    status("claimStatus","证据已留档："+d.event_id+"；仍需要独立复核才能计入成熟度验收。");
   }catch(e){status("claimStatus",e.message,true);}
  }
+ async function history(){
+  status("claimStatus","正在读取自己的提交与复评历史…");
+  try {
+   const data=await owned("/v1/history",{});
+   isPublic=Boolean(data.target?.is_public);
+   $("publishBtn").textContent=isPublic?"撤回公开":"自愿公开当前报告";
+   const runs=Array.isArray(data.runs)?data.runs:[];
+   const events=Array.isArray(data.events)?data.events:[];
+   $("historyResults").innerHTML=
+    '<h4>评估版本（'+runs.length+'）</h4>'+
+    (runs.length?runs.map(r=>'<article><b>'+esc(r.created_at)+' · '+esc(r.status)+
+       '</b><p>静态预检：'+(r.score===null?"证据不足":Number(r.score)+"/100")+
+       ' · 工具：'+esc(r.observed_tools??"未知")+' · 来源：'+esc(r.source_provenance)+
+       '</p><p>'+esc((r.findings||[]).map(f=>f.note).slice(0,3).join("；"))+'</p></article>').join(""):"<p>没有历史记录。</p>")+
+    '<h4>提交事件（'+events.length+'）</h4>'+
+    (events.length?events.map(e=>'<article><b>'+esc(e.created_at)+' · '+esc(e.event_type)+
+      '</b><p>'+esc(JSON.stringify(e.details||{})).slice(0,900)+'</p></article>').join(""):"<p>暂无额外提交。</p>");
+   status("claimStatus","已读取完整的本人提交和版本历史，所有证明尚以实际独立审核为准。");
+  }catch(e){status("claimStatus","读取历史失败："+e.message,true);}
+ }
  async function loadReport(id){
   try{
    const data=await call("/v1/report?id="+encodeURIComponent(id));
@@ -171,6 +191,13 @@
  $("retestBtn").addEventListener("click",retest);
  $("publishBtn").addEventListener("click",publish);
  $("evidenceBtn").addEventListener("click",evidence);
+ $("historyBtn").addEventListener("click",history);
+ $("copyOwnerBtn").addEventListener("click",async()=>{
+  const token=$("ownerToken").value.trim();
+  if(!token)return status("claimStatus","尚无可复制的 Token，请先完成控制权验证。",true);
+  try{await navigator.clipboard.writeText(token);status("claimStatus","Owner Token 已复制。请立即保存在自己的密码管理器中。");}
+  catch{status("claimStatus","复制失败，请选中输入框内容手动复制。",true);}
+ });
  load();
  const report=new URLSearchParams(location.search).get("report");
  if(report&&/^[0-9a-f-]{36}$/i.test(report))loadReport(report);
