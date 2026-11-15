@@ -30,7 +30,7 @@
 <div class="eyebrow">MCP ENGINEERING QUALITY <span>VALUE FIRST · 2026</span></div>
 <section class="hero bench-hero"><div>
 <h1>让 MCP 真正<br><em>适合 Agent 使用</em></h1>
-<p>从 World2 MCP 目录寻找值得评估的服务。提供可复现的工具预检、源码与运行证据、整改建议和版本复评。未通过验证的信号不会被包装成成熟度认证。</p>
+<p>评估真实可访问的 HTTPS MCP 服务，保留版本证据与整改建议。World2 样本仅作为研究池，不等于已验证的 Benchmark 结果。未通过验证的信号不会被包装成成熟度认证。</p>
 <div class="hero-foot"><span class="hbadge">Creator-first</span><span class="hbadge">39 ARE checks</span><span class="hbadge">Unverified ≠ Failed</span></div>
 <a href="#submit" class="primary-link">提交你的 MCP 进行自评</a>
 </div><div class="hero-shape" aria-hidden="true"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="center">ARE<span>°</span></div></div></section>
@@ -41,18 +41,19 @@
 <article><span>正式 L0–L4 认证</span><strong>0</strong><small>静态评分不等于 39 项独立验收</small></article>
 </section>
 <section id="submit" class="section">
-<div class="headingrow"><div><span class="section-no">01 / SELF ASSESSMENT</span><h2>提交 MCP · 即时静态预检</h2><p>支持 GitHub 仓库及 HTTPS MCP URL。关联到 World2 既有工具列表时自动评分；其他项目可附工具清单。不会调用任何第三方写工具。</p></div></div>
+<div class="headingrow"><div><span class="section-no">01 / SELF ASSESSMENT</span><h2>提交 MCP · 即时静态预检</h2><p>仅接受真实可连接的公网 HTTPS MCP Endpoint。自动执行 initialize / tools/list 并生成可追溯的静态预检；不接受 GitHub 仓库、本地 stdio 或手工 Manifest 作为评分目标。</p></div></div>
 <div class="bench-columns">
 <div class="bench-card">
 <form id="submitForm">
-<label class="fieldlabel" for="targetInput">MCP URL 或 GitHub 仓库地址</label>
-<input id="targetInput" required type="url" spellcheck="false" placeholder="https://github.com/owner/repository 或 https://service.example/mcp" maxlength="350" autocomplete="off">
-<details class="manifest-option"><summary>有 tools/list JSON？可选提供以补充证据</summary>
-<p>粘贴 MCP 协议 <code>tools/list</code> 的 JSON 响应或 <code>{"tools":[...]}</code>。上传内容只作为提交者提供的未核验证据，不会授予正式等级。</p>
-<textarea id="manifestInput" rows="5" spellcheck="false" placeholder='{"tools":[{"name":"search","description":"Search ...","inputSchema":{"type":"object","properties":{}}}]}'>
-</textarea>
+<label class="fieldlabel" for="targetInput">公网 HTTPS MCP Endpoint</label>
+<input id="targetInput" required type="url" spellcheck="false" placeholder="https://your-service.example/mcp" maxlength="350" autocomplete="off">
+<p class="small-help">无需上传源码或工具清单。需要能在无需登录的状态下完成 MCP 协议初始化和工具发现；需要 OAuth 的服务暂不能自动评分。GitHub 只用于后续补充源码证据，不是评分入口。</p>
+<details class="manifest-option"><summary>如何让 ChatGPT / Claude 对自己的 MCP 进行 ARE 自评？</summary>
+<p>先在 Agent 中连接 ARE MCP：<code>https://are.fde.fan/mcp</code>，并确认工具列表中有 <code>are_score_mcp</code>。随后调用该工具，只传入 <code>endpoint</code> 参数。单凭提示词不会自动连接 MCP。无法配置连接时，可直接通过本页提交 HTTPS Endpoint。</p>
+<button type="button" id="copyPromptBtn">复制中文自评提示词</button>
+<p>直接用浏览器打开 <code>/mcp</code> 出现 HTTP 406 不等于 MCP 服务故障，必须由支持 MCP 协议的客户端访问。</p>
 </details>
-<div class="submit-disclaimer"><strong>证据分级：</strong> Registry 数据 / 用户提供的 Manifest / 独立运行验证必须分别标记。一次预检无法自动证明 39 项成熟度检查。</div>
+<div class="submit-disclaimer"><strong>证据分级：</strong> 只以实际连接 Endpoint 返回的 tools/list 做静态预评估。源码分析、真实任务和 39 项成熟度验证必须另行提供证据；工具清单不会被原文存入数据库。</div>
 <button id="submitBtn" class="primary-btn" type="submit">执行非破坏性预检</button>
 <p id="submitStatus" class="status-note" role="status" aria-live="polite"></p>
 </form>
@@ -69,13 +70,13 @@
 <div class="report-score"><div><span class="report-num" id="scoreNumber">—</span><span id="scoreTag">静态预检 / 100</span></div><p id="reportTrust"></p></div>
 <div id="scoreBreakdown" class="breakdown"></div><div id="reportFindings" class="report-findings"></div>
 <div class="submit-disclaimer">所有 39 项 ARE 成熟度检查仍为待独立验证状态；不因为工具定义齐全而授予 L2、L3 或 L4。</div>
-<div class="report-actions"><button id="copyReportBtn" type="button">复制报告摘要</button><button id="claimBtn" type="button">认领仓库 / MCP 域名</button></div>
+<div class="report-actions"><button id="copyReportBtn" type="button">复制报告摘要</button><button id="claimBtn" type="button">认领 MCP 域名</button></div>
 <p class="status-note" id="targetId"></p>
 </section>
 <section class="report-panel" id="claimPanel" hidden>
-<h3>自主认领与复评</h3><p class="small-help">GitHub 仓库请在默认分支放置验证文件；HTTPS MCP 服务请在同一域名提供验证文件。仅证明对应仓库或域名控制权，不能证明工程质量。</p>
-<div class="report-actions"><button id="startClaimBtn" type="button">获取认领或 Token 找回挑战</button></div><p class="small-help">如果曾经验证但丢失 Owner Token，可在旧挑战失效后重新证明相同仓库或域名控制权，旧 Token 会在新验证完成后失效。</p>
-<div id="claimChallenge" hidden><p>将下面内容放到仓库 <code>.well-known/are-verification.txt</code>，或 MCP 域名的 <code>/.well-known/are-verification.txt</code>：</p><pre id="challengeText"></pre><button id="verifyClaimBtn" type="button">我已提交文件，验证控制权</button></div>
+<h3>自主认领与复评</h3><p class="small-help">仅通过 HTTPS MCP Endpoint 所属域名的验证文件确认控制权。GitHub 仓库归属不能替代域名控制权，也不能替代运行质量认证。</p>
+<div class="report-actions"><button id="startClaimBtn" type="button">获取认领或 Token 找回挑战</button></div><p class="small-help">如果丢失 Owner Token，可在旧挑战失效后重新证明相同 MCP 域名控制权，旧 Token 在新验证后失效。</p>
+<div id="claimChallenge" hidden><p>在 MCP Endpoint 的同一域名发布 <code>/.well-known/are-verification.txt</code>，内容如下：</p><pre id="challengeText"></pre><button id="verifyClaimBtn" type="button">我已提交文件，验证控制权</button></div>
 <div id="ownerArea" hidden>
 <p class="small-help">验证成功后会收到一次性 Owner Token。请自行妥善保存，不在浏览器长期存储。</p>
 <label class="fieldlabel" for="ownerToken">Owner Token</label><input id="ownerToken" type="password" autocomplete="off" placeholder="粘贴你的 Owner Token"><div class="report-actions"><button id="copyOwnerBtn" type="button">复制一次性 Token</button></div>

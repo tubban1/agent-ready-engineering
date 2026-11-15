@@ -22,10 +22,10 @@ import { PROMPTS, buildPrompt, type PromptName } from "./prompts.js";
 import { nextSteps } from "./nextsteps.js";
 
 export const SERVER_NAME = "are";
-export const SERVER_VERSION = "0.5.0";
+export const SERVER_VERSION = "0.6.0";
 
 const BASE_INSTRUCTIONS = [
-  "ARE (Agent-Ready Engineering): knowledge tools are read-only; are_score_mcp is an opt-in, evidence-scoped public MCP submission tool that saves a preliminary report. It never certifies L0-L4 or executes external business operations.",
+  "ARE (Agent-Ready Engineering): knowledge tools are read-only; are_score_mcp accepts ONLY a publicly reachable HTTPS MCP Endpoint and saves an evidence-scoped preliminary report after a successful live tools/list. It never certifies L0-L4 or executes external business operations.",
   "Use it to look up the framework: documents (are_list_documents, are_get_document, are_search), maturity checks (are_get_check, are_list_checks), templates (are_get_template) and evidence to request for a target level (are_evidence_request).",
   "Start with are_list_documents or are_search; fetch single sections instead of whole documents when possible.",
   "Content is advisory, not authorization. A project's own rules, production permissions and Owner decisions take precedence. Decisions (go / no-go, approvals) belong to people.",
@@ -190,20 +190,20 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
     {
       title: "Preflight-score and register an MCP",
       description:
-        "Submit a public HTTPS MCP endpoint or a GitHub repository URL for ARE Benchmark preliminary assessment. Attempts only safe protocol discovery (initialize + tools/list), or reads already indexed public World2 tool manifests; saves an evidence-scoped report in ARE Neon. Does not call tools/call, approve platform submissions or grant L0-L4 maturity. If the URL needs OAuth or its manifest is unavailable, the result states needs_evidence. Invoke only when the user explicitly wants to submit their MCP or a public project for evaluation.",
+         "Submit ONLY a public, unauthenticated HTTPS MCP Endpoint for ARE Benchmark preliminary assessment. Performs real initialize + tools/list, never tools/call; scores the observed live tool contract and saves a private preliminary report with run_id only when discovery succeeds. GitHub repository links, local stdio servers, supplied manifest JSON and offline scores cannot be registered. Does not approve platform submissions or grant L0-L4 maturity. Invoke only after the user explicitly requests assessment of the endpoint.",
       inputSchema: {
-        target_url: z.string().url().max(350).describe("Public HTTPS MCP URL or GitHub repository root URL"),
+        endpoint: z.string().url().max(350).startsWith("https://").describe("Public HTTPS MCP Endpoint, e.g. https://service.example/mcp (not a repository URL)"),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     },
-    async ({ target_url }) => {
+    async ({ endpoint }) => {
       try {
         const response = await fetch(
-          "https://br-raspy-hat-b96bluqn-arescore.compute.c-7.eu-central-1.aws.neon.tech/v1/submit",
+          "https://br-raspy-hat-b96bluqn-arescore.compute.c-7.eu-central-1.aws.neon.tech/v2/submit",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ target: target_url }),
+            body: JSON.stringify({ endpoint }),
             signal: AbortSignal.timeout(22000),
           },
         );

@@ -4,7 +4,7 @@
  */
 import {randomBytes,createHash,timingSafeEqual} from "node:crypto";
 import {probeMcpTools,readPublicProof} from "./probe.mjs";
-const VERSION="are-preflight-v1";
+const VERSION="are-preflight-v2-endpoint-only";
 const ORIGINS=new Set(["https://are.fde.fan","https://agent-ready-engineering.vercel.app"]);
 const sha=x=>createHash("sha256").update(String(x)).digest("hex");
 const same=(a,b)=>typeof a==="string"&&typeof b==="string"&&a.length===b.length&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
@@ -32,55 +32,15 @@ async function sql(query,params=[]) {
 export function normalize(text){
  if(typeof text!=="string"||text.length>350)throw Error("invalid_target");
  let u;try{u=new URL(text.trim());}catch{throw Error("invalid_target");}
- if(u.protocol!=="https:"||u.username||u.password||u.hash||u.search)throw Error("invalid_target");
- if(u.hostname==="github.com"){
-  const m=/^\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/?$/.exec(u.pathname);
-  if(!m)throw Error("github_root_url_required");
-  const repo=(m[1]+"/"+m[2].replace(/\.git$/,"")).toLowerCase();
-  return {kind:"github",url:"https://github.com/"+repo,repo,identity:"github:"+repo};
- }
+ if(u.protocol!=="https:"||u.username||u.password||u.hash||u.search)throw Error("https_mcp_endpoint_required");
+ if(u.hostname.toLowerCase()==="github.com")throw Error("github_repository_not_supported_use_https_mcp_endpoint");
  const h=u.hostname.toLowerCase();
  if(h.length>150||!h.includes(".")||/[^a-z0-9.-]/.test(h)||
     /(^|\.)(localhost|local|internal|onion|test|invalid)$/.test(h)||
     /^(?:\d{1,3}\.){3}\d{1,3}$/.test(h)||u.port||
     u.pathname.length>180||/%2f|%5c|%00/i.test(u.pathname))throw Error("public_https_domain_required");
  const url=u.origin+u.pathname.replace(/\/+$/,"");
- return {kind:"mcp_url",url,repo:null,identity:"url:"+url.toLowerCase()};
-}
-async function ext(url,options={}){
- const r=await fetch(url,{...options,redirect:"error",signal:AbortSignal.timeout(8500)});
- if(!r.ok)throw Error("external_source_http_"+r.status);
- if(Number(r.headers.get("content-length")||0)>600000)throw Error("source_too_large");
- const txt=await r.text();
- if(txt.length>600000)throw Error("source_too_large");
- return JSON.parse(txt);
-}
-async function world2(repo){
- // Requests go exclusively to World2's fixed origin, not to submitted hosts.
- const cached=await sql("SELECT COALESCE((SELECT json_build_object('id',world2_service_id,'expected_hash',tool_hash) FROM are_eval.benchmark_study_candidates WHERE repository_key=$1 ORDER BY first_review_at DESC LIMIT 1),'null'::json)::text",[repo]);
- let serviceId=cached?.id||null;
- if(!serviceId){
-  const q=new URLSearchParams({query:repo.split("/")[1].replace(/[-_]mcp$/,""),
-   sources:"mcp_service",batch_size:"20"});
-  const search=await ext("https://world2.co/api/catalog?"+q);
-  serviceId=search.records?.find(x=>x.repository_identity?.key?.toLowerCase()===repo)?.id;
- }
- if(!serviceId)return null;
- const detail=await ext("https://world2.co/api/catalog",{method:"POST",
-  headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({refs:[{source:"mcp_service",id:serviceId}]})});
- const metadata=detail.records?.[0]?.metadata;
- if(!Array.isArray(metadata?.tool_manifest?.tools))return null;
- return {tools:metadata.tool_manifest.tools,version:metadata.tool_hash,
-  provenance:"world2_observed_tool_list_unverified",
-  evidence:[{kind:"world2_catalog",service_id:serviceId,hash:metadata.tool_hash,
-   confidence:"repository_association_not_independently_verified"}]};
-}
-async function github(repo){
- const r=await ext("https://api.github.com/repos/"+repo,{headers:{"Accept":"application/vnd.github+json",
- "User-Agent":"ARE-Evidence-Preflight"}});
- if(r.private||r.full_name?.toLowerCase()!==repo)throw Error("public_repository_not_found");
- return {name:r.name,branch:r.default_branch,pushed:r.pushed_at};
+ return {url,identity:"url:"+url.toLowerCase()};
 }
 const CHECK_IDS=("L1-V1 L1-V2 L1-V3 L1-V4 L1-A1 L1-C1 L2-C1 L2-C2 L2-X1 L2-X2 L2-X3 L2-X4 L2-A1 L2-A2 L2-I1 L2-O1 L2-O2 L3-C1 L3-C2 L3-C3 L3-C4 L3-S1 L3-S2 L3-S3 L3-S4 L3-A1 L3-A2 L3-A3 L3-A4 L3-O1 L3-O2 L4-O1 L4-O2 L4-I1 L4-I2 L4-R1 L4-R2 L4-R3 L4-R4").split(" ");
 export function staticScore(t){
@@ -106,40 +66,23 @@ export function staticScore(t){
  if(!findings.length)findings.push({code:"unknown_runtime",status:"unknown",note:"Limited static scan found no signals; actual task behavior, security and recovery are unverified."});
  return {score:Object.values(parts).reduce((a,b)=>a+b,0),parts,n,bytes,findings};
 }
-async function prepare(target,manifest){
+async function prepare(target){
  const parsed=normalize(target);
- let observed=null,name=parsed.repo?.split("/")[1]||parsed.url,version=null;
- if(manifest){
-  const v=typeof manifest==="string"?JSON.parse(manifest):manifest;
-  if(JSON.stringify(v).length>280000)throw Error("manifest_too_large");
-  observed={tools:v?.result?.tools||v?.tools,version:null,
-   provenance:"submitter_manifest_unverified",evidence:[{kind:"self_supplied",trust:"unverified"}]};
- }
- if(parsed.kind==="github"){
-  try{
-   const gh=await github(parsed.repo);name=gh.name;version="branch:"+gh.branch+" pushed:"+gh.pushed;
-   if(!observed)observed=await world2(parsed.repo);
-  }catch(e){if(!observed)version="github_lookup_unavailable";}
- }
- if(!observed&&parsed.kind==="mcp_url") {
-  try{observed=await probeMcpTools(parsed.url);}
-  catch(e){version="mcp_probe:"+String(e.message).slice(0,90);}
- }
- if(observed) {
-  const a=staticScore(observed.tools);
-  return {parsed,name,version:observed.version||version,status:"preflight_scored",
-   ...a,provenance:observed.provenance,evidence:observed.evidence};
- }
- return {parsed,name,version,status:parsed.kind==="mcp_url"?"probe_unavailable":"needs_evidence",score:null,parts:{},n:null,bytes:null,
-  findings:[{code:"missing_tool_list",status:"unknown",note:"No independently available tools/list. Provide your MCP tools/list JSON for static preflight; no remote tools/call was attempted."}],
-  provenance:"submitted_url_only",evidence:[{kind:"submitted_url",url:parsed.url}]};
+ let observed;
+ try{observed=await probeMcpTools(parsed.url);}
+ catch{throw Error("mcp_endpoint_unavailable_or_auth_required");}
+ if(!Array.isArray(observed.tools)||observed.tools.length===0)
+  throw Error("mcp_tools_list_required");
+ const a=staticScore(observed.tools);
+ return {parsed,name:new URL(parsed.url).hostname,version:observed.version,
+   status:"preflight_scored",...a,provenance:"live_mcp_tools_list",evidence:observed.evidence};
 }
 
-const UPSERT="WITH i AS (INSERT INTO are_eval.benchmark_targets(identity,source_kind,submitted_url,repo_key,display_name,is_public) VALUES($1,$2,$3,$4,$5,false) ON CONFLICT(identity) DO NOTHING RETURNING id) SELECT json_build_object('id',COALESCE((SELECT id FROM i),(SELECT id FROM are_eval.benchmark_targets WHERE identity=$1)),'created',EXISTS(SELECT 1 FROM i))::text";
+const UPSERT="WITH i AS (INSERT INTO are_eval.benchmark_targets(identity,submitted_url,display_name,is_public) VALUES($1,$2,$3,false) ON CONFLICT(identity) DO NOTHING RETURNING id) SELECT json_build_object('id',COALESCE((SELECT id FROM i),(SELECT id FROM are_eval.benchmark_targets WHERE identity=$1)),'created',EXISTS(SELECT 1 FROM i))::text";
 async function record(study,force=false){
  const p=study.parsed;
- const target=await sql(UPSERT,[p.identity,p.kind,p.url,p.repo,study.name]);
- if(!target.created&&!force)return {target_id:target.id,existing:true,note:"Existing submissions cannot be re-scored anonymously; claim the repository to run reassessment."};
+ const target=await sql(UPSERT,[p.identity,p.url,study.name]);
+ if(!target.created&&!force)return {target_id:target.id,existing:true,note:"Existing submissions cannot be re-scored anonymously; prove control of the endpoint hostname to run reassessment."};
  const unknown=Object.fromEntries(CHECK_IDS.map(id=>[id,{status:"unknown",reason:"needs_independent_evidence"}]));
  const q="WITH r AS (INSERT INTO are_eval.benchmark_runs(target_id,evaluator_version,status,score,score_components,observed_tools,manifest_bytes,findings,evidence,maturity_checks,source_version,source_provenance) VALUES($1::uuid,$2,$3,$4::integer,$5::jsonb,$6::integer,$7::integer,$8::jsonb,$9::jsonb,$10::jsonb,$11,$12) RETURNING id,created_at) SELECT row_to_json(r)::text FROM r";
  const run=await sql(q,[target.id,VERSION,study.status,study.score,JSON.stringify(study.parts),
@@ -152,9 +95,9 @@ async function record(study,force=false){
   maturity_level:null,maturity_checks_verified:0,maturity_checks_total:CHECK_IDS.length,
   public:false,owner_claim_required:true};
 }
-const OVERVIEW="SELECT json_build_object('schema','are.benchmark.v1','generated_at',now(),'cohort_count',(SELECT COUNT(*) FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115'),'cohort_tools',(SELECT COALESCE(SUM(observed_tool_count),0) FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115'),'public_submissions',(SELECT COUNT(*) FROM are_eval.benchmark_targets WHERE is_public),'recent',(SELECT COALESCE(json_agg(x ORDER BY x.created_at DESC),'[]'::json) FROM (SELECT t.id,t.display_name,t.source_kind,t.submitted_url,t.owner_proof_status,t.created_at,r.score,r.status,r.observed_tools,r.manifest_bytes,r.created_at AS assessed_at FROM are_eval.benchmark_targets t LEFT JOIN LATERAL (SELECT score,status,observed_tools,manifest_bytes,created_at FROM are_eval.benchmark_runs WHERE target_id=t.id ORDER BY created_at DESC LIMIT 1) r ON true WHERE t.is_public ORDER BY t.created_at DESC LIMIT 70) x),'cohort_preview',(SELECT COALESCE(json_agg(z ORDER BY z.manifest_bytes DESC),'[]'::json) FROM (SELECT repository_key,display_name,tool_count,manifest_bytes,sampling_bucket,stage,repository_match_verified,source_probe_checked_at FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115' ORDER BY manifest_bytes DESC LIMIT 100) z))::text";
-const REPORT="SELECT COALESCE((SELECT json_build_object('target',row_to_json(t),'runs',(SELECT COALESCE(json_agg(row_to_json(r) ORDER BY r.created_at DESC),'[]'::json) FROM (SELECT id,created_at,status,score,score_components,observed_tools,manifest_bytes,findings,evidence,maturity_checks,source_version,source_provenance FROM are_eval.benchmark_runs WHERE target_id=t.id ORDER BY created_at DESC LIMIT 20) r)) FROM (SELECT id,display_name,submitted_url,source_kind,owner_proof_status,created_at FROM are_eval.benchmark_targets WHERE id=$1::uuid AND is_public=true) t),'null'::json)::text";
-const HISTORY="SELECT json_build_object('target',(SELECT row_to_json(t) FROM (SELECT id,display_name,submitted_url,source_kind,owner_proof_status,is_public,created_at FROM are_eval.benchmark_targets WHERE id=$1::uuid) t),'runs',(SELECT COALESCE(json_agg(r ORDER BY r.created_at DESC),'[]'::json) FROM (SELECT id,evaluator_version,status,score,score_components,observed_tools,manifest_bytes,findings,source_provenance,source_version,created_at FROM are_eval.benchmark_runs WHERE target_id=$1::uuid ORDER BY created_at DESC LIMIT 30) r),'events',(SELECT COALESCE(json_agg(e ORDER BY e.created_at DESC),'[]'::json) FROM (SELECT id,event_type,details,created_at FROM are_eval.benchmark_submission_events WHERE target_id=$1::uuid ORDER BY created_at DESC LIMIT 70) e))::text";
+const OVERVIEW="SELECT json_build_object('schema','are.benchmark.v2','generated_at',now(),'cohort_count',(SELECT COUNT(*) FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115'),'cohort_tools',(SELECT COALESCE(SUM(observed_tool_count),0) FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115'),'public_submissions',(SELECT COUNT(*) FROM are_eval.benchmark_targets WHERE is_public),'recent',(SELECT COALESCE(json_agg(x ORDER BY x.created_at DESC),'[]'::json) FROM (SELECT t.id,t.display_name,t.submitted_url,t.owner_proof_status,t.created_at,r.score,r.status,r.observed_tools,r.manifest_bytes,r.created_at AS assessed_at FROM are_eval.benchmark_targets t LEFT JOIN LATERAL (SELECT score,status,observed_tools,manifest_bytes,created_at FROM are_eval.benchmark_runs WHERE target_id=t.id ORDER BY created_at DESC LIMIT 1) r ON true WHERE t.is_public ORDER BY t.created_at DESC LIMIT 70) x),'cohort_preview',(SELECT COALESCE(json_agg(z ORDER BY z.manifest_bytes DESC),'[]'::json) FROM (SELECT repository_key,display_name,tool_count,manifest_bytes,sampling_bucket,stage,repository_match_verified,source_probe_checked_at FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115' ORDER BY manifest_bytes DESC LIMIT 100) z))::text";
+const REPORT="SELECT COALESCE((SELECT json_build_object('target',row_to_json(t),'runs',(SELECT COALESCE(json_agg(row_to_json(r) ORDER BY r.created_at DESC),'[]'::json) FROM (SELECT id,created_at,status,score,score_components,observed_tools,manifest_bytes,findings,evidence,maturity_checks,source_version,source_provenance FROM are_eval.benchmark_runs WHERE target_id=t.id ORDER BY created_at DESC LIMIT 20) r)) FROM (SELECT id,display_name,submitted_url,owner_proof_status,created_at FROM are_eval.benchmark_targets WHERE id=$1::uuid AND is_public=true) t),'null'::json)::text";
+const HISTORY="SELECT json_build_object('target',(SELECT row_to_json(t) FROM (SELECT id,display_name,submitted_url,owner_proof_status,is_public,created_at FROM are_eval.benchmark_targets WHERE id=$1::uuid) t),'runs',(SELECT COALESCE(json_agg(r ORDER BY r.created_at DESC),'[]'::json) FROM (SELECT id,evaluator_version,status,score,score_components,observed_tools,manifest_bytes,findings,source_provenance,source_version,created_at FROM are_eval.benchmark_runs WHERE target_id=$1::uuid ORDER BY created_at DESC LIMIT 30) r),'events',(SELECT COALESCE(json_agg(e ORDER BY e.created_at DESC),'[]'::json) FROM (SELECT id,event_type,details,created_at FROM are_eval.benchmark_submission_events WHERE target_id=$1::uuid ORDER BY created_at DESC LIMIT 70) e))::text";
 async function limitWrites(){
  for(const [bucket,window,max] of [["minute","minute",8],["day","day",90]]){
   const q="WITH t AS (INSERT INTO are_eval.benchmark_request_budget(bucket,window_at,used) VALUES($1,date_trunc($2::text,now()),1) ON CONFLICT(bucket,window_at) DO UPDATE SET used=are_eval.benchmark_request_budget.used+1 WHERE are_eval.benchmark_request_budget.used<$3 RETURNING used) SELECT json_build_object('allowed',EXISTS(SELECT 1 FROM t))::text";
@@ -170,51 +113,47 @@ async function ownerRequired(id,token){
 }
 async function claimStart(id){
  if(!/^[0-9a-f-]{36}$/i.test(id||""))throw Error("invalid_target_id");
- const t=await sql("SELECT COALESCE((SELECT json_build_object('id',id,'kind',source_kind,'repo',repo_key,'proof',owner_proof_status) FROM are_eval.benchmark_targets WHERE id=$1::uuid),'null'::json)::text",[id]);
+ const t=await sql("SELECT COALESCE((SELECT json_build_object('id',id,'url',submitted_url,'proof',owner_proof_status) FROM are_eval.benchmark_targets WHERE id=$1::uuid),'null'::json)::text",[id]);
  if(!t)throw Error("unknown_target");
- if(!["unclaimed","repository_verified","domain_verified"].includes(t.proof))throw Error("invalid_claim_state");
+ if(!["unclaimed","domain_verified"].includes(t.proof))throw Error("invalid_claim_state");
  const challenge="are-verification="+randomBytes(18).toString("hex");
  const q="WITH c AS (INSERT INTO are_eval.benchmark_claims(target_id,challenge_hash,challenge_expires_at) VALUES($1::uuid,$2,now()+interval '30 minutes') ON CONFLICT(target_id) DO UPDATE SET challenge_hash=EXCLUDED.challenge_hash,challenge_expires_at=EXCLUDED.challenge_expires_at,updated_at=now() WHERE are_eval.benchmark_claims.challenge_expires_at<now() AND are_eval.benchmark_claims.updated_at<now()-interval '2 minutes' RETURNING target_id) SELECT json_build_object('issued',EXISTS(SELECT 1 FROM c))::text";
  const result=await sql(q,[id,sha(challenge)]);
  if(!result.issued)throw Error("active_claim_challenge_exists");
  return {target_id:id,challenge,expires_in_minutes:30,
-  instruction:t.kind==="github"?"Commit this exact text in .well-known/are-verification.txt on the repository default branch.": "Serve this exact text at https://YOUR-MCP-HOST/.well-known/are-verification.txt on the MCP host.",
+  instruction:"Serve the exact challenge text at https://YOUR-MCP-HOST/.well-known/are-verification.txt on the same MCP host.",
   verification_status:"not_yet_verified"};
 }
 async function claimVerify(id,challenge){
  if(!/^[0-9a-f-]{36}$/i.test(id||"")||typeof challenge!=="string"||!/^are-verification=[0-9a-f]{36}$/.test(challenge))throw Error("invalid_challenge");
- const t=await sql("SELECT COALESCE((SELECT json_build_object('repo',b.repo_key,'kind',b.source_kind,'url',b.submitted_url,'hash',c.challenge_hash,'expires',c.challenge_expires_at,'verified',c.verified_at,'updated',c.updated_at) FROM are_eval.benchmark_targets b JOIN are_eval.benchmark_claims c ON c.target_id=b.id WHERE b.id=$1::uuid),'null'::json)::text",[id]);
+ const t=await sql("SELECT COALESCE((SELECT json_build_object('url',b.submitted_url,'hash',c.challenge_hash,'expires',c.challenge_expires_at,'verified',c.verified_at,'updated',c.updated_at) FROM are_eval.benchmark_targets b JOIN are_eval.benchmark_claims c ON c.target_id=b.id WHERE b.id=$1::uuid),'null'::json)::text",[id]);
  if(!t||new Date(t.expires)<=new Date()||!same(sha(challenge),t.hash)||
     (t.verified&&new Date(t.updated)<=new Date(t.verified)))throw Error("invalid_claim");
- let txt;
- if(t.kind==="github"){
-  const meta=await github(t.repo);
-  const path="https://raw.githubusercontent.com/"+t.repo+"/"+encodeURIComponent(meta.branch)+"/.well-known/are-verification.txt";
-  const check=await fetch(path,{redirect:"error",signal:AbortSignal.timeout(9000)});
-  if(!check.ok||Number(check.headers.get("content-length")||0)>4000)throw Error("verification_file_unavailable");
-  txt=await check.text();
- }else{
-  txt=await readPublicProof(new URL(t.url).origin+"/.well-known/are-verification.txt");
- }
+ const txt=await readPublicProof(new URL(t.url).origin+"/.well-known/are-verification.txt");
  if(txt.length>4000||!txt.split(/\r?\n/).some(x=>x.trim()===challenge))throw Error("verification_file_mismatch");
  const token=randomBytes(32).toString("hex");
- const proof=t.kind==="github"?"repository_control":"domain_control";
- const verified_status=t.kind==="github"?"repository_verified":"domain_verified";
+ const proof="domain_control";
+ const verified_status="domain_verified";
  const q="WITH v AS (UPDATE are_eval.benchmark_claims SET verified_at=now(),owner_token_hash=$3,proof_kind=$4,challenge_expires_at=now(),updated_at=now() WHERE target_id=$1::uuid AND challenge_hash=$2 AND challenge_expires_at>now() AND (verified_at IS NULL OR updated_at>verified_at) RETURNING target_id) SELECT json_build_object('verified',EXISTS(SELECT 1 FROM v))::text";
  const done=await sql(q,[id,sha(challenge),sha(token),proof]);
  if(!done.verified)throw Error("claim_race_or_expired");
  await sql("WITH u AS (UPDATE are_eval.benchmark_targets SET owner_proof_status=$2,updated_at=now() WHERE id=$1::uuid RETURNING id) SELECT json_build_object('ok',EXISTS(SELECT 1 FROM u))::text",[id,verified_status]);
  return {target_id:id,proof,owner_token:token,
-  warning:"This token is displayed once. It confirms repository control, not ownership of the deployed service or ARE certification."};
+  warning:"This token is displayed once. It confirms HTTPS endpoint hostname control, not engineering quality or ARE certification."};
 }
 async function ownedTarget(id){
- return sql("SELECT COALESCE((SELECT json_build_object('url',submitted_url,'kind',source_kind) FROM are_eval.benchmark_targets WHERE id=$1::uuid),'null'::json)::text",[id]);
+ return sql("SELECT COALESCE((SELECT json_build_object('url',submitted_url) FROM are_eval.benchmark_targets WHERE id=$1::uuid),'null'::json)::text",[id]);
 }
 
+export function assertFields(body,keys){
+ if(!body||typeof body!=="object"||Array.isArray(body)||
+    Object.keys(body).some(k=>!keys.includes(k))||
+    keys.some(k=>!Object.hasOwn(body,k)))throw Error("invalid_request_schema");
+}
 async function postBody(req){
- if(Number(req.headers.get("content-length")||0)>290000)throw Error("request_too_large");
+ if(Number(req.headers.get("content-length")||0)>20000)throw Error("request_too_large");
  const raw=await req.text();
- if(raw.length>290000)throw Error("request_too_large");
+ if(raw.length>20000)throw Error("request_too_large");
  let data;try{data=JSON.parse(raw);}catch{throw Error("invalid_json_body");}
  if(!data||typeof data!=="object"||Array.isArray(data))throw Error("invalid_json_body");
  return data;
@@ -227,9 +166,9 @@ async function serve(req){
   "Access-Control-Allow-Methods":"GET,POST,OPTIONS",
   "Access-Control-Allow-Headers":"Content-Type","Access-Control-Max-Age":"600"}});
  if(req.method==="GET"){
-  if(u.pathname==="/v1/health")return res(req,200,{ok:true,source:"neon",version:VERSION});
-  if(u.pathname==="/v1/overview")return res(req,200,await sql(OVERVIEW));
-  if(u.pathname==="/v1/report"){
+  if(u.pathname==="/v2/health")return res(req,200,{ok:true,source:"neon",version:VERSION});
+  if(u.pathname==="/v2/overview")return res(req,200,await sql(OVERVIEW));
+  if(u.pathname==="/v2/report"){
    const id=u.searchParams.get("id")||"";
    if(!/^[0-9a-f-]{36}$/i.test(id))throw Error("invalid_target_id");
    const report=await sql(REPORT,[id]);
@@ -241,32 +180,41 @@ async function serve(req){
  if(origin&&!ORIGINS.has(origin))return res(req,403,{error:"origin_not_allowed"});
  await limitWrites();
  const body=await postBody(req);
- if(u.pathname==="/v1/submit"){
-  const prepared=await prepare(body.target,body.manifest||null);
+ if(u.pathname==="/v2/submit"){
+  assertFields(body,["endpoint"]);
+  const prepared=await prepare(body.endpoint);
   return res(req,201,{ok:true,...await record(prepared)});
  }
- if(u.pathname==="/v1/claim/start")
+ if(u.pathname==="/v2/claim/start"){
+  assertFields(body,["target_id"]);
   return res(req,200,{ok:true,...await claimStart(body.target_id)});
- if(u.pathname==="/v1/claim/verify")
+ }
+ if(u.pathname==="/v2/claim/verify"){
+  assertFields(body,["target_id","challenge"]);
   return res(req,200,{ok:true,...await claimVerify(body.target_id,body.challenge)});
- if(u.pathname==="/v1/history"){
+ }
+ if(u.pathname==="/v2/history"){
+  assertFields(body,["target_id","owner_token"]);
   await ownerRequired(body.target_id,body.owner_token);
   return res(req,200,{ok:true,...await sql(HISTORY,[body.target_id])});
  }
- if(u.pathname==="/v1/reassess"){
+ if(u.pathname==="/v2/reassess"){
+  assertFields(body,["target_id","owner_token"]);
   await ownerRequired(body.target_id,body.owner_token);
   const t=await ownedTarget(body.target_id);
   if(!t)throw Error("unknown_target");
-  const prepared=await prepare(t.url,body.manifest||null);
+  const prepared=await prepare(t.url);
   return res(req,200,{ok:true,...await record(prepared,true),authorized_retest:true});
  }
- if(u.pathname==="/v1/publish"){
+ if(u.pathname==="/v2/publish"){
+  assertFields(body,["target_id","owner_token","public"]);
   await ownerRequired(body.target_id,body.owner_token);
   if(typeof body.public!=="boolean")throw Error("public_boolean_required");
   const update=await sql("WITH u AS (UPDATE are_eval.benchmark_targets SET is_public=$2,updated_at=now() WHERE id=$1::uuid RETURNING id,is_public) SELECT row_to_json(u)::text FROM u",[body.target_id,body.public]);
   return res(req,200,{ok:true,...update});
  }
- if(u.pathname==="/v1/evidence"){
+ if(u.pathname==="/v2/evidence"){
+  assertFields(body,["target_id","owner_token","evidence"]);
   await ownerRequired(body.target_id,body.owner_token);
   if(!Array.isArray(body.evidence)||!body.evidence.length||body.evidence.length>12)throw Error("invalid_evidence_count");
   for(const e of body.evidence){
@@ -284,7 +232,7 @@ export default {async fetch(req){
  try{return await serve(req);}
  catch(e){
   const error=String(e?.message||"unknown").slice(0,90);
-  const expected=/^(invalid_|not_|request_|rate_limit|external_source|source_too_large|public_|github_|verification_|claim_|active_claim|owner_proof|mcp_url_claim|manifest_too_large)/.test(error);
+  const expected=/^(invalid_|not_|request_|rate_limit|public_|github_|https_|mcp_|verification_|claim_|active_claim|owner_proof)/.test(error);
   if(!expected)console.error("ARE Benchmark function error:",error);
   return res(req,expected?(error==="rate_limit_exceeded"?429:400):503,
     {ok:false,error:expected?error:"service_temporarily_unavailable"});

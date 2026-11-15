@@ -42,6 +42,12 @@ test("exposes seven read-only knowledge tools and one explicit opt-in scoring to
     if (t.name === "are_score_mcp") assert.equal(t.annotations?.openWorldHint, true);
     assert.ok((t.description ?? "").length > 40, `${t.name} has a description`);
   }
+  const scoring = tools.find((t) => t.name === "are_score_mcp")!;
+  const props = (scoring.inputSchema as { properties?: Record<string, unknown>; required?: string[] });
+  assert.deepEqual(props.required, ["endpoint"]);
+  assert.ok(props.properties?.endpoint, "only an endpoint may be scored");
+  assert.equal(props.properties?.target_url, undefined, "old target_url input must not be accepted");
+  assert.doesNotMatch(scoring.description ?? "", /GitHub repository URL or/);
   assert.match(client.getInstructions() ?? "", /advisory, not authorization/);
 });
 

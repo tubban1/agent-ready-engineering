@@ -7,6 +7,13 @@
  let cohort=[],publicReports=[],active=null,challenge=null,isPublic=false;
  const names={contract:"工具契约",tool_guidance:"工具说明",annotations:"安全声明",payload_footprint:"发现响应体积"};
  function status(id,text,error=false){const el=$(id);el.textContent=text;el.classList.toggle("error",error);}
+ const messageForError=msg=>({
+   github_repository_not_supported_use_https_mcp_endpoint:"不接受 GitHub 仓库地址。请填写实际运行中的公网 HTTPS MCP Endpoint。",
+   https_mcp_endpoint_required:"只能提交 HTTPS MCP Endpoint；本地 stdio 或 HTTP 地址不支持官方登记。",
+   mcp_endpoint_unavailable_or_auth_required:"无法通过该 Endpoint 完成 MCP 初始化与工具发现，可能需要登录、网络不可达或协议不兼容；本次未创建评分。",
+   invalid_request_schema:"请求格式不符合新版 Endpoint-only 接口：只接受 endpoint 参数。",
+   rate_limit_exceeded:"匿名请求已达到限额，请稍后再试。"
+ })[msg]||msg;
  async function call(path,data){
   const resp=await fetch(API+path,{method:data?"POST":"GET",mode:"cors",cache:"no-store",
    headers:data?{"Content-Type":"application/json"}:{},
@@ -31,7 +38,7 @@
  }
  function publicRender(){
   $("publicList").innerHTML=publicReports.length?publicReports.map(x=>
-   '<article class="public-item"><h3>'+esc(x.display_name)+'</h3><p>'+esc(x.source_kind)+' · '+esc(x.status||"等待证据")+
+   '<article class="public-item"><h3>'+esc(x.display_name)+'</h3><p>'+'HTTPS MCP · '++esc(x.status||"等待证据")+
    '</p><div class="report-score"><b>'+ (x.score===null||x.score===undefined?"未评分":Number(x.score)+"/100")+
    '</b><span class="preflight-tag">静态预评估</span></div><p>已观察工具：'+esc(x.observed_tools??"未知")+
    '</p><a href="/benchmark/?report='+encodeURIComponent(x.id)+'">查看公开报告 ↗</a></article>'
@@ -40,7 +47,7 @@
  async function load(){
   status("liveStatus","同步 Neon 数据中");
   try{
-   const v=await call("/v1/overview");
+   const v=await call("/v2/overview");
    cohort=Array.isArray(v.cohort_preview)?v.cohort_preview:[];
    publicReports=Array.isArray(v.recent)?v.recent:[];
    $("cohortCount").textContent=pretty(v.cohort_count);
@@ -61,7 +68,7 @@
   $("ownerArea").hidden=false; // returning verified creators can paste owner token
   $("claimChallenge").hidden=true;
   $("reportTitle").textContent=r.existing?"该项目已在库中":"ARE 自助预评估";
-  $("reportStage").textContent=r.existing?"已有记录":r.status==="preflight_scored"?"Manifest 静态预检":"证据不足";
+  $("reportStage").textContent=r.existing?"已有记录":r.status==="preflight_scored"?"实测工具契约静态预检":"证据不足";
   $("scoreNumber").textContent=r.score===null||r.score===undefined?"—":String(r.score);
   $("scoreTag").textContent=r.score===null||r.score===undefined?"待提供工具定义":"静态预检 / 100";
   $("reportTrust").textContent=(r.provenance||"暂无可复核的工具定义")+" · 不表示真实运行成功或平台审核结果";
@@ -85,20 +92,17 @@
   $("submitBtn").disabled=true;
   status("submitStatus","正在安全检索公开工具证据并保存版本记录…");
   try{
-   let manifest=null;
-   const text=$("manifestInput").value.trim();
-   if(text){try{manifest=JSON.parse(text);}catch{throw Error("工具清单 JSON 格式错误");}}
-   const p=await call("/v1/submit",{target:$("targetInput").value.trim(),...(manifest?{manifest}:{})});
+   const p=await call("/v2/submit",{endpoint:$("targetInput").value.trim()});
    showReport(p);
-   status("submitStatus",p.existing?"此目标已有报告，需要仓库认领后复评。":"已写入 Neon，结果为静态预评估，未授予正式等级。");
-  }catch(err){status("submitStatus","未完成："+err.message,true);}
+   status("submitStatus",p.existing?"此 Endpoint 已有报告，需验证域名控制权后复评。":"工具列表已通过真实 MCP 连接获取；静态预评估写入 Neon，但不是正式成熟度认证。");
+  }catch(err){status("submitStatus","未完成："+messageForError(err.message),true);}
   finally{$("submitBtn").disabled=false;}
  }
  async function startClaim(){
   if(!active?.target_id)return status("claimStatus","请先提交项目。",true);
-  status("claimStatus","正在创建仓库控制权挑战…");
+  status("claimStatus","正在创建域名控制权挑战…");
   try{
-   const d=await call("/v1/claim/start",{target_id:active.target_id});
+   const d=await call("/v2/claim/start",{target_id:active.target_id});
    challenge=d.challenge;
    $("challengeText").textContent=challenge;
    $("claimChallenge").hidden=false;
@@ -107,9 +111,9 @@
  }
  async function verifyClaim(){
   if(!challenge)return;
-  status("claimStatus","正在核实 GitHub 仓库文件…");
+  status("claimStatus","正在核实 MCP 域名验证文件…");
   try{
-   const d=await call("/v1/claim/verify",{target_id:active.target_id,challenge});
+   const d=await call("/v2/claim/verify",{target_id:active.target_id,challenge});
    $("ownerToken").value=d.owner_token;
    $("claimChallenge").hidden=true;
    status("claimStatus","控制权验证成功。请立即复制并安全保存 Owner Token（只显示一次）；可重新评估、查阅自己的历史或公开报告。");
@@ -124,15 +128,14 @@
  async function retest(){
   status("claimStatus","正在复评并保存历史…");
   try{
-   const raw=$("manifestInput").value.trim();
-   const d=await owned("/v1/reassess",{...(raw?{manifest:JSON.parse(raw)}:{})});
+   const d=await owned("/v2/reassess",{});
    showReport(d);status("claimStatus","复评已保存为不可变历史，尚非正式成熟度认证。");
   }catch(e){status("claimStatus","复评失败："+e.message,true);}
  }
  async function publish(){
   status("claimStatus","正在更新公开状态…");
   try{
-   const d=await owned("/v1/publish",{public:!isPublic});
+   const d=await owned("/v2/publish",{public:!isPublic});
    isPublic=d.is_public;
    $("publishBtn").textContent=isPublic?"撤回公开":"自愿公开当前报告";
    status("claimStatus",isPublic?"已自愿公开；可以复制 /benchmark/?report="+active.target_id:"已撤回公开。");
@@ -142,7 +145,7 @@
  async function evidence(){
   status("claimStatus","正在保存提交证据…");
   try{
-   const d=await owned("/v1/evidence",{evidence:[{
+   const d=await owned("/v2/evidence",{evidence:[{
     check_id:$("evidenceId").value.trim().toUpperCase(),
     kind:$("evidenceType").value,
     url:$("evidenceUrl").value.trim(),note:$("evidenceNote").value.trim()}]});
@@ -152,7 +155,7 @@
  async function history(){
   status("claimStatus","正在读取自己的提交与复评历史…");
   try {
-   const data=await owned("/v1/history",{});
+   const data=await owned("/v2/history",{});
    isPublic=Boolean(data.target?.is_public);
    $("publishBtn").textContent=isPublic?"撤回公开":"自愿公开当前报告";
    const runs=Array.isArray(data.runs)?data.runs:[];
@@ -171,7 +174,7 @@
  }
  async function loadReport(id){
   try{
-   const data=await call("/v1/report?id="+encodeURIComponent(id));
+   const data=await call("/v2/report?id="+encodeURIComponent(id));
    const run=data.runs?.[0];
    if(!run)return;
    showReport({target_id:id,status:run.status,score:run.score,score_components:run.score_components,
@@ -184,6 +187,13 @@
  }
  $("submitForm").addEventListener("submit",submit);
  $("refreshBtn").addEventListener("click",load);
+ $("copyPromptBtn").addEventListener("click",async()=>{
+  const endpoint=$("targetInput").value.trim()||"https://YOUR-SERVICE.example/mcp";
+  const prompt="请使用已连接的 ARE MCP（https://are.fde.fan/mcp）的 are_score_mcp 工具，对我的公网 HTTPS MCP Endpoint 进行自助预评估：\n"+endpoint+
+   "\n请只传 endpoint 参数，明确区分预评分与正式 39 项成熟度验收，返回评分、证据和 run_id。若当前 Agent 无法连接 ARE MCP，请直接说明，不要自行假称官方注册成功。";
+  try{await navigator.clipboard.writeText(prompt);status("submitStatus","中文提示词已复制；先确认 Agent 中已连接 ARE MCP。");}
+  catch{status("submitStatus","无法自动复制，请通过本页直接提交 Endpoint 进行评分。",true);}
+ });
  $("cohortSearch").addEventListener("input",cohortRender);
  $("cohortBucket").addEventListener("change",cohortRender);
  $("startClaimBtn").addEventListener("click",startClaim);

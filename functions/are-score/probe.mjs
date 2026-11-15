@@ -73,17 +73,35 @@ export async function readPublicProof(url){
 }
 export async function probeMcpTools(endpoint){
  const first=await pinnedHttps(endpoint,{jsonrpc:"2.0",id:1,method:"initialize",
-  params:{protocolVersion:"2025-06-18",capabilities:{},clientInfo:{name:"ARE Preflight",version:"1.0"}}});
+  params:{protocolVersion:"2025-06-18",capabilities:{},clientInfo:{name:"ARE Preflight",version:"2.0"}}});
  const init=readRpc(first.body);
  if(!init.result?.protocolVersion)throw Error("mcp_initialize_failed");
+ const version=String(init.result.protocolVersion);
+ if(!/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/.test(version))throw Error("mcp_invalid_negotiated_version");
  const session=first.headers["mcp-session-id"];
- const extra={"Mcp-Protocol-Version":init.result.protocolVersion};
+ const extra={"Mcp-Protocol-Version":version};
  if(typeof session==="string"&&session.length<200&&!/[\r\n]/.test(session))extra["Mcp-Session-Id"]=session;
- try{await pinnedHttps(endpoint,{jsonrpc:"2.0",method:"notifications/initialized"},extra);}catch{} // Older hosts may not require this; still attempt tools/list.
- const reply=await pinnedHttps(endpoint,{jsonrpc:"2.0",id:2,method:"tools/list",params:{}},extra);
- const tools=readRpc(reply.body).result?.tools;
- if(!Array.isArray(tools)||tools.length>250)throw Error("mcp_tools_list_unavailable");
- return {tools,version:init.result.protocolVersion,provenance:"live_mcp_tools_list",
-  evidence:[{kind:"mcp_tools_list",url:endpoint,response_bytes:reply.bytes,
-   note:"Transport tools/list observed; no business tools were invoked"}]};
+ try{await pinnedHttps(endpoint,{jsonrpc:"2.0",method:"notifications/initialized"},extra);}catch{} // Compatibility with differing notification handling is protocol-level, not target compatibility.
+ const tools=[],seen=new Set();
+ let cursor=null,totalBytes=0,pageCount=0;
+ do{
+   if(pageCount>=5)throw Error("mcp_tools_list_pagination_limit");
+   const params=cursor?{cursor}:{};
+   const reply=await pinnedHttps(endpoint,{jsonrpc:"2.0",id:pageCount+2,method:"tools/list",params},extra);
+   const result=readRpc(reply.body).result;
+   if(!Array.isArray(result?.tools))throw Error("mcp_tools_list_unavailable");
+   tools.push(...result.tools);
+   totalBytes+=reply.bytes;
+   if(tools.length>250||totalBytes>550000)throw Error("mcp_tools_list_too_large");
+   const next=result.nextCursor;
+   if(next!==undefined&&next!==null&&(typeof next!=="string"||next.length>512||seen.has(next)))
+      throw Error("mcp_invalid_pagination_cursor");
+   if(typeof next==="string")seen.add(next);
+   cursor=next||null;
+   pageCount++;
+ }while(cursor);
+ if(tools.length===0)throw Error("mcp_no_tools_listed");
+ return {tools,version,provenance:"live_mcp_tools_list",
+  evidence:[{kind:"mcp_tools_list",url:endpoint,response_bytes:totalBytes,pages:pageCount,
+   note:"Verified protocol initialize + tools/list (including pagination); no business tools invoked"}]};
 }

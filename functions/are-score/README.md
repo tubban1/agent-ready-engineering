@@ -1,39 +1,39 @@
-# ARE Benchmark self-assessment API
+# ARE Benchmark v2 — Endpoint-only self-assessment
 
-Status: P0 early public preflight; not a formal ARE maturity verifier or official OpenAI/Anthropic submission reviewer.
+**Decision:** only a publicly reachable, unauthenticated HTTPS Streamable HTTP MCP Endpoint may be registered and scored. There is NO backward compatibility with GitHub-only submissions, manually supplied tool manifests, local `stdio`, local offline scores or the `/v1/*` API. GitHub links may be included later as owner-provided source evidence, not as target identities.
 
-Production Neon Function: project \`are-evaluations\`, slug \`arescore\`, Node 24. Code in \`index.mjs\` and \`probe.mjs\`. Schema migration: \`migrations/002_are_benchmark_selfscore.sql\`. Public UI: \`/benchmark/\`. MCP tool: \`are_score_mcp\` in \`mcp/src/server.ts\` explicitly writes a preliminary report only on request.
+Production: Neon Function `arescore` in ARE Neon project. Source `index.mjs` + `probe.mjs`; migration `migrations/003_https_endpoints_only.sql`; frontend `/benchmark/`; MCP tool `are_score_mcp({endpoint})`.
 
-## Routes
-- \`GET /v1/health\`: readiness marker.
-- \`GET /v1/overview\`: 100-sample World2 research cohort + opt-in public reports only.
-- \`GET /v1/report?id=<uuid>\`: public reports only, with immutable assessment run history.
-- \`POST /v1/submit\`: \`{"target":"https://...","manifest": {"tools":[...]}}\` (manifest optional). GitHub repository root links look up the World2 observed tools/list when a verified source-level link is not yet available; remote MCP HTTPS URLs get protocol-only initialize + tools/list. Unavailable/private/OAuth tool lists show \`needs_evidence\`, never fabricated scores.
-- \`POST /v1/claim/start\`: \`{"target_id":"..." }\` -> 30-minute random challenge.
-- \`POST /v1/claim/verify\`: \`{"target_id":"...", "challenge":"are-verification=..."}\` -> once-only Owner token, stored by hash. GitHub claimant commits \`.well-known/are-verification.txt\` in public default branch; MCP URL claimant provides \`/.well-known/are-verification.txt\` on same host. Proof is ONLY repository or domain control, not full service ownership or formal quality.
-- \`POST /v1/reassess\`: owner token + target id (+ optional manifest) -> immutable new preliminary run. Failing or changed sources do not silently preserve the old score.
-- \`POST /v1/history\`: owner token + target id -> private submission events and immutable re-assessment version list.
-- Lost Owner Token: after a prior challenge has expired, \`/v1/claim/start\` permits a new proof challenge for the same verified repository or MCP domain; successfully responding rotates the token and invalidates the previous token. Used challenges cannot be replayed.
-- \`POST /v1/evidence\`: owner token + target id + 1–12 evidence rows (\`check_id\`, \`kind\`, HTTPS \`url\`, \`note\`). Saved as unverified creator evidence, never auto-passed in ARE 39 checks.
-- \`POST /v1/publish\`: owner token + target id + \`public\`: boolean; only verified controllers can opt into the public list or withdraw it.
+## External API (v2 only)
 
-## Score semantics
-The 0–100 number is an early **manifest preflight heuristic**, separate from ARE L0–L4: contract 35, descriptions 25, annotations 20, serialized manifest footprint 20. A well-described MCP may score 100 while still being unsafe, broken at runtime, or missing all independent value evidence. All 39 maturity check statuses default to unknown. Public list requires explicit verified owner opt-in; mere registration is private. Every run stores immutable source provenance, version where available, tool count, findings and component breakdown.
+- `GET /v2/health`, `GET /v2/overview`, `GET /v2/report?id=UUID` (public reports only).
+- `POST /v2/submit`: `{"endpoint":"https://service.example/mcp"}`; verifies public DNS/TLS, initializes MCP, obtains ALL `tools/list` pages, computes preliminary static score, privately saves target/run ID. If the Endpoint is unreachable, requires authentication or cannot list tools, returns an explicit failure **without creating a target/score**.
+- `POST /v2/claim/start`: `{"target_id":"UUID"}` → 30-minute challenge; owner serves it from `https://MCP-HOST/.well-known/are-verification.txt` on the same domain.
+- `POST /v2/claim/verify`: `{"target_id":"UUID","challenge":"are-verification=..."}` → one-time Owner Token (stored hashed).
+- `POST /v2/reassess`: `{"target_id":"UUID","owner_token":"..."}` → live Endpoint re-probe, new immutable run. Only verified owners can invoke it.
+- `POST /v2/history`: same credentials; private full run and evidence-submission history.
+- `POST /v2/evidence`: same credentials plus evidence rows (`check_id`, `kind`, HTTPS `url`, `note`); status stays unverified pending independent review.
+- `POST /v2/publish`: same credentials and `public` boolean; verified owners opt in or withdraw public visibility.
+- No other v1 operation aliases, alternate JSON property names, or raw manifest upload.
 
-## Safe behavior and gaps
-- Remote preflight is restricted to public HTTPS domain on port 443, DNS-pinned public IPv4, validated TLS, no credentials/query strings, no redirects, max 550k response, 8-second request timeout. Only \`initialize\`, \`notifications/initialized\` and \`tools/list\`; never \`tools/call\`.
-- World2 tools are untrusted registry-observed facts, GitHub repository relationship is explicitly UNVERIFIED, and submitted manifest is tagged self-supplied. No credential is copied to the model.
-- Global bounded anonymous write budget 8/min and 90/day. This is an initial safeguard, **not a complete per-user rate limit/abuse system**; strengthen before wide promotion.
-- OAuth-only hosts, remote servers without reachable public tools/list, direct IPv6-only services and private source repositories need alternative evidence or authorized testing.
-- No automatic independent source audit, isolated end-to-end scenario tests, full 39-item proof, or L0-L4 verification. Those remain separate human-reviewed and authorized workflows. No creator outreach has been sent.
-- Read API uses server-side Neon database proxy; no database credentials in public browser code.
+Public scoring is only a static preflight heuristic (contract 35, descriptions 25, annotations 20, manifest footprint 20). **Not** official platform approval and **not** ARE L0–L4: all 39 ARE checks default to UNKNOWN until independently verified.
 
-## Manual smoke test
-Use a test project you control, e.g. \`https://are.fde.fan/mcp\`:
-1. GET health, GET overview.
-2. POST submit known MCP URL and confirm \`status=preflight_scored\`, \`maturity_level=null\`, 39 unknown checks; external tools/call MUST NOT execute.
-3. POST unknown/unauthorized URL and check \`needs_evidence\` or \`probe_unavailable\`.
-4. Verify invalid proof and invalid owner token cannot publish, reassess or submit independent evidence.
-5. Real owner may verify domain challenge in the sandbox and opt in publicly, then compare immutable runs.
+## Safety and data scope
+- HTTPS public DNS address pinned to a public IPv4 target; validated TLS; no redirects, query secrets, private IPs, unauthorized ports, or arbitrary HTTP.
+- Only MCP `initialize`, optional `notifications/initialized`, and `tools/list`. No `tools/call` or business side effects.
+- Multi-page tools/list supports up to five pages, 250 tools and bounded response bytes.
+- Metadata/version/provenance are stored, **not the raw tool catalog**. Report is private by default. Domain proof is distinct from quality certification.
+- v1 GitHub-only and preflight-failed records were archived under `are_eval.benchmark_retired_v1_20261115` and removed from live Benchmark. Existing live successful endpoint runs are preserved.
+- Global quota 8 anonymous requests/min and 90/day, not a substitute for a complete per-user anti-abuse system.
+- OAuth-only/IPv6-only/non-public service evaluation and actual Agent task, recovery or business-value verification are out of scope of this P0 tool. Source code analysis via GitHub is still available as separate ARE engineering work, but cannot create a Benchmark scoring target.
 
-See also \`docs/research/ARE_BENCHMARK_P0_VALUE_20261115.md\`.
+## Verification
+
+Run `node --test functions/are-score/preflight.test.mjs` and `npm test --prefix mcp`.
+
+Live smoke:
+1. `POST /v2/submit` with a known reachable public MCP Endpoint.
+2. Assert a `run_id`, observed tools, `source_provenance=live_mcp_tools_list` and no mature L-level.
+3. `POST /v2/submit` using GitHub URL, `stdio://`, local IP, `manifest`, or old `target` field must fail without a new registration.
+4. `GET /v1/overview` must return 404.
+5. Verify owner domain claim, retest, private history, publish and revoke are still functioning.
