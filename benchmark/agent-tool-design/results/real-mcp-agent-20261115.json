@@ -1,0 +1,104 @@
+{
+  "schema": "are.real-mcp-agent-evidence.v1",
+  "date": "2026-11-15",
+  "scenario": "T02-ack-lost",
+  "source_fixture": "mcp/test/fixtures/agent-task-server.mjs",
+  "synthetic_only": true,
+  "task": "Resolve SYN-TICKET-101, notify owner exactly once, and handle acknowledgement lost after commit",
+  "client": "Codex CLI 0.166.0, MCP stdio via official @modelcontextprotocol/server v2",
+  "model": "Codex configured default (GPT-6 family; exact served checkpoint not independently confirmed)",
+  "comparison_scope": "One real model, one MCP client, one synthetic scenario, one successful run per variant",
+  "variant_runs": [
+    {
+      "variant": "api-wrapper",
+      "status": "COMPLETED",
+      "task_result": {
+        "ticket_status": "resolved",
+        "revision": 8,
+        "notifications": 1,
+        "ack_lost": true
+      },
+      "tool_calls": [
+        "get_ticket",
+        "update_ticket",
+        "get_ticket",
+        "notify_customer"
+      ],
+      "model_statement": "The notification was attempted and acknowledgment was lost; no status lookup exists, so delivery is unverified. Did not retry.",
+      "independent_oracle_verified": true,
+      "agent_verified_notification_receipt": false,
+      "input_tokens": 126090,
+      "cached_input_tokens": 113408,
+      "output_tokens": 506,
+      "reasoning_output_tokens": 103,
+      "trace_origin": "OWL process_mwi0lq45_45b0e6e75174"
+    },
+    {
+      "variant": "anthropic-principles",
+      "status": "COMPLETED",
+      "task_result": {
+        "ticket_status": "resolved",
+        "revision": 8,
+        "notifications": 1,
+        "ack_lost": true
+      },
+      "tool_calls": [
+        "ticket_get_resolution_context",
+        "ticket_resolve_and_notify",
+        "ticket_get_resolution_context"
+      ],
+      "model_statement": "Ticket state verified, but notification delivery still uncertain; no retry.",
+      "independent_oracle_verified": true,
+      "agent_verified_notification_receipt": false,
+      "input_tokens": 84216,
+      "cached_input_tokens": 78976,
+      "output_tokens": 421,
+      "reasoning_output_tokens": 41,
+      "trace_origin": "OWL process_mwi0lq45_45b0e6e75174"
+    },
+    {
+      "variant": "are-operation-contract",
+      "status": "COMPLETED",
+      "task_result": {
+        "ticket_status": "resolved",
+        "revision": 8,
+        "notifications": 1,
+        "ack_lost": true
+      },
+      "tool_calls": [
+        "ticket_inspect",
+        "ticket_prepare_resolution",
+        "ticket_confirm_resolution",
+        "ticket_operation_status"
+      ],
+      "model_statement": "Status receipt verified ticket resolved at revision 8 and notification exactly once; no retry.",
+      "independent_oracle_verified": true,
+      "agent_verified_notification_receipt": true,
+      "input_tokens": 102662,
+      "cached_input_tokens": 96896,
+      "output_tokens": 394,
+      "reasoning_output_tokens": 0,
+      "trace_origin": "OWL process_mwi0k6do_7213fcbed290"
+    }
+  ],
+  "prior_denied_trial": {
+    "variant": "are-operation-contract",
+    "host_mode": "read-only",
+    "result": "PREPARE_WRITE_DENIED_BY_HOST_APPROVAL",
+    "ticket_status": "open",
+    "notifications": 0,
+    "tool_calls": [
+      "ticket_inspect"
+    ],
+    "trace_origin": "OWL process_mwi0ibex_256f0bb742a2"
+  },
+  "caveats": [
+    "These three variants are illustrative software designs authored for ARE; the Anthropic-principles variant is not an Anthropic-provided or endorsed product.",
+    "The oracle independently inspected local synthetic state after the actual MCP tool calls; the model's own statements alone did not count as business state verification.",
+    "All three variants achieved the final synthetic ticket state and did not duplicate notifications in this single run. Only the ARE variant exposed an operation status receipt enabling the Agent to verify the notification. That is not a statistically significant success-rate difference.",
+    "Model token usage includes host-specific context and should not be interpreted as interface token cost alone; no repeated samples or model randomization performed.",
+    "Other MCP implementations, actual clients, data, enterprise workflows, authentication and real users not evaluated.",
+    "No official MCP certification or third-party published audit from this synthetic experiment."
+  ],
+  "external_business_effects": 0
+}

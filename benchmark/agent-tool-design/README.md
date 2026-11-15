@@ -37,6 +37,25 @@ Results: [results/scripted-reference-20261115.json](results/scripted-reference-2
 
 **Important:** These are *deterministic reference-controller fixture executions*, not evaluations of any language model. Real model executions **0**; measured model tokens **unknown**. The task set was engineered to expose the fixture's own contract differences. These numbers provide no statistical evidence of general model efficacy, no ranking of Anthropic products, no independent third-party task improvement, and no comparison to a production integration.
 
+## Actual Agent → MCP tool-call follow-up (2026-11-15)
+
+To move beyond a deterministic reference controller, we built an **isolated stdio MCP server** with the same synthetic ticket and tested it through a real authenticated Codex CLI Agent. The server persists a *separate local state oracle*; the Agent does not decide whether its own write succeeded.
+
+- Source fixture: `mcp/test/fixtures/agent-task-server.mjs` (synthetic only).
+- Reproducible explicit opt-in runner: `python3 benchmark/agent-tool-design/run_codex.py --variant are-operation-contract --scenario T02-ack-lost --execute` (requires Codex login; incurs model usage; auto-review allows only the synthetic fixture; inspect local controls before running).
+- Actual raw summary (no secrets): [real-mcp-agent-20261115.json](results/real-mcp-agent-20261115.json).
+- **One model, one actual MCP host, same task three variants, one run each.** This is a small case study, not multi-model benchmarking. The `anthropic-principles` variant is **our own illustrative implementation**, not a test of Anthropic's product.
+
+| Variant | Actual MCP calls | Independent ticket state | Notification side effects | Agent could prove notification outcome? |
+|---|---:|---|---:|---|
+| API wrapper | 4 | resolved, revision 8 | 1 | **No**, acknowledgment lost and no status tool |
+| Anthropic-principles illustration | 3 | resolved, revision 8 | 1 | **No**, ticket read shows resolved but notification delivery uncertain |
+| ARE operation contract illustration | 4 | resolved, revision 8 | 1 | **Yes**, operation-status receipt links the business outcome |
+
+The model acted cautiously in *all three* variants, so there were **no duplicate side effects** in these particular runs. ARE's observed incremental benefit in this sample was a provable completion state, **not** a superior measured success rate. Codex reported model usage, but large host-level cached context means these figures are **not** a clean token-efficiency comparison. A prior read-only Codex run correctly refused write tools; this is an important authorization control rather than a variant failure.
+
+A separate attempt to run another named model from the same Codex ChatGPT account returned "model not supported"; therefore only **one model actually completed the end-to-end experiment**. Repeat the same suite using at least two independently available models/clients, task hold-outs and multiple trials before claiming generalized benefit.
+
 ## Full P2 acceptance protocol for actual AI agents
 The above is a fixture feasibility stage, not the full cross-model experiment. A valid follow-on experiment needs all:
 - Two or more actual LLM models *and* at least two real MCP clients/hosts; record model IDs, client versions and actual tool traces. The separate `mcp/test/client-interop.test.ts` and `stdio-interop.test.ts` now validate the **official SDK** in both protocol eras, which is transport interoperability, not multiple model evaluations.
