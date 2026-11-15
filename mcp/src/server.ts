@@ -23,7 +23,7 @@ import { nextSteps } from "./nextsteps.js";
 import { validateLocalMcpAudit } from "./audit-gate.js";
 
 export const SERVER_NAME = "are";
-export const SERVER_VERSION = "0.8.0";
+export const SERVER_VERSION = "0.9.0";
 
 const BASE_INSTRUCTIONS = [
   "ARE (Agent-Ready Engineering): knowledge tools are read-only; are_score_mcp accepts ONLY a publicly reachable HTTPS MCP Endpoint and saves an evidence-scoped preliminary report after a successful live tools/list. It never certifies L0-L4 or executes external business operations.",
@@ -256,7 +256,7 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
             "Call are_list_checks and are_get_check to obtain canonical ARE-A02 criteria, then retrieve ARE-T07 template.",
             "For all 39 applicable checks classify VERIFIED_PASS, VERIFIED_FAIL, UNKNOWN or NOT_APPLICABLE (with explicit reason). Cite source+line or reproducible test for each verified claim.",
             "Before granting PASS verify the cited artifact satisfies the *whole* check: ARE-T01 Owner decision for L1-V1; ARE-T02 first batch and responsible persons for L1-V4/A1; all read tools measured for L2-X4; actual task outcomes for L2-O2; all in-scope writes with replay and revision conflicts for L3-C1/C2; approved authorization matrix for L3-A1; actual CI release-blocking proof for L4-O2.",
-            "Use the local are_validate_local_mcp_audit tool or the CLI to catch missing paths and overclaimed coverage before writing final maturity. Structural validation alone is not semantic proof.",
+            "Use the local are_validate_local_mcp_audit tool or CLI to catch missing paths, invalid N/A, source-vs-requirement mismatches and overclaimed coverage. Findings are review gates, never product defects or semantic certification.",
             "Treat static source evidence, declared schemas and task-runtime observations as separate confidence classes. Never infer L3/L4 from missing evidence or from a 0–100 static heuristic.",
           ],
           evidence: "Local check-by-check evidence register and draft ARE-T07, without claiming official certified maturity.",
@@ -288,7 +288,10 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
           "An annotation is a hint and must match the operation's real persistence/network side effects; it does not ensure host auto-approval.",
           "Do not remove a tool until task-level behavioral equivalence is demonstrated, including in-flight cancellation.",
           "A response byte count is observed size, NOT measured token count; predictions and measured outcomes must remain separate.",
-          "A single missing L1 Value Card/owner approval is enough to make a reported L1 unverified.",
+          "L1 requires an attributable, reviewed owner decision and substantive value evidence. A concise equivalent in README/AGENTS is valid; corporate signatures and fixed filenames are NOT compulsory.",
+          "A scripted sequence of MCP SDK calls is transport integration, not proof of a coding Agent independently choosing tools and verifying a user task.",
+          "L3-S1 can apply to cancellable/timeout-controlled long tasks even without a background daemon. N/A requires a scenario-specific reason, reviewed by a person.",
+          "For L3-A4, timeout and kill switch alone are not amount and frequency limits. For L3-O1, actor/submissionId alone are not claim/pre-authorization evidence.",
         ],
       },
       reporting: {

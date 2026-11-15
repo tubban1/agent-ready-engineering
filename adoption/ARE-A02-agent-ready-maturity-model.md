@@ -1,6 +1,6 @@
 # Agent-Ready Engineering Maturity Model
 > Document ID: ARE-A02
-> v0.3 | 2026-11-12 | Status: design recommendation; levels and thresholds are not empirically calibrated and are not an industry standard
+> v0.4 | 2026-11-15 | Status: design recommendation; levels and thresholds are not empirically calibrated and are not an industry standard
 > Language: English (canonical). Chinese reading aid: `ARE-A02-agent-ready-maturity-model.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
 > Related: `ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `templates/` (deliverables), `templates/ARE-T07-maturity-assessment.md` (assessment form), `templates/ARE-T08-scenario-screening.md` (screening many candidates), `templates/ARE-T09-portfolio-report.md` (portfolio report and roadmap)
 
@@ -16,6 +16,8 @@
 3. **Reaching level N = every check from level 1 to level N passes or is not applicable.** If any check fails, the level stops below the level of that check.
 4. **“Not applicable” needs a written reason confirmed in review.** Example: if the scenario has no long-running tasks, L3-S1 may be marked not applicable.
 5. **Assessments expire.** When the core, tool definitions or authorization rules change, the affected checks must be reassessed.
+6. **Substance, not document bureaucracy.** A solo maintainer or small open-source project may record its value decision, user, baseline source/measurement plan, real validation, capped first batch, and operation owners in concise project Markdown (e.g. README or AGENTS) rather than separate enterprise-form templates. The evidence must still be attributable, reviewed and checkable. **L1-V1 does not require a wet signature or a corporate approver role.** L1-A1 still requires accountable Owner/approver/responsible for the scoped operations; one person may fulfill multiple roles if clearly recorded. There is no automatic maturity certificate.
+7. **A code reference is not a semantic pass.** The assessor must verify the full check wording, its scope (all applicable tools/operations), and evidence of executed tests where required. A scripted SDK call is protocol integration evidence, not proof of autonomous Agent planning. A long-running operation can exist without an always-on daemon; do not mark L3-S1 N/A on daemon absence alone. Local automatic evidence gates flag review issues but never establish an official level.
 
 ## Levels
 | Level | Name | In one sentence | Allowed action | Main stages |
@@ -120,6 +122,7 @@ Repository readiness already has similar models (for example, Factory Agent Read
 - There is currently no data showing that higher levels correspond to higher task completion or fewer incidents; do not claim so.
 
 ## Change log
+- **v0.4 (2026-11-15)**: clarified lightweight equivalent evidence for solo maintainers (without mandatory signatures), strict semantic/coverage review, scripted MCP tests vs autonomous Agent evaluations, and long-task N/A applicability. Unchanged check IDs, binary level rule and exposure requirements.
 - **v0.3 (2026-11-12)**: added evidence types (`inspected` / `documented`; `self-reported` never passes) with inspection recommended for L3-C1, L3-C2, L3-A2, L3-O2; linked scenario screening (ARE-T08) and the portfolio report (ARE-T09). Check IDs and level rules unchanged.
 - **v0.2 (2026-11-12)**: first English canonical version, translated from Chinese v0.1. No change in content; check IDs unchanged. The Chinese text becomes the reading aid `ARE-A02-agent-ready-maturity-model.zh.md`.
 - **v0.1**: first version: L0–L4, eight dimensions, 39 binary checks.

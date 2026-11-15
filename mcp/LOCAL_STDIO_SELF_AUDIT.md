@@ -1,5 +1,5 @@
 # ARE — Local stdio MCP Self-Audit (NOT Benchmark registration)
-> v0.2 | 2026-11-15 | Status: public read-only self-audit guidance
+> v0.3 | 2026-11-15 | Status: public read-only self-audit guidance
 > English canonical. Chinese reading aid: `LOCAL_STDIO_SELF_AUDIT.zh.md`.
 
 ## Scope and separation of responsibilities
@@ -34,7 +34,10 @@ node mcp/dist/src/audit-gate-cli.js --workspace /ABSOLUTE/PATH/TO/PROJECT --repo
 
 - Exit 0: no structural evidence blockers found; **NOT a maturity certification**.
 - Exit 2: review blockers; exit 3: invalid input or execution failure.
-- The validator checks 39 check IDs, referenced local evidence files and line numbers, required artifact types and certain incomplete-coverage or regression-danger patterns. It cannot prove evidence semantics, actual execution success, human authorization approval or complete tool/task coverage.
+- The validator checks 39 check IDs, cited file/line ranges (including .mdc rules), format-neutral lightweight value evidence, basic mandatory semantic elements of selected checks, contradictory N/A claims, incomplete coverage, and affirmative unsafe recommendations. It checks cited evidence only and cannot prove code semantics, actual execution success, independent authorizations, all runtime paths or complete tool/task coverage.
+- **N/A is not a shortcut:** an in-flight Worker/scan may trigger L3-S1 despite having no daemon; merely logging an actor and submissionId does not prove L3-O1's authorization receipt. For L3-A4 timeout/kill switch do not replace amount and frequency limits.
+- **First-person/OSS value evidence:** ARE-T01/T02 are recommended layouts, not mandatory filenames or corporate signature requirements. A concise README/AGENTS decision table may carry equivalent value metrics, scope cap and roles, but the Owner decision and verification still require review.
+- An MCP SDK script with preselected tool calls is a valid transport integration test, but not a measured autonomous Agent planning test. Distinguish the two explicitly.
 - With ARE installed as a local MCP using an authorized `--workspace` root, the same read-only check is available as `are_validate_local_mcp_audit({path:"ARE_LOCAL_AUDIT_REPORT.md"})`. This tool is **not exposed** from ARE's public remote MCP.
 - Neither path sends the code or report to ARE servers. All report and source paths must remain within the authorized project root.
 
