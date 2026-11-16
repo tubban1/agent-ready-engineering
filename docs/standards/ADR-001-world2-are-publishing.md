@@ -1,10 +1,10 @@
 # ADR-001 — World2 as the Unified Agent Service Platform
 
-**Status:** Accepted product direction; production migration NOT YET EXECUTED
+**Status:** Executed ARE domain registration and public World2 service publication; legacy endpoint preserved.
 **Date:** 2026-11-16
 **English canonical; Chinese summary:** [ADR-001.zh.md](ADR-001-world2-are-publishing.zh.md)
 **Applies to:** All first-party remote MCP services managed by World2 (ARE, Interior, future services).
-**Scope of this revision:** Documentation and prompt design ONLY. Do not change code, DNS, Vercel routing, client configurations or existing public endpoints as part of this document change.
+**Scope update:** Canonical ARE hostname is now live on the existing Vercel deployment. World2 controls service publication/discovery; its external MCP descriptor does not proxy execution or grant tools.
 
 ## Decision — corrected after explicit owner clarification
 
@@ -15,7 +15,7 @@
 | Service | Intended World2-managed URL | Observed current state on 2026-11-16 |
 |---|---|---|
 | World2 platform | `https://world2.co/mcp` | Existing public MCP URL |
-| Agent-Ready Engineering (ARE) | **`https://are.world2.co/mcp`** | **NOT DEPLOYED**: `are.world2.co` DNS currently fails to resolve. Current functioning address is `https://are.fde.fan/mcp` |
+| Agent-Ready Engineering (ARE) | **`https://are.world2.co/mcp`** | Live CNAME to ARE Vercel project, 2026 bounded protocol 9 PASS/0 FAIL, old `https://are.fde.fan/mcp` still working |
 | Interior | `https://interior.world2.co/mcp` | Existing public MCP URL and separate Vercel project |
 | Other owned MCPs | `https://<service>.world2.co/mcp` | Names reserved by future per-service registration; do not assert they exist |
 
@@ -52,4 +52,4 @@ For ARE, **`https://are.world2.co/`** will also host the public entry page with 
 - [S0–S13 evaluation & publication SOP](ARE-EVALUATION-PUBLICATION-SOP-v1.md)
 - [English-first channel prompt directory](../prompts/README.md)
 
-**This ADR supersedes the previous "World2 = discovery/distribution only" interpretation.**
+**This ADR supersedes the previous "World2 = discovery/distribution only" interpretation. ARE is registered as World2 public app.mcp `2ca4d14b-2b82-43f9-9eea-d2de82ecb845`, version 1. World2 descriptor is publisher-declared; operational health is separately validated.**

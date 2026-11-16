@@ -1,36 +1,101 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agent-Ready Engineering MCP</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent-Ready Engineering — MCP Evaluation for Real Agents | World2</title>
+<meta name="description" content="Evidence-first MCP engineering evaluation. Connect the ARE MCP, copy a general Agent evaluation prompt, review real Agent test cases and safely assess your own MCP.">
+<link rel="canonical" href="https://are.world2.co/">
 <style>
-  :root { color-scheme: light dark; --fg:#1a1a1a; --bg:#fff; --muted:#666; --code:#f3f3f3; }
-  @media (prefers-color-scheme: dark) { :root { --fg:#eee; --bg:#121212; --muted:#999; --code:#222; } }
-  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui, sans-serif; }
-  main { max-width:44rem; margin:0 auto; padding:3rem 1rem; }
-  code, pre { background:var(--code); border-radius:6px; font-size:.9em; }
-  code { padding:.1em .35em; } pre { padding:1rem; overflow-x:auto; }
-  p.muted { color:var(--muted); }
+:root{color-scheme:light;--bg:#fafaf9;--ink:#151a21;--muted:#606875;--border:#e4e7eb;--surface:#fff;--accent:#214e71;--accentsoft:#ecf5fa}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg)}
+a{color:#145784;text-decoration:none}a:hover{text-decoration:underline}a:focus-visible,button:focus-visible{outline:3px solid #88b9e8;outline-offset:3px}
+header{background:white;border-bottom:1px solid var(--border)}
+.top{max-width:1080px;margin:auto;padding:17px 26px;display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.brand{font-size:16px;font-weight:750;letter-spacing:-.02em;color:var(--ink)}.brand span{font-weight:400;color:var(--muted)}
+nav{display:flex;gap:20px;flex-wrap:wrap;font-size:14px}
+main{max-width:1080px;margin:0 auto;padding:48px 26px 64px}
+.kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{font-size:clamp(34px,5vw,53px);line-height:1.14;letter-spacing:-.045em;max-width:820px;margin:13px 0 18px}h2{font-size:25px;letter-spacing:-.025em;margin:0 0 8px}
+.lead{font-size:18px;color:var(--muted);max-width:800px;margin:0 0 24px}
+a.pill,button.action{display:inline-flex;align-items:center;justify-content:center;padding:10px 17px;border-radius:9px;background:var(--accent);border:1px solid var(--accent);color:#fff;font-weight:650;font-size:14px;cursor:pointer}
+a.alt{background:white!important;color:var(--accent)!important} .actions{display:flex;gap:10px;flex-wrap:wrap}
+section{margin-top:42px}.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-top:15px}
+.sub{color:var(--muted);font-size:14px}.tag{display:inline-block;background:var(--accentsoft);color:var(--accent);border-radius:7px;padding:4px 8px;font-size:12px;font-weight:700}
+pre{background:#f3f6f7;border-radius:8px;padding:15px;overflow:auto;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
+textarea{display:block;width:100%;min-height:360px;border:1px solid #cbd5dc;border-radius:9px;background:#f8fafb;color:var(--ink);padding:16px;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:15px}
+footer{border-top:1px solid var(--border);padding:27px 26px;text-align:center;color:var(--muted);font-size:14px}
+footer a{margin:0 8px}#copyStatus{font-size:13px;color:#226b41;min-height:1em}
+@media(max-width:670px){main{padding:29px 16px 50px}.top{padding:14px 16px}h1{font-size:33px}.two{grid-template-columns:1fr}.panel{padding:17px}}
 </style>
 </head>
 <body>
+<header><div class="top"><a class="brand" href="/">ARE <span>· Agent-Ready Engineering / World2</span></a><nav><a href="#evaluate">Evaluate</a><a href="/benchmark/">Fast preflight</a><a href="/evaluations/">Evidence reports</a><a href="https://github.com/tubban1/agent-ready-engineering">GitHub</a></nav></div></header>
 <main>
-  <h1>Agent-Ready Engineering — MCP endpoint</h1>
-  <p>Public ARE MCP: read-only knowledge tools for documents, maturity checks, templates, evidence requests and workflow prompts, plus one explicit opt-in tool, <code>are_score_mcp</code>, that submits a preliminary MCP report to ARE Benchmark.</p>
-  <p><strong><a href="/benchmark/">ARE Benchmark — score your HTTPS MCP Endpoint →</a></strong> — value-first, evidence-scoped MCP preflight, creator claim, evidence submission and retest history. Not an official maturity certification.</p>
-  <p><strong><a href="https://github.com/tubban1/agent-ready-engineering/blob/main/mcp/LOCAL_STDIO_SELF_AUDIT.zh.md">Audit a local stdio MCP with ARE →</a></strong> — use the read-only <code>are_local_mcp_audit_guide</code> tool in your coding Agent to audit authorized local source and stdio runtime. No upload, Benchmark score, or registration.</p>
-  <p><strong><a href="/evaluations/">Browse ARE project evaluations →</a></strong> — live evidence dashboard backed by Neon. Automated research is preliminary.</p>
-  <p>Endpoint (Streamable HTTP, no sign-in):</p>
-  <pre>https://are.fde.fan/mcp</pre>
-  <p>Example client configuration:</p>
-  <pre>{
+<div class="kicker">World2-managed MCP service · for AI Agents</div>
+<h1>Evaluate MCPs with evidence, not assumptions.</h1>
+<p class="lead">Check protocols and every tool contract, observe a real Agent task, verify the business outcome independently, and keep failures and unknowns distinct. This is a repeatable engineering method, not an official certification.</p>
+<div class="actions"><a class="pill" href="#evaluate">Copy evaluation prompt</a><a class="pill alt" href="/evaluations/">View public assessments</a></div>
+
+<section aria-labelledby="connectTitle">
+<div class="row"><h2 id="connectTitle">Connect to ARE MCP</h2><span class="tag">Public HTTPS · no sign-in for read-only methods</span></div>
+<div class="panel"><div class="sub">Canonical MCP endpoint</div><pre id="endpointUrl">https://are.world2.co/mcp</pre><div class="sub">Example client configuration</div>
+<pre>{
   "mcpServers": {
-    "are": { "type": "http", "url": "https://are.fde.fan/mcp" }
+    "are": {
+      "type": "http",
+      "url": "https://are.world2.co/mcp"
+    }
   }
 }</pre>
-  <p class="muted">Checks of your own engagement workspace (validate deliverables, assess scenarios, aggregate a portfolio) are not available here so client files never leave your machine. Run the local server with <code>--workspace</code> for those.</p>
-  <p><a href="https://github.com/tubban1/agent-ready-engineering">Source and documents on GitHub</a></p>
+<p class="sub">Existing integrations may continue using <a href="https://are.fde.fan/mcp">are.fde.fan/mcp</a> during the compatibility period. The optional <code>are_score_mcp</code> publishes a preliminary Benchmark submission only when explicitly requested.</p></div>
+</section>
+
+<section id="evaluate" aria-labelledby="evaluateTitle">
+<div class="row"><h2 id="evaluateTitle">General Agent evaluation prompt</h2><span class="tag">English · copy &amp; customize</span></div>
+<p class="sub">Use this with a connected Agent. Fill in your target MCP URL, permitted test scope, source revision (if known), and independent task success condition. Public reviewers must stay read-only.</p>
+<div class="panel">
+<div class="row" style="margin-bottom:12px"><span class="sub">ARE 39-check scenario method · evidence-scoped</span><button class="action" id="copyPrompt" type="button">Copy prompt</button></div>
+<textarea id="evaluationPrompt" readonly spellcheck="false" aria-label="General Agent-Ready Engineering evaluation prompt">Use the Agent-Ready Engineering (ARE) methodology through the connected ARE MCP:
+https://are.world2.co/mcp
+
+Evaluate this MCP service: &lt;TARGET_MCP_HTTPS_URL&gt;
+Public source, if verified: &lt;GITHUB_REPO_AND_COMMIT_OR_UNKNOWN&gt;
+My role and authorized scope: &lt;PUBLIC_READONLY | OWNER_SANDBOX_WITH_EXPLICIT_PERMISSION&gt;
+Representative user task and independent success condition: &lt;TASK_AND_ORACLE&gt;
+
+Choose the applicable depth:
+A) PUBLIC READ-ONLY — no credentials; metadata plus genuinely safe public tool calls.
+B) OWNER-AUTHORIZED — access to owner-approved sandbox code, credentials and synthetic data; isolate state-changing calls.
+If neither route is lawful, stop and state BLOCKED.
+
+1. Verify the target's actual MCP protocol version(s) and inspect its complete tool inventory and applicable resources/prompts. Keep official protocol MUST compliance separate from ARE engineering guidance.
+2. Inspect ALL discovered tool contracts, including input schemas, optional output schemas, descriptions, side-effect annotations, auth scopes and errors. Report metadata coverage separately from actual invocation coverage. Do not assume readOnlyHint alone establishes safety.
+3. Run the safe, authorized success and validation paths. Never write, pay, send messages, delete, control devices or stress-test production merely because a tool is exposed.
+4. When source access is authorized, pin a source SHA and distinguish source evidence from the deployed version; never invent a source-to-runtime binding.
+5. Have a real Agent attempt at least one predefined user task (not just an SDK test call) and verify outcomes with an independent public/owner-approved oracle. If unavailable, mark NOT_VERIFIED.
+6. Report all 39 ARE scenario checks as PASS / FAIL / NOT_APPLICABLE (with reason) / NOT_VERIFIED. Assign an L0–L4 level only if the strict evidence gates genuinely pass; otherwise MATURITY_NOT_ESTABLISHED.
+7. Produce a concise report with tested URL/version/time, verified positives, reproducible problems, practical fixes, gaps, safe evidence links and retest instructions. Do not call the result official MCP certification or ARE independent approval.
+8. Do not send unsolicited email, create GitHub Issues, modify code or publish another project's vulnerability; those require separate evidence/disclosure checks and authorization.
+
+Start with the permitted test scope, exact tools seen and the intended task oracle. At the end say what was actually performed and what remains unverified.</textarea>
+<p id="copyStatus" role="status" aria-live="polite"></p>
+<p class="sub">A preliminary check does not certify a service. Missing authorized source, production binding, or an independent outcome oracle remains <strong>NOT_VERIFIED</strong>.</p>
+</div>
+</section>
+
+<section><h2>Choose the right evaluation depth</h2><div class="two">
+<div class="panel"><span class="tag">01 · Quick preflight</span><h3>MCP compatibility and metadata</h3><p>Safely inspect a publicly reachable MCP endpoint, protocol response and tool schemas. No private credentials or unknown business writes.</p><a href="/benchmark/">Open quick preflight</a></div>
+<div class="panel"><span class="tag">02 · Deep Agent evaluation</span><h3>Source, tools, outcomes and ARE 39</h3><p>Inspect authorized source and real multi-step Agent tasks with an independent oracle, then produce a reproducible, scoped maintainer report.</p><a href="https://github.com/tubban1/agent-ready-engineering/blob/main/docs/prompts/SELF_EVALUATE_MCP.md">Read deep self-evaluation guide</a></div>
+</div></section>
+
+<section><h2>Independent assessments and reproducible reports</h2>
+<p>Published cases distinguish live execution from source-only evidence, optional recommendations from protocol requirements, and unanswered questions from confirmed defects.</p>
+<div class="actions"><a class="pill alt" href="/evaluations/">Browse evaluation library</a><a class="pill alt" href="https://github.com/tubban1/agent-ready-engineering/blob/main/docs/cases/solarstorm-2026-11-16.md">Read the Solarstorm case</a></div>
+</section>
 </main>
-</body>
-</html>
+<footer>Agent-Ready Engineering is a World2-managed first-party service. Contact: <a href="mailto:liang.rao@world2.co">liang.rao@world2.co</a><a href="https://world2.co/">World2 Agent Service Platform</a><a href="https://github.com/tubban1/agent-ready-engineering">Source &amp; methodology</a></footer>
+<script>
+(function(){const button=document.getElementById("copyPrompt"),text=document.getElementById("evaluationPrompt"),status=document.getElementById("copyStatus");button.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(text.value);status.textContent="Prompt copied.";button.textContent="Copied";}catch(_){text.select();status.textContent="Select and copy this prompt with your keyboard.";button.textContent="Select text";}})})();
+</script>
+</body></html>
