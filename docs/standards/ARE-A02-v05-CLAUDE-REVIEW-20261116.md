@@ -53,6 +53,18 @@ Claude's first review returned **REQUEST_CHANGES**, citing CE1–CE6. Follow-up 
 
 The exact 6 Claude counterexamples were run again; a repository-local, strengthened copy lives at `mcp/test/claude-pr13-regressions.test.ts`. Additional regression covers N/A dates before the risk profile and substantive Chinese N/A explanations. The previously unfilled A02@0.5 T07 template fixture now correctly expects an unscorable grade, rather than a fictitious L0. The A02 evidence section also links a directly verifiable Solarstorm case and Vibe Monitor study; Benchmark's copied prompt now uses the canonical `are.world2.co/mcp`. Re-run these tests and look for new ways to exploit version metadata, source evidence, N/A scope or inconsistent consumers. Do not accept this summary as independent proof.
 
+## Round 2 independent rejection and Round 3 corrections (2026-11-16)
+
+Claude's second review found backdating as a legacy-score shortcut (R1/R2) and impossible dates passing string comparison (R3). The latest Draft PR changes are:
+
+- Strict UTC calendar-date roundtrip: invalid dates such as `2026-00-01` or `2026-02-30` are **unscorable** with `invalid_assessment_date` before any historical/version branching.
+- Existing valid pre-v0.5 records remain readable as historical grades, but their `consistent` and `provisional_consistent` are **null**, `allows` is null and `exposure_consistency_status` is `LEGACY_NOT_REVALIDATED`. They are **not** current authorization endorsements.
+- Portfolio `distribution` and risk/evidence summaries contain only current A02@0.5 evaluations. `legacy_distribution` retains old grades separately with the clear label `HISTORICAL_NOT_REVALIDATED_NOT_COMPARABLE`; invalid records appear in `unscorable`. Old records are not counted as completed checks for current `are_evidence_request`.
+- Local `are_validate_deliverable` emits an informational `legacy_assessment_not_current` notice on historical T07 documents without breaking archival validation.
+- New `mcp/test/claude-round2-regressions.test.ts` includes R1, R2, invalid calendar dates and a mixed old/new portfolio. Re-run Claude's original `round2.test.mts` as well. Its tests mostly log outputs, so do not treat them as a substitute for repository-local assertions.
+
+**Known provenance limitation:** A backdated document's filename is still user-controlled; this change segregates its effects rather than cryptographically verifying when the file was created. Pinning original Git commit/time and any signed source/provenance must be reviewed separately. These local checks never grant formal certifications.
+
 ## Acceptance decision
 
 Please report concrete defects with filename, line, reproduction, impact and minimal fix. Return `APPROVE`, `REQUEST_CHANGES` or `BLOCKED`, with regression outcomes and your assessment of unnecessary complexity. Do not merge or deploy on the user's behalf before review.

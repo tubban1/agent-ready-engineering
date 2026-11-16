@@ -4,6 +4,8 @@
 
 适用：在 Antigravity、Claude Code、Codex 或其他具备本地仓库访问和 MCP 调用能力的 coding Agent 中，由开发者评估自己的本地 stdio MCP。
 
+历史 T07 仅作为旧版本快照，`consistent=null`，`LEGACY_NOT_REVALIDATED`；当前 `distribution` 和历史 `legacy_distribution` 分开统计。不存在的日历日期不能进入旧版分支；仅把文件名日期改早不能证明它是真正的历史证据。新的整改请求不会自动继承旧版 PASS。
+
 ## 重要边界
 
 - 公共 ARE MCP：`https://are.fde.fan/mcp`

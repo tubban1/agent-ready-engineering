@@ -30,7 +30,7 @@ These tag mappings are **conservative applicability hints**. A profile cannot pr
 
 - New A02@0.5 T07 uses the same local semantic/coverage review rules as the audit evidence gate. Missing evidence and invalid N/A do **not** count toward provisional level computation.
 - A `level` calculated from documentation is ALWAYS `PROVISIONAL_EVIDENCE_REVIEW`, with `verified_level=null`, never an ARE issued certification. A local static gate cannot prove actual behavior or human approval.
-- Historical v0.4 or unpinned T07 records keep their original contents and are labeled `LEGACY_UNPINNED_PROVISIONAL` when read through the new code. Do not silently rescore them or compare their levels directly with v0.5.
+- Pre-2026-11-16 v0.4 or unpinned T07 records retain their historical computed levels, labeled `LEGACY_UNPINNED_PROVISIONAL`. They do not revalidate current exposure (`consistent=null`, `LEGACY_NOT_REVALIDATED`), nor count toward the current portfolio `distribution` or evidence-request completion. Use `legacy_distribution` for archival values; nonexistent calendar dates are unscorable. A backdated filename is not proof of original historical provenance.
 - Reproduce a new assessment at its pinned source revision and artifact hashes; changing the tool catalog requires a fresh risk profile and evaluation.
 - Public HTTPS preflight score is a different, read-only contract inspection (no tools/call). Its stored legacy 0–100 field is retained for historical continuity, but the public UI highlights four observed dimensions, not an unvalidated overall quality score.
 

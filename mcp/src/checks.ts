@@ -17,6 +17,11 @@ import { loadRiskProfile, reviewRiskProfile } from "./risk-profile.js";
 const framework = loadFramework();
 const checks = loadChecks();
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+function isActualISODate(date:string|null):boolean {
+  if(!date||!DATE.test(date))return false;
+  const milliseconds=Date.parse(date+"T00:00:00Z");
+  return Number.isFinite(milliseconds)&&new Date(milliseconds).toISOString().slice(0,10)===date;
+}
 
 export type { Issue };
 
@@ -66,19 +71,25 @@ function reviewT07(ws:Workspace,file:string,text:string){
   const parsed=parseAssessment(text),dir=dirname(file);
   const fileDate=basename(file).match(/^ARE-T07-maturity-assessment-(\d{4}-\d{2}-\d{2})\.md$/)?.[1]??null;
   const version=parsed.standardVersion?.trim()||null;
-  const modern=version==="ARE-A02@0.5";
-  const historical=Boolean(fileDate&&fileDate<A02_V05_DATE&&(!version||version==="ARE-A02@0.4"));
+  const validDate=isActualISODate(fileDate);
+  const modern=validDate&&version==="ARE-A02@0.5";
+  const historical=Boolean(validDate&&fileDate!<A02_V05_DATE&&(!version||version==="ARE-A02@0.4"));
   const mode:ReviewMode=modern?"modern":historical?"legacy":"invalid";
   const issues:Issue[]=[];
+  if(!validDate)issues.push({code:"invalid_assessment_date",
+    message:"Assessment filename must contain a real calendar date in YYYY-MM-DD format.",
+    hint:"Correct the filename; invalid or nonexistent dates can never enter the legacy assessment path."});
   const approvedNAs=new Set<string>();
   if(mode==="legacy")
     return {mode,modern:false,scoreable:true,issues,approvedNAs,excludedChecks:new Set<string>(),verdict:"LEGACY_UNPINNED_PROVISIONAL"};
   if(mode==="invalid"){
-    const code=version?"unsupported_standard_version":"standard_version_required";
-    issues.push({code,message:version
-      ? "Unsupported standard version "+version+"; explicit migration or review is required."
-      : "T07 dated on/after "+A02_V05_DATE+" must declare Standard version | ARE-A02@0.5.",
-      hint:"Restore the supported standard header, or leave this assessment unscored; never reclassify a new file as legacy."});
+    if(validDate){
+      const code=version?"unsupported_standard_version":"standard_version_required";
+      issues.push({code,message:version
+        ? "Unsupported standard version "+version+"; explicit migration or review is required."
+        : "T07 dated on/after "+A02_V05_DATE+" must declare Standard version | ARE-A02@0.5.",
+        hint:"Restore the supported standard header, or leave this assessment unscored; never reclassify a new file as legacy."});
+    }
     return {mode,modern:false,scoreable:false,issues,approvedNAs,excludedChecks:new Set<string>(),verdict:"UNSCORABLE_INVALID_STANDARD"};
   }
   if(!fileDate)issues.push({code:"assessment_date_required",message:"T07 filename must pin a valid date.",hint:"Use ARE-T07-maturity-assessment-YYYY-MM-DD.md."});
@@ -246,8 +257,12 @@ export function validateDeliverable(ws: Workspace, userPath: string) {
     ...(type === "ARE-T03" ? validateOperationContract(text) : []),
     ...(type === "ARE-T04" ? validateAuthorizationMatrix(ws, file, text) : []),
   ];
+  const notices=type==="ARE-T07"&&reviewT07(ws,file,text).mode==="legacy"
+    ? [{code:"legacy_assessment_not_current",message:"Historical ARE-T07 retained for reference; new assessments must use ARE-A02@0.5 and be independently revalidated."}]
+    : [];
   return {
     ...META,
+    notices,
     path: ws.rel(file),
     deliverable: type,
     checked: ["ARE-T01", "ARE-T02", "ARE-T03", "ARE-T04", "ARE-T07", "ARE-T08"].includes(type) ? "full" : "placeholders only",
@@ -286,7 +301,7 @@ export function assessScenario(ws: Workspace, userPath: string) {
     const prev = rowsOf(ws, previous.path);
     const previousReview=reviewT07(ws,previous!.path,ws.read(previous!.path));
     const pf = assess(prev, exists,previousReview.mode==="modern"?{approvedNAs:previousReview.approvedNAs,excludedChecks:previousReview.excludedChecks}:{});
-    const before = new Map(prev.rows.map((r) => [r.id, isSatisfied(r, exists,previousReview.modern?previousReview.approvedNAs:undefined,previousReview.modern?previousReview.excludedChecks:undefined)]));
+    const before = new Map(prev.rows.map((r) => [r.id, isSatisfied(r, exists,previousReview.mode==="modern"?previousReview.approvedNAs:undefined,previousReview.mode==="modern"?previousReview.excludedChecks:undefined)]));
     change = {
       previous_date: previous.date,
       previous_level: previousReview.scoreable ? pf.level : null,
@@ -302,7 +317,7 @@ export function assessScenario(ws: Workspace, userPath: string) {
   if(review.issues.length)warnings.push("ARE-T07 semantic and operation-risk review has "+review.issues.length+" blocking evidence issues; no verified maturity level is issued.");
   if (f.missingChecks.length || f.duplicateChecks.length || f.unknownChecks.length)
     warnings.push(`Assessment integrity: ${f.missingChecks.length} missing, ${f.duplicateChecks.length} duplicated and ${f.unknownChecks.length} unknown checks. Scoring is based only on authoritative checks.`);
-  if (f.consistent === false)
+  if (review.mode==="modern" && f.consistent === false)
     warnings.push(`High-risk inconsistency: “${f.exposure}” is exposed to agents but the level is ${f.level}. Reduce exposure or close the blocking checks first.`);
   if (f.evidenceLocationMissing.length) warnings.push(`Passes whose evidence file is missing do not count: ${f.evidenceLocationMissing.join(", ")}.`);
   if (outside.length) warnings.push(`Evidence outside the workspace does not count: ${outside.join(", ")}.`);
@@ -326,11 +341,13 @@ export function assessScenario(ws: Workspace, userPath: string) {
     risk_profile: parsed.riskProfile || null,
     evidence_gate: {verdict:review.verdict,blocker_count:review.issues.length,issues:review.issues.slice(0,100),maturity_certified:false},
     level_name: level?levelInfo.name.en:null,
-    allows: level?levelInfo.allows:null,
+    allows: review.mode==="modern"&&level?levelInfo.allows:null,
     exposure: f.exposure,
-    consistent: review.mode!=="legacy" && review.issues.length ? null : review.scoreable ? f.consistent:null,
-    provisional_consistent: f.consistent,
-    exposure_consistency_status: review.modern && review.issues.length ? "UNVERIFIED_EVIDENCE_BLOCKERS" : "PROVISIONAL_ONLY",
+    consistent: review.mode==="modern"&&!review.issues.length?f.consistent:null,
+    provisional_consistent: review.mode==="modern"?f.consistent:null,
+    exposure_consistency_status: review.mode==="legacy"?"LEGACY_NOT_REVALIDATED"
+      :review.mode==="invalid"?"UNSCORABLE_INVALID_ASSESSMENT"
+      :review.issues.length?"UNVERIFIED_EVIDENCE_BLOCKERS":"PROVISIONAL_ONLY",
     next_level: level?f.nextLevel:null,
     blocking_checks: level?f.blockingChecks:[],
     dimension_levels: level?dimensionLevels(parsed.rows, exists, options):null,
@@ -380,8 +397,10 @@ export function aggregatePortfolio(ws: Workspace, userPath?: string) {
     };
   });
   const assessed = scenarios.filter((s): s is Extract<typeof s, { assessed: true }> => s.assessed);
+  const current=assessed.filter(s=>s.assessment_standard_version==="ARE-A02@0.5"&&s.level!==null);
+  const historical=assessed.filter(s=>s.level_status==="LEGACY_UNPINNED_PROVISIONAL");
   const byDim = new Map<string, string[]>();
-  for (const s of assessed) for (const d of s.blocking_dimensions) byDim.set(d, [...(byDim.get(d) ?? []), s.scenario]);
+  for (const s of current) for (const d of s.blocking_dimensions) byDim.set(d, [...(byDim.get(d) ?? []), s.scenario]);
   const screeningFile = ws.fileIn(`${ws.root}/portfolio`, "ARE-T08-scenario-screening.md");
   let screening: Record<string, string[]> | null = null;
   if (screeningFile) {
@@ -395,16 +414,18 @@ export function aggregatePortfolio(ws: Workspace, userPath?: string) {
     ...META,
     workspace: ".",
     scenarios,
-    distribution: Object.fromEntries(framework.levels.map((l) => [l.id, assessed.filter((s) => s.level === l.id).length])),
-    distribution_status:"PROVISIONAL_ONLY_NO_CERTIFIED_LEVELS",
+    distribution: Object.fromEntries(framework.levels.map((l) => [l.id, current.filter((s) => s.level === l.id).length])),
+    distribution_status:"CURRENT_A02_V05_PROVISIONAL_ONLY_NO_CERTIFIED_LEVELS",
+    legacy_distribution:Object.fromEntries(framework.levels.map((l) => [l.id, historical.filter(s=>s.level===l.id).length])),
+    legacy_distribution_status:"HISTORICAL_NOT_REVALIDATED_NOT_COMPARABLE",
     unscorable: assessed.filter(s=>s.level===null).map(s=>s.scenario),
     not_assessed: scenarios.filter((s) => !s.assessed).map((s) => s.scenario),
     high_risk_inconsistencies: assessed.filter((s) => s.consistent === false).map((s) => ({ scenario: s.scenario, exposure: s.exposure, level: s.level, blocking_checks: s.blocking_checks })),
     recurring_weak_dimensions: Object.fromEntries([...byDim].filter(([, v]) => v.length >= 2).sort()),
     evidence: {
-      inspected: assessed.reduce((n, s) => n + s.passes.inspected, 0),
-      documented: assessed.reduce((n, s) => n + s.passes.documented, 0),
-      documented_on_inspection_recommended: assessed.flatMap((s) => s.documented_on_inspection_recommended.map((c) => `${s.scenario}:${c}`)),
+      inspected: current.reduce((n, s) => n + s.passes.inspected, 0),
+      documented: current.reduce((n, s) => n + s.passes.documented, 0),
+      documented_on_inspection_recommended: current.flatMap((s) => s.documented_on_inspection_recommended.map((c) => `${s.scenario}:${c}`)),
     },
     screening,
     note: "No averaged enterprise score by design (ARE-A02). Use ARE-T09 to write the portfolio report.",
@@ -421,7 +442,8 @@ export function evidenceRequestForScenario(ws: Workspace, userPath: string, targ
   if (files.length){
     const latest=files.at(-1)!.path, parsed=rowsOf(ws,latest);
     const review=reviewT07(ws,latest,ws.read(latest));
-    if(review.scoreable)for (const id of satisfiedCheckIds(parsed, exists, review.modern?{approvedNAs:review.approvedNAs,excludedChecks:review.excludedChecks}:{}))done.add(id);
+    if(review.mode==="modern"&&review.scoreable)
+      for(const id of satisfiedCheckIds(parsed, exists, {approvedNAs:review.approvedNAs,excludedChecks:review.excludedChecks}))done.add(id);
   }
   return {
     ...META,

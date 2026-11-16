@@ -55,7 +55,8 @@ for (const [scenario, want] of Object.entries<any>(expected.scenarios)) {
     assert.equal(isError, false);
     assert.equal(data.level, want.level);
     assert.equal(data.exposure, want.exposure);
-    assert.equal(data.consistent, want.consistent);
+    assert.equal(data.consistent, null, 'historical assessment does not revalidate current exposure');
+    assert.equal(data.exposure_consistency_status, 'LEGACY_NOT_REVALIDATED');
     assert.deepEqual(data.blocking_checks, want.blocking_checks);
     assert.deepEqual(data.evidence_location_missing, want.evidence_location_missing);
     assert.deepEqual(data.not_applicable_without_reason, want.not_applicable_without_reason);
@@ -77,19 +78,21 @@ for (const [scenario, want] of Object.entries<any>(expected.scenarios)) {
 test("are_assess_scenario reports per-dimension levels and warns about high-risk exposure", async () => {
   const { data } = await call(client, "are_assess_scenario", { scenario_path: "scenarios/invoice-matching" });
   assert.equal(data.dimension_levels.A, "L1");
-  assert.ok(data.warnings.some((w: string) => w.startsWith("High-risk inconsistency")));
+  assert.equal(data.consistent,null);
+  assert.ok(data.warnings.some((w: string) => w.includes("Historical assessment")));
 });
 
 test("are_aggregate_portfolio matches the expected portfolio answers and never averages", async () => {
   const { data } = await call(client, "are_aggregate_portfolio", {});
-  assert.deepEqual(data.distribution, expected.portfolio.distribution);
-  assert.deepEqual(data.high_risk_inconsistencies.map((x: { scenario: string }) => x.scenario), expected.portfolio.high_risk_inconsistencies);
+  assert.deepEqual(data.legacy_distribution, expected.portfolio.distribution);
+  assert.ok(Object.values<number>(data.distribution).every(n=>n===0));
+  assert.deepEqual(data.high_risk_inconsistencies, [], 'historical findings cannot assert current security consistency');
   const sortValues = (o: Record<string, string[]>) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, [...v].sort()]));
-  assert.deepEqual(sortValues(data.recurring_weak_dimensions), sortValues(expected.portfolio.recurring_weak_dimensions));
+  assert.deepEqual(sortValues(data.recurring_weak_dimensions), {}, 'historical gaps must not be counted as current findings');
   assert.deepEqual(data.screening, expected.screening);
   assert.deepEqual(data.not_assessed, []);
   assert.ok(!("average" in data) && !("score" in data));
-  assert.deepEqual(data.evidence.documented_on_inspection_recommended, ["supplier-order-change:L3-C2"]);
+  assert.deepEqual(data.evidence.documented_on_inspection_recommended, [], 'legacy evidence is not silently revalidated');
 });
 
 test("are_validate_deliverable finds the planted problems and passes clean files", async () => {
@@ -163,8 +166,8 @@ test("text planted in evidence files is never read into results", async () => {
 
 test("are_evidence_request with a scenario lists only what is still missing", async () => {
   const { data } = await call(client, "are_evidence_request", { target_level: "L3", scenario_path: "scenarios/supplier-order-change" });
-  assert.deepEqual(data.checks.map((c: { id: string }) => c.id), expected.scenarios["supplier-order-change"].blocking_checks);
-  assert.equal(data.already_satisfied, 31 - data.checks.length);
+  assert.equal(data.already_satisfied,0,"Historical checks do not automatically satisfy a current evidence request");
+  assert.equal(data.checks.length,31);
 });
 
 test("structured errors for missing assessments and unknown deliverables", async () => {
