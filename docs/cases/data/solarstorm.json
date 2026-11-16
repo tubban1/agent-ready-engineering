@@ -1,0 +1,197 @@
+{
+  "schema": "are.publication.case.v1",
+  "case_id": "solarstorm-2026-11-16",
+  "name": "Solarstorm MCP",
+  "world2_id": "5388312a-23b9-58f5-89ef-ec184a389907",
+  "endpoint": "https://mcp.solarstorm.today/mcp",
+  "assessed_at": "2026-11-16",
+  "owner_contact": "hello@solarstorm.today",
+  "report_url": "https://github.com/tubban1/agent-ready-engineering/blob/main/docs/cases/solarstorm-2026-11-16.md",
+  "source": {
+    "repo": "https://github.com/newminya/solarstorm-mcp",
+    "sha": "6d0fed8c9ec43bc2b2efb2fe94be81c45e66d650",
+    "source_version": "1.0.3",
+    "live_version": "1.0.0",
+    "binding": "UNVERIFIED"
+  },
+  "claim_deployed_source_tests": false,
+  "scope": {
+    "type": "PUBLIC_READ_ONLY",
+    "allowed_tools": [
+      "get_current_kp",
+      "get_kp_forecast_3day",
+      "get_solar_flares_24h",
+      "get_aurora_visibility"
+    ],
+    "non_disruptive": true,
+    "external_business_writes": false
+  },
+  "protocol": {
+    "version": "2026-07-28",
+    "pass": 9,
+    "fail": 0,
+    "unknown": 1,
+    "not_applicable": 1,
+    "profile": "BOUNDED_NON_OFFICIAL"
+  },
+  "tool_coverage": {
+    "discovered": 4,
+    "contract_checked": 4,
+    "called": 4,
+    "called_error_safe": true
+  },
+  "source_tests": {
+    "offline": 55,
+    "live_noaa": 9,
+    "binding_proven": false
+  },
+  "agent": {
+    "host": "Claude Code Sonnet",
+    "runs": 1,
+    "actual_mcp_calls": 4,
+    "independent_oracle": "NOAA Space Weather Prediction Center (SWPC)",
+    "user_task": "Use current public data to report the planetary Kp level, next three days' peak Kp, 24h GOES flare peak and naked-eye aurora likelihood at 48.2° latitude; distinguish forecasts from observations."
+  },
+  "assessment": {
+    "counts": {
+      "PASS": 4,
+      "FAIL": 2,
+      "NOT_APPLICABLE": 10,
+      "NOT_VERIFIED": 23
+    },
+    "maturity_level": "NOT_ESTABLISHED",
+    "certification": false
+  },
+  "finding": {
+    "id": "solarstorm-20261116-domain-error",
+    "classification": "ARE_DESIGN_RECOMMENDATION_NOT_PROTOCOL_MUST",
+    "tool": "get_aurora_visibility",
+    "input": "{latitude: 999}",
+    "observed": "A domain validation error message was returned with MCP isError=false; missing required latitude returned isError=true.",
+    "recommendation": "Consider consistent machine-readable tool error semantics; confirm which source revision matches deployed 1.0.0."
+  },
+  "outreach": {
+    "recipient": "hello@solarstorm.today",
+    "sent_at": "2026-11-16T13:41:36Z",
+    "provider_evidence_scope": "Gmail SENT label / separate private thread ID exists",
+    "delivery": "UNKNOWN",
+    "operator_response": "WAITING_EXTERNAL",
+    "current_sender_policy": "liang.rao@world2.co for future human followups; initial note came from Gmail"
+  },
+  "engagement": {
+    "actual_reply_evidence": null
+  },
+  "retest": {
+    "status": "WAITING_MAINTAINER_UPDATE",
+    "new_deployed_version": null,
+    "independent_oracle_passed": null,
+    "evidence_uri": null
+  },
+  "stages": {
+    "S0": {
+      "status": "COMPLETE",
+      "reason": "Selected from existing World2 MCP catalog"
+    },
+    "S1": {
+      "status": "COMPLETE_WITH_LIMITATIONS",
+      "reason": "Open-source service and contact verified; deployment/source binding unknown"
+    },
+    "S2": {
+      "status": "COMPLETE",
+      "reason": "2026-07-28 bounded protocol profile, 9 PASS / 0 FAIL"
+    },
+    "S3": {
+      "status": "COMPLETE",
+      "reason": "All 4 public tool schemas reviewed"
+    },
+    "S4": {
+      "status": "COMPLETE_WITH_LIMITATIONS",
+      "reason": "Source pinned and tests run; public source not bound to production"
+    },
+    "S5": {
+      "status": "COMPLETE",
+      "reason": "All 4 public read-only tools called; negative input tested"
+    },
+    "S6": {
+      "status": "COMPLETE_WITH_LIMITATIONS",
+      "reason": "One real Claude Agent run with independent NOAA validation, no statistical multi-run claim"
+    },
+    "S7": {
+      "status": "COMPLETE_WITH_LIMITATIONS",
+      "reason": "39 IDs classified; maturity not established"
+    },
+    "S8": {
+      "status": "COMPLETE",
+      "reason": "Evidence-scoped developer report and QA completed"
+    },
+    "S9": {
+      "status": "COMPLETE",
+      "reason": "One verified-address email accepted by Gmail; recipient delivery/read unknown"
+    },
+    "S10": {
+      "status": "COMPLETE",
+      "reason": "GitHub case and ARE World2 evaluations portal public"
+    },
+    "S11": {
+      "status": "PARTIAL",
+      "reason": "ARE GitHub case, ARE website and own-methodology Issue published; X human-required, HF moderation, other social pending"
+    },
+    "S12": {
+      "status": "WAITING_EXTERNAL",
+      "reason": "No maintainer reply or independent public engagement yet verified"
+    },
+    "S13": {
+      "status": "WAITING_EXTERNAL",
+      "reason": "No confirmed maintainer patch/new deployment and independent post-fix retest"
+    }
+  },
+  "channels": {
+    "github_case": {
+      "status": "PUBLISHED",
+      "url": "https://github.com/tubban1/agent-ready-engineering/blob/main/docs/cases/solarstorm-2026-11-16.md",
+      "published_at": "2026-11-16",
+      "verification_method": "github_fetch_file"
+    },
+    "are_website": {
+      "status": "PUBLISHED",
+      "url": "https://are.world2.co/evaluations/",
+      "published_at": "2026-11-16",
+      "verification_method": "public_site_fetch_and_neon_readback",
+      "reason": "Search for Solarstorm MCP; source_review, no formal level"
+    },
+    "github_discussion": {
+      "status": "PUBLISHED",
+      "url": "https://github.com/tubban1/agent-ready-engineering/issues/4",
+      "published_at": "2026-11-16",
+      "verification_method": "github_create_issue_and_readback"
+    },
+    "x": {
+      "status": "BLOCKED_HUMAN",
+      "reason": "@tubban1 composer filled but posting click returned CURSOR_ACTION_REQUIRES_HUMAN"
+    },
+    "linkedin": {
+      "status": "CONTENT_READY",
+      "reason": "Authenticated personal account and post composer, but no persistent post URL/confirmation"
+    },
+    "huggingface": {
+      "status": "BLOCKED_MODERATION",
+      "reason": "Existing ARE forum discussion post under moderator review; do not duplicate promotional outreach"
+    },
+    "modelscope": {
+      "status": "ACCOUNT_UNVERIFIED",
+      "reason": "ARE brand publishing identity not verified"
+    },
+    "reddit": {
+      "status": "NOT_ATTEMPTED",
+      "reason": "No suitable subreddit/host rules and author identity vetted"
+    },
+    "youtube": {
+      "status": "CONTENT_NOT_PRODUCED",
+      "reason": "No evidence-based video completed yet"
+    },
+    "bilibili": {
+      "status": "CONTENT_NOT_PRODUCED",
+      "reason": "No evidence-based video completed yet"
+    }
+  }
+}
