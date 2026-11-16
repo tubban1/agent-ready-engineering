@@ -103,7 +103,7 @@
 
 ## 5. 验收表和责任边界
 
-只有 `S10 PUBLIC_CASE` 已有在线 URL 才算“公开案例走通”； `S11 DISTRIBUTE` 可以局部走通（如 GitHub 自有仓库），不同账号/平台逐项记录。网站现有 Benchmark 已有一个**快速静态自评**按钮；在新 World2 托管服务页将增加**英文通用评估提示词**（[ready-to-use copy](../prompts/channels/WEBSITE_GENERAL_EVALUATION.md)），这是未来需要页面/部署代码变更的任务。本轮**先不修改产品代码**，先将英文提示词在 GitHub 公开，并保留需实施门禁。**World2 统一管理 ARE 等 MCP 服务是已明确的目标；ARE canonical endpoint 计划迁至 `are.world2.co/mcp`，但生产迁移尚未执行。** 详见 [ADR-001](ADR-001-world2-are-publishing.md) 与 [迁移验收计划](ARE-WORLD2-ENDPOINT-MIGRATION-PLAN.md)。
+只有 S10 PUBLIC_CASE 已有在线 URL 才算公开案例走通；S11 DISTRIBUTE 可分渠道局部完成。ARE 已在 https://are.world2.co/ 提供英文通用评估提示词与复制入口；正式 https://are.world2.co/mcp 已上线、旧域名兼容。S11 四渠道实施与实际状态见 [Channel Playbooks](ARE-S11-CHANNEL-PLAYBOOKS-v1.md)。对 HF / ModelScope / X / LinkedIn / Reddit 必须分别保留真实 URL 和授权回执，GitHub 或 ARE 自有站点成功不等于第三方渠道完成。
 
 **批量化门槛**：单案 S0–S10 全部证据、S11 至少一个合法渠道公开、S12 有联系记录、S13 仅在收到可复测更新后完成；源码绑定、维护者治理或认证无法取得时必须标 `LIMITED`。不能因没有维护者回复而伪称完成 S13。
 
@@ -129,3 +129,7 @@
 真实跨平台发布仍须使用明确授权的各平台工具/账号；只有回读公开 URL + 保存真实 Provider/API/浏览器回执才能通过 `receipt` 门禁，不允许仅靠点击按钮或草稿建立 PUBLISHED。连接中断后同一渠道同一回执幂等；不同 URL 触发冲突，需要人工审阅，不允许自动重复发帖。
 
 **S13 依赖维护者新版本和独立业务 Oracle**。发送 S9 邮件本身不能满足 S12 回信或 S13 修复验收。可公开的技术评估闭环与外部合作/修复闭环分别列示。
+
+## S11 实际生产与平台分流
+
+四条渠道生产线详见 [ARE S11 Channel Playbooks v1](ARE-S11-CHANNEL-PLAYBOOKS-v1.md)。证据数据、媒体卡片、短视频已可重建；外部平台是否真正 PUBLISHED 必须有对应独立可访问链接和回执，且与官方报告来源一一关联。现有统一 Google Calendar 调度器仅跟进状态/讨论，不替代各平台的发帖授权。

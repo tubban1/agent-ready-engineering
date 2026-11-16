@@ -29,6 +29,21 @@ The source-of-truth **public** case manifest is [solarstorm.json](data/solarstor
 
 [Public replay prompt](solarstorm-public-replay-2026-11-16.md) and [maintainer retest prompt](solarstorm-maintainer-retest-2026-11-16.md) are now generated from that fixed case manifest. The initial Gmail send is not repeated; no owner reply or production fix is verified as of the review. X repost attempt again hit `CURSOR_ACTION_REQUIRES_HUMAN`. LinkedIn editor was filled but did not yield a publish URL or unambiguous visible post; it remains CONTENT_READY rather than PUBLISHED. These may only change status after a real receipt.
 
+## S11 four-channel deliverable update (2026-11-16)
+
+Published as first-party ARE assets after the production deployment gate:
+
+- [Interactive bilingual evidence explorer](https://are.world2.co/evidence/solarstorm/) — a **static client-side viewer**, not live MCP execution.
+- [Downloadable evidence dataset](https://are.world2.co/datasets/solarstorm-20261116/) — 39 check records, four tools and three NOAA comparisons (2 match, 1 time-sensitive difference).
+- [Public data cards and 15-second short video](https://are.world2.co/media/solarstorm/) — accurately labeled evidence motion graphics, not a recording of Agent tool execution.
+- [Hugging Face technical article draft](../channels/huggingface/SOLARSTORM_TECHNICAL_ARTICLE_EN.md)
+- [ModelScope Chinese technical case](../channels/modelscope/SOLARSTORM_CASE_ZH.md)
+- [X technical thread](../channels/x/SOLARSTORM_THREAD_EN.md) and [LinkedIn native post](../channels/linkedin/SOLARSTORM_POST_EN.md)
+- [Reddit native discussion](../channels/reddit/SOLARSTORM_DISCUSSION_EN.md) — no self-promotional links in the main post body.
+- [Four channel release playbooks](../standards/ARE-S11-CHANNEL-PLAYBOOKS-v1.md) and [safe dataset/media build scripts](../../scripts/are_s11_build.py)
+
+External publication remains a distinct event. Hugging Face dataset/Space creation required a human submission click and no HF API token was available; the existing HF forum thread was under moderation. ModelScope session was not signed in. X human click was blocked, LinkedIn had no verified permalink. Reddit community rules were read; project links are restricted and no post URL was obtained. NONE of these external states is counted as PUBLISHED until a provider URL is read back.
+
 ## Copy for X (prepared, not submitted)
 
 > Real Agent test > schema scan.
