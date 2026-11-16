@@ -4,11 +4,58 @@
   "installCommand": "npm ci --prefix mcp",
   "buildCommand": "npm run build --prefix mcp",
   "outputDirectory": "public",
-  "rewrites": [{ "source": "/mcp", "destination": "/api/mcp" }],
+  "rewrites": [
+    {
+      "source": "/mcp",
+      "destination": "/api/mcp"
+    }
+  ],
   "functions": {
     "api/mcp.mjs": {
       "includeFiles": "{README.md,data/**,principles/**,references/**,adoption/**,media/**}",
       "maxDuration": 30
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/datasets/solarstorm-20261116/checks.jsonl",
+      "destination": "/evidence/solarstorm/checks.jsonl",
+      "permanent": true
+    },
+    {
+      "source": "/datasets/solarstorm-20261116/tools.jsonl",
+      "destination": "/evidence/solarstorm/tools.jsonl",
+      "permanent": true
+    },
+    {
+      "source": "/datasets/solarstorm-20261116/oracle.jsonl",
+      "destination": "/evidence/solarstorm/oracle.jsonl",
+      "permanent": true
+    },
+    {
+      "source": "/datasets/solarstorm-20261116/case_summary.json",
+      "destination": "/evidence/solarstorm/case_summary.json",
+      "permanent": true
+    },
+    {
+      "source": "/datasets/solarstorm-20261116/:path*",
+      "destination": "/evidence/solarstorm/",
+      "permanent": true
+    },
+    {
+      "source": "/datasets/solarstorm-20261116",
+      "destination": "/evidence/solarstorm/",
+      "permanent": true
+    },
+    {
+      "source": "/media/solarstorm/:path*",
+      "destination": "/evidence/solarstorm/",
+      "permanent": true
+    },
+    {
+      "source": "/media/solarstorm",
+      "destination": "/evidence/solarstorm/",
+      "permanent": true
+    }
+  ]
 }

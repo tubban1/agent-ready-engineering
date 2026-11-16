@@ -134,7 +134,7 @@
     },
     "S11": {
       "status": "PARTIAL",
-      "reason": "ARE GitHub case, ARE website and own-methodology Issue published; X human-required, HF moderation, other social pending"
+      "reason": "Canonical ARE Solarstorm review and evidence page public; channel-specific short-link posts still require independent publish receipts"
     },
     "S12": {
       "status": "WAITING_EXTERNAL",
@@ -154,10 +154,10 @@
     },
     "are_website": {
       "status": "PUBLISHED",
-      "url": "https://are.world2.co/evaluations/",
+      "url": "https://are.world2.co/evidence/solarstorm/",
       "published_at": "2026-11-16",
-      "verification_method": "public_site_fetch_and_neon_readback",
-      "reason": "Search for Solarstorm MCP; source_review, no formal level"
+      "verification_method": "public_http_200_and_live_chrome_review",
+      "reason": "Canonical single case page, embedded 39 checks, 4 tool evidence, NOAA Oracle, reproduction and limits"
     },
     "github_discussion": {
       "status": "PUBLISHED",
@@ -179,19 +179,11 @@
     },
     "modelscope": {
       "status": "ACCOUNT_UNVERIFIED",
-      "reason": "ARE brand publishing identity not verified"
+      "reason": "Current ModelScope browser not signed in; no public post"
     },
     "reddit": {
-      "status": "NOT_ATTEMPTED",
-      "reason": "No suitable subreddit/host rules and author identity vetted"
-    },
-    "youtube": {
-      "status": "CONTENT_NOT_PRODUCED",
-      "reason": "No evidence-based video completed yet"
-    },
-    "bilibili": {
-      "status": "CONTENT_NOT_PRODUCED",
-      "reason": "No evidence-based video completed yet"
+      "status": "BLOCKED_HUMAN",
+      "reason": "Weekly r/AI_Agents Project Display comment drafted, submission rejected CURSOR_ACTION_REQUIRES_HUMAN; no public permalink"
     }
   }
 }

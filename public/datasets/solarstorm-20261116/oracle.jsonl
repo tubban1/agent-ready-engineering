@@ -1,3 +1,0 @@
-{"case_id":"solarstorm-2026-11-16","check":"3day_date_buckets","interpretation":"Matched independent NOAA reference at evaluation time","match_at_capture":true,"observed_at":"2026-11-16","oracle":"NOAA SWPC","volatile_instantaneous_data":false}
-{"case_id":"solarstorm-2026-11-16","check":"xray_flare_classes","interpretation":"NOAA and server instantaneous X-ray flux differed across observations; peak class agreed","match_at_capture":false,"observed_at":"2026-11-16","oracle":"NOAA SWPC","volatile_instantaneous_data":true}
-{"case_id":"solarstorm-2026-11-16","check":"aurora_noaa_forecast","interpretation":"Matched independent NOAA reference at evaluation time","match_at_capture":true,"observed_at":"2026-11-16","oracle":"NOAA SWPC","volatile_instantaneous_data":false}
