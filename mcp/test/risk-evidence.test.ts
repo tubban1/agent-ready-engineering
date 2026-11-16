@@ -13,7 +13,7 @@ import {assessScenario,validateDeliverable} from "../src/checks.js";
 function fixture(){
  const dir=mkdtempSync(join(tmpdir(),"are-risk-"));mkdirSync(join(dir,"evidence"));
  writeFileSync(join(dir,"evidence","sources.md"),"All tools discovered from runtime; side effects inspected and verified.\n");
- writeFileSync(join(dir,"evidence","na.md"),"The public tools only read data, do not run background jobs and have no task IDs.\n");
+ writeFileSync(join(dir,"evidence","na.md"),"public_lookup is a synchronous public read-only operation, it does not run background jobs and has no task IDs.\n");
  const profile={
   schema:"are.operation-risk.v1",target:"synthetic-readonly-mcp",source_revision:"f".repeat(40),
   standard_version:"ARE-A02@0.5",tool_catalog_count:1,operation_count:1,ingress_paths:["mcp"],
@@ -39,7 +39,7 @@ function t07(dir:string,modern:boolean, naReason:string){
  "## L1–L4", "| ID | Short name | Result | Evidence type | Evidence location / reason for N/A |",
  "| :--- | :--- | :--- | :--- | :--- |", rows
  ].join("\n");
- const file=join(dir,"ARE-T07-maturity-assessment-2026-11-16.md");writeFileSync(file,text);return file;
+ const file=join(dir,"ARE-T07-maturity-assessment-"+(modern?"2026-11-16":"2026-11-15")+".md");writeFileSync(file,text);return file;
 }
 test("risk inventory: right-sized public reader and source annotations",()=>{
  const f=fixture();
@@ -79,6 +79,22 @@ test("N/A rejects vague reasons, no profile, unknown tools and out-of-workspace 
   assert.equal(reviewNA(f.ws,f.dir,"L3-S1",evil,"ARE-T10-operation-risk-profile.json").ok,false);
  }finally{rmSync(f.dir,{force:true,recursive:true});}
 });
+test("N/A dates must follow profile review and precede assessment; evidence must name scoped operation",()=>{
+ const f=fixture();
+ try{
+  const good=na();
+  assert.equal(reviewNA(f.ws,f.dir,"L3-S1",good,"ARE-T10-operation-risk-profile.json","2026-11-16").ok,true);
+  const early=good.replace("reviewed_at=2026-11-16","reviewed_at=2026-11-15");
+  assert.ok(reviewNA(f.ws,f.dir,"L3-S1",early,"ARE-T10-operation-risk-profile.json","2026-11-16").issues.includes("na_review_before_risk_profile"));
+  const future=good.replace("reviewed_at=2026-11-16","reviewed_at=2099-01-01");
+  assert.ok(reviewNA(f.ws,f.dir,"L3-S1",future,"ARE-T10-operation-risk-profile.json","2026-11-16").issues.includes("na_review_after_assessment"));
+  writeFileSync(join(f.dir,"evidence","na.md"),"These operations have no asynchronous state and require no resumption.");
+  assert.ok(reviewNA(f.ws,f.dir,"L3-S1",good,"ARE-T10-operation-risk-profile.json","2026-11-16").issues.includes("na_evidence_does_not_identify_scoped_operation"));
+  writeFileSync(join(f.dir,"evidence","na.md"),"public_lookup: 公开同步读取，不创建持久任务，没有取消或恢复的对象。");
+  assert.equal(reviewNA(f.ws,f.dir,"L3-S1",na("public_lookup","该读取不会产生异步任务，也不会创建需要恢复的执行状态。"),"ARE-T10-operation-risk-profile.json","2026-11-16").ok,true);
+ }finally{rmSync(f.dir,{force:true,recursive:true});}
+});
+
 test("T07@0.5 no longer counts free-text N/A, and its computed level is provisional",()=>{
  const f=fixture();
  try{

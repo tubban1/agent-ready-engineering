@@ -41,6 +41,18 @@ Use an isolated synthetic scenario that:
 - A02's living-evidence links point to data-backed portfolio and research pages. Some older records may be narrower than the full ARE100 latest local research; check source and freshness, do not invent broad study completions.
 - No statistical prediction of task success from ARE levels is claimed; only that **ARE has already been applied to real projects**.
 
+## Round 1 independent rejection and Round 2 corrections (2026-11-16)
+
+Claude's first review returned **REQUEST_CHANGES**, citing CE1–CE6. Follow-up code repairs are in the same Draft PR, not merged or deployed:
+
+- **CE1:** Semantically blocked PASS checks are excluded in the *actual* assessment and portfolio grade calculation, not merely listed in `evidence_gate`; evidence requests use the same exclusions.
+- **CE2 / CE3:** Only T07 records dated before 2026-11-16 with absent or recognized legacy version can be historical. New missing and unsupported versions return `UNSCORABLE_EVIDENCE_BLOCKED`, `level=null` and `provisional_level=null`, with an explicit blocking issue.
+- **CE4:** Global risk-profile/source-revision mismatch makes the whole grade unscorable, clears approved N/A and prevents its inclusion in L4 distributions.
+- **CE5:** A cancellable long-running operation continues to block L3-S1 N/A.
+- **CE6:** Reject filler N/A explanations, unrelated scope evidence and review dates after T07 or before the profile review. Reviewer names and semantic correctness still require independent human/source verification.
+
+The exact 6 Claude counterexamples were run again; a repository-local, strengthened copy lives at `mcp/test/claude-pr13-regressions.test.ts`. Additional regression covers N/A dates before the risk profile and substantive Chinese N/A explanations. The previously unfilled A02@0.5 T07 template fixture now correctly expects an unscorable grade, rather than a fictitious L0. The A02 evidence section also links a directly verifiable Solarstorm case and Vibe Monitor study; Benchmark's copied prompt now uses the canonical `are.world2.co/mcp`. Re-run these tests and look for new ways to exploit version metadata, source evidence, N/A scope or inconsistent consumers. Do not accept this summary as independent proof.
+
 ## Acceptance decision
 
 Please report concrete defects with filename, line, reproduction, impact and minimal fix. Return `APPROVE`, `REQUEST_CHANGES` or `BLOCKED`, with regression outcomes and your assessment of unnecessary complexity. Do not merge or deploy on the user's behalf before review.

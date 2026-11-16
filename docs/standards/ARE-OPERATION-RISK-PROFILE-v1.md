@@ -20,7 +20,7 @@ ARE-T07 records a header `Standard version | ARE-A02@0.5` and `Risk profile | AR
 N/A{scope=tool_a,tool_b; reason=These named operations have no mutable state and no long-running jobs; evidence=evidence/no-long-jobs.md; reviewer=Owner Person; reviewed_at=2026-11-16}
 ```
 
-The `scope` is one or more tool/operation IDs from the verified inventory, or `all` only when all tools are accounted for. The evidence must exist inside the authorized scenario folder. A generic sentence, missing reviewer, short justification or non-inventory ID is rejected. N/A is not permitted when the risk profile shows operations to which that check applies.
+The `scope` is one or more tool/operation IDs from the verified inventory, or `all` only when all tools are accounted for. The evidence must exist inside the authorized scenario folder. A generic sentence, filler/repeated-character reason, missing reviewer, short justification or non-inventory ID is rejected. The N/A evidence must identify its named operation IDs (or at least an inventoried ID for an all-tools claim). The review date cannot be later than the T07 date or earlier than the risk-profile review date. These static checks still cannot verify whether the claimed human review actually occurred. N/A is not permitted when the risk profile shows operations to which that check applies.
 
 Examples: `long_running=true` activates L3-S1 even with no daemon; `privileged_execution=true` activates relevant L3 authorization, safety-limit and audit checks; `read=sensitive` activates corresponding read-credential and trust controls; `financial=true` activates authorization and limits. L3-S2 applies when `draft_state=true`.
 

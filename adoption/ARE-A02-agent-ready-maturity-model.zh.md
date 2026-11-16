@@ -126,4 +126,6 @@ ARE 已经在 Interior、OWL LAB、Vibe Monitor、ARE100 公共 MCP 样本和 So
 
 新增项目和实测数据统一在 [ARE 动态评估目录](https://are.world2.co/evaluations/) 与 [Benchmark/研究入口](https://are.world2.co/benchmark/) 展示，A02 不维护随时可能过期的固定样本数。每条记录须保留标准、源码/部署版本、时间、证据范围及验证状态；离线快照不得冒充实时数据。
 
+**可直接核验的示例（非固定项目清单）：** [Solarstorm 实测证据](https://are.world2.co/evidence/solarstorm/) 和 [Vibe Monitor 证据门禁复验记录](../docs/research/ARE_SEMANTIC_EVIDENCE_GATE_20261115.md)。动态展示入口可能尚未收录全部本地研究，不应将“尚未出现在动态目录”误认为“未执行过验证”。
+
 需要继续针对性校准的结论，是等级与 Agent 任务成功率、故障率、运行成本及整改工时的预测关系。这不等于 ARE 缺少实测。下一轮采用同题重复测试、独立结果核验和修复前后对照。39 项 ID 保留，历史等级不得静默重算。

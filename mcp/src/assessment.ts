@@ -32,6 +32,7 @@ export interface ParsedAssessment {
 }
 export interface AssessmentOptions {
   approvedNAs?: ReadonlySet<string>;
+  excludedChecks?: ReadonlySet<string>;
 }
 
 export interface AssessmentFindings {
@@ -90,7 +91,8 @@ function hasNAReason(reason: string): boolean {
   return s.length > 0 && s !== "-" && s !== "—" && !/^<.*>$/.test(s);
 }
 
-export function isSatisfied(row: CheckRow, exists: (location: string) => boolean, approvedNAs?:ReadonlySet<string>): boolean {
+export function isSatisfied(row: CheckRow, exists: (location: string) => boolean, approvedNAs?:ReadonlySet<string>, excludedChecks?:ReadonlySet<string>): boolean {
+  if(excludedChecks?.has(row.id))return false;
   return isValidPass(row, exists) || (row.result === "➖" &&
     (approvedNAs ? approvedNAs.has(row.id) : hasNAReason(row.location)));
 }
@@ -106,7 +108,7 @@ export function satisfiedCheckIds(parsed: ParsedAssessment, exists: (location: s
   const byId = groupedRows(parsed.rows);
   return new Set(CHECKS.filter((check) => {
     const group = byId.get(check.id) ?? [];
-    return group.length === 1 && isSatisfied(group[0]!, exists, options.approvedNAs);
+    return group.length === 1 && isSatisfied(group[0]!, exists, options.approvedNAs, options.excludedChecks);
   }).map((check) => check.id));
 }
 

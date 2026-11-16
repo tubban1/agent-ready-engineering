@@ -122,7 +122,8 @@ test("are_validate_deliverable checks an unfilled template copy", async () => {
   const t07 = await call(c, "are_validate_deliverable", { path: "scenarios/s1/ARE-T07-maturity-assessment-2026-11-13.md" });
   assert.equal(t07.data.issues.filter((i: { code: string }) => i.code === "invalid_result").length, 39);
   const level = await call(c, "are_assess_scenario", { scenario_path: "scenarios/s1" });
-  assert.equal(level.data.level, "L0");
+  assert.equal(level.data.level, null, "Unfilled A02@0.5 template has no valid risk profile and must be unscorable");
+  assert.equal(level.data.level_status, "UNSCORABLE_EVIDENCE_BLOCKED");
   await c.close();
 });
 

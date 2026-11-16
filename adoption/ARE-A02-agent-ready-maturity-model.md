@@ -126,6 +126,8 @@ ARE has been tested on real engineering projects and public MCP services, includ
 
 **Living evidence, not fixed sample counts:** See the continuously updated [ARE evaluation portfolio](https://are.world2.co/evaluations/) and [Benchmark/research index](https://are.world2.co/benchmark/). These are the evidence entry points for new projects and versioned records. Each record must specify assessment version, source/deployment revision, evidence scope, time and independent verification status; offline snapshots must be labeled. This methodology document does not need updating every time a new project is assessed.
 
+**Illustrative verifiable records (not a fixed cohort list):** [Solarstorm live evidence](https://are.world2.co/evidence/solarstorm/) and [Vibe Monitor evidence-gate regression](../docs/research/ARE_SEMANTIC_EVIDENCE_GATE_20261115.md) link to concrete results. The living evaluation index may have narrower coverage than the latest local project studies; absence from that index does not mean no evaluation occurred.
+
 **Specific open quantitative questions:** What is the predictive relationship of ARE levels to Agent task completion, incident frequency, execution costs and remediation effort? Those claims require matched repeated tasks and independent outcome verification. They are separate from ARE's already demonstrated real-project testing. The 39 check IDs remain stable; v0.5 explicitly versions applicability and provisional grading.
 
 ## Change log
