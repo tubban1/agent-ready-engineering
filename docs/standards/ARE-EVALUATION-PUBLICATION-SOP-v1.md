@@ -1,6 +1,6 @@
 # ARE 评估到公开传播标准流程（S0–S13）
 
-**版本**：1.0 / 2026-11-16　**性质**：可复用 SOP、内容标准、门禁；**非已部署的软件流水线**
+**版本**：1.1 / 2026-11-16　**性质**：可复用 SOP、内容标准、门禁；**非已部署的软件流水线**。公开提示词以英文版为准；中文仅辅助阅读。
 **现有 ARE 标准**：`adoption/ARE-A02-agent-ready-maturity-model.md`、`conformance/README.md`、`adoption/templates/ARE-T05-eval-report.md`、`adoption/templates/ARE-T07-maturity-assessment.md`
 **本次实操案例**：[Solarstorm public read-only case](../cases/solarstorm-2026-11-16.md)
 **域名与品牌**：[ADR-001](ADR-001-world2-are-publishing.md)
@@ -37,7 +37,7 @@
 
 ### 2.1 维护者复测提示词
 
-在邮件正文附上或链接到 [Maintainer Retest Prompt](../prompts/MAINTAINER_RETEST_MCP.zh.md)。维护者在其**拥有并授权**的源码/测试环境中运行；不会强迫其给 ARE 写入权限，也不会用自述代替独立复测证据。
+维护者邮件**不要直接粘贴没有项目背景的通用自评提示词**。应根据具体服务、版本、已确认问题、最小复现、安全边界和预期结果，生成 [Maintainer Email Retest Prompt（英文主版本）](../prompts/channels/MAINTAINER_EMAIL_RETEST.md)；同时附上可重用的 [Maintainer Retest Core Prompt](../prompts/MAINTAINER_RETEST_MCP.md)。维护者在其**拥有并授权**的源码/测试环境中运行；不强迫其给 ARE 写入权限，也不用自述代替独立复测证据。
 
 ## 3. S10–S13：**新增的公共影响力闭环**
 
@@ -56,7 +56,7 @@
 
 | 渠道 | 内容与注意 | 可量化指标 |
 |---|---|---|
-| **ARE 官网** | 长期权威案例、覆盖与证据、版本历史、三个提示词入口；站内状态必须反映证据等级 | 访问、点击自评、评估申请 |
+| **ARE 官网** | 计划在 `https://are.world2.co/` 提供**英文通用评估提示词**及一键复制，含快速预检/完整自评分流；在迁移完成前仍用 `are.fde.fan` 当前功能。站内证据等级不可夸大 | 访问、点击自评、评估申请 |
 | **ARE GitHub 自有仓库** | 原始开放方法、公开报告和复测脚本/提示词；自有 Discussion 可讨论技术方法 | Stars/引用/Issue、报告点击 |
 | **第三方 GitHub Issue** | **仅**公开且已复现的具体工程缺陷，适当通知维护者，最小复现、非推广语气；优化建议优先 Discussion/邮件 | 维护者回应、关闭/合并 PR |
 | **Hugging Face** | 共享研究方法、开源案例、可交互只读预检 Space（需以后实现，不得假称已发布）；原创内容而非群发 | 有用反馈、试用、Agent 引用 |
@@ -74,13 +74,22 @@
 
 **只有平台实际报告成功并有真实 URL 才能标 `PUBLISHED`**。账号未连接、网站页面不能新增、需要写入代码或无权限时标 `BLOCKED`，不做臆造。
 
-### 3.4 不同报告/提示词不能混用
+### 3.4 英文优先，严格按发布渠道提供不同的 Prompt
 
-- **Self Evaluate**（开发者自测）：[SELF_EVALUATE_MCP.zh.md](../prompts/SELF_EVALUATE_MCP.zh.md)；结果必须标为自评，不能写“ARE independently certified”。
-- **Maintainer Retest**（接到反馈的维护者）：[MAINTAINER_RETEST_MCP.zh.md](../prompts/MAINTAINER_RETEST_MCP.zh.md)；要求修复前后同条件复测，允许获得源码/测试租户授权。
-- **Independent Third-Party Review**（公众/第三方）：[INDEPENDENT_MCP_EVALUATION.zh.md](../prompts/INDEPENDENT_MCP_EVALUATION.zh.md)；不凭用户访问权限代替运营者许可，严格公共只读。
+**英文是对外发布的 canonical prompt**；魔搭等中文渠道可提供中文本地化版本，但测试范围、事实和安全门禁不得变化。四个场景不能相互复制：
 
-所有提示词必须含：输入参数/范围、参考最新 ARE MCP、数据/权限边界、完整工具矩阵、真实 Agent 任务 + Oracle、39 检查覆盖与非官方认证声明、可复现产物、禁止造分数。
+| 渠道 | 面向谁 | 必须提供的提示词 | 是否针对特定项目 |
+|---|---|---|---|
+| **`are.world2.co/`**（迁移后） | 首次接入 ARE 的任何 Agent/开发者 | [Website General Evaluation](../prompts/channels/WEBSITE_GENERAL_EVALUATION.md)，用户填写其 MCP URL 与授权范围；先区分 public read-only vs owner sandbox | **通用** |
+| **维护者邮件** | 被评估服务的真实运营者 | [Maintainer Email Retest](../prompts/channels/MAINTAINER_EMAIL_RETEST.md)，填入该项目报告、具体 finding、重现输入、预期和实际；可引用 [Core Maintainer Retest](../prompts/MAINTAINER_RETEST_MCP.md) | **针对单个项目/问题** |
+| **第三方 GitHub Issue** | 源码维护者、具体故障跟进者 | [GitHub Issue Reproduction](../prompts/channels/GITHUB_ISSUE_REPRODUCTION.md)，单问题、固定 commit/版本、最小复现、允许的修复范围；不应把 ARE 营销帖发到项目方 Issue | **针对单个 Issue** |
+| **X / LinkedIn / HF / Reddit / 魔搭 / 视频** | 对真实实验感兴趣的公共读者 | [Public Project Review](../prompts/channels/PUBLIC_PROJECT_REVIEW.md)，提供该项目**仅公共只读**的自助复测提示词（可选），以报告 URL 为依据；短平台只放链接，长平台可展示正文 | **针对已完成测试的项目** |
+
+注意：**`are.world2.co/mcp` 是目标地址，2026-11-16 尚未完成 DNS 和生产验证。** 不得将还未上线的 URL 作为目前已可连接的地址发送给开发者。上线前以 `https://are.fde.fan/mcp` 为现网入口；迁移后按受测版本记录新 canonical URL，旧地址保留兼容期。
+
+[Developer Self Evaluate](../prompts/SELF_EVALUATE_MCP.md) 和 [Independent Third-party Evaluation](../prompts/INDEPENDENT_MCP_EVALUATION.md) 是完整方法参考，不能代替有服务名称、工具和 Oracle 的渠道专用实例。
+
+所有提示词必须含：输入参数/范围、适用 ARE MCP、数据/权限边界、完整工具矩阵、真实 Agent 任务 + Oracle、39 检查覆盖与非官方认证声明、可复现产物、禁止造分数。
 
 ## 4. 一次完成的 Solarstorm 案例：可公开什么？
 
@@ -94,7 +103,7 @@
 
 ## 5. 验收表和责任边界
 
-只有 `S10 PUBLIC_CASE` 已有在线 URL 才算“公开案例走通”； `S11 DISTRIBUTE` 可以局部走通（如 GitHub 自有仓库），不同账号/平台逐项记录。网站新增自评入口当前尚需网站内容/界面变更时，本轮**先不修改代码**，所以可先在 GitHub 文档发布可复制提示词，并记录站内按钮为待实施。World2 不迁移 Endpoint。
+只有 `S10 PUBLIC_CASE` 已有在线 URL 才算“公开案例走通”； `S11 DISTRIBUTE` 可以局部走通（如 GitHub 自有仓库），不同账号/平台逐项记录。网站现有 Benchmark 已有一个**快速静态自评**按钮；在新 World2 托管服务页将增加**英文通用评估提示词**（[ready-to-use copy](../prompts/channels/WEBSITE_GENERAL_EVALUATION.md)），这是未来需要页面/部署代码变更的任务。本轮**先不修改产品代码**，先将英文提示词在 GitHub 公开，并保留需实施门禁。**World2 统一管理 ARE 等 MCP 服务是已明确的目标；ARE canonical endpoint 计划迁至 `are.world2.co/mcp`，但生产迁移尚未执行。** 详见 [ADR-001](ADR-001-world2-are-publishing.md) 与 [迁移验收计划](ARE-WORLD2-ENDPOINT-MIGRATION-PLAN.md)。
 
 **批量化门槛**：单案 S0–S10 全部证据、S11 至少一个合法渠道公开、S12 有联系记录、S13 仅在收到可复测更新后完成；源码绑定、维护者治理或认证无法取得时必须标 `LIMITED`。不能因没有维护者回复而伪称完成 S13。
 

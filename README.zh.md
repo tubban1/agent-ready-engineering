@@ -47,8 +47,8 @@
 ### 公开评估、开发者自检与复测（仅流程文档更新）
 
 - [ARE S0–S13 评估→公开案例→渠道传播→维护者反馈与复测 SOP](docs/standards/ARE-EVALUATION-PUBLICATION-SOP-v1.md)。
-- [World2 与 ARE 的品牌、发布和执行边界](docs/standards/ADR-001-world2-are-publishing.md)：目前仍保留 ARE 独立 MCP 入口。
-- [提示词目录](docs/prompts/README.md)：[开发者自评](docs/prompts/SELF_EVALUATE_MCP.zh.md)、[收到反馈后的自检/复测](docs/prompts/MAINTAINER_RETEST_MCP.zh.md)、[公众第三方独立评估](docs/prompts/INDEPENDENT_MCP_EVALUATION.zh.md)。
+- [World2 与 ARE 的统一 MCP 服务平台架构](docs/standards/ADR-001-world2-are-publishing.zh.md)：World2 将统一管理全部自有 MCP，ARE 计划从 `are.fde.fan/mcp` **迁至 `are.world2.co/mcp`**；目前新域名尚未上线，详见 [迁移验收计划](docs/standards/ARE-WORLD2-ENDPOINT-MIGRATION-PLAN.md)。
+- [英文优先的渠道提示词目录](docs/prompts/README.md)：[网站通用接入/评估](docs/prompts/channels/WEBSITE_GENERAL_EVALUATION.md)、[维护者邮件针对性自检](docs/prompts/channels/MAINTAINER_EMAIL_RETEST.md)、[GitHub Issue 单问题复现](docs/prompts/channels/GITHUB_ISSUE_REPRODUCTION.md)、[公共社媒按项目只读复测](docs/prompts/channels/PUBLIC_PROJECT_REVIEW.md)；另有[中文开发者自评](docs/prompts/SELF_EVALUATE_MCP.zh.md)、[中文复测](docs/prompts/MAINTAINER_RETEST_MCP.zh.md)和[中文第三方评估](docs/prompts/INDEPENDENT_MCP_EVALUATION.zh.md)。
 - [Solarstorm 真实 MCP 评估案例](docs/cases/solarstorm-2026-11-16.md)，全部四个只读工具、单次真实 Agent 和 NOAA 交叉核验，未擅自授予成熟度等级。
 - [ARE Benchmark](https://are.fde.fan/benchmark/) **已经存在**一键复制的基础自评提示词；它只做公开 Endpoint 静态预检，与上述完整深度自评提示词不同。两者均非官方认证。
 
