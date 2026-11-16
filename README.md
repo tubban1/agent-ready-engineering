@@ -50,6 +50,7 @@ Public ARE knowledge endpoint (World2-managed canonical): `https://are.world2.co
 
 ARE now has a documented, evidence-scoped public case and reusable prompts. **This is a process/documentation publication, not a new automated testing feature or certification.**
 
+- [Centralized Calendar Operations Scheduler](docs/standards/ARE-CALENDAR-OPS-SCHEDULER-v1.md) — one hourly watcher reads the private ARE follow-up calendar, checks Gmail per task, and journals execution; no per-project automations.
 - [Evaluation → public report → distribution → retest SOP](docs/standards/ARE-EVALUATION-PUBLICATION-SOP-v1.md) — S0–S13, including safe GitHub/community publishing gates.
 - [World2 / ARE platform architecture decision](docs/standards/ADR-001-world2-are-publishing.md) — World2 centrally **manages all first-party MCP services**; ARE canonical URL is **`https://are.world2.co/mcp`** (online and independently probed); [migration gates](docs/standards/ARE-WORLD2-ENDPOINT-MIGRATION-PLAN.md) preserve the current host until verified.
 - [English-first, channel-specific prompts](docs/prompts/README.md) — [website general](docs/prompts/channels/WEBSITE_GENERAL_EVALUATION.md), [personalized maintainer email](docs/prompts/channels/MAINTAINER_EMAIL_RETEST.md), [GitHub Issue reproduction](docs/prompts/channels/GITHUB_ISSUE_REPRODUCTION.md), optional [public project-specific review](docs/prompts/channels/PUBLIC_PROJECT_REVIEW.md), plus core self/retest/third-party methodology (EN/中文).

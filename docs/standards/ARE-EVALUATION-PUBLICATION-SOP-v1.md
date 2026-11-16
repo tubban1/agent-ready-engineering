@@ -120,6 +120,8 @@
 
 ## 8. 可执行的证据、提示词与渠道回执门禁（v1.2）
 
+后续 S9/S12/S13 多项目跟进由 [统一 ARE 日历运营调度器](ARE-CALENDAR-OPS-SCHEDULER-v1.md) 处理：Google Calendar 专用队列 + Gmail 证据 + 私有执行回执 + 单一每小时调度，不再一项目一条 Automation。
+
 上一版 SOP 是规范，不是可复用软件。本版新增 [ARE Publication Runner](ARE-PUBLICATION-RUNNER-v1.md) 的实现和 13 项回归测试；`scripts/are_publication.py` 为零外部写入的准入/状态检查器和渠道素材生成器。
 
 每个项目必须先准备 `are.publication.case.v1` JSON 清单，保存 World2 来源、原生服务身份、源码 SHA 与部署绑定、全部工具静态/执行覆盖率、真实 Agent Oracle、39 项分布、维护者邮箱发信凭证范围、S0–S13 状态、渠道实际链接与阻塞。生成的角色提示词与发布素材必须可由清单确定性重建。
