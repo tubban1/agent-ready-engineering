@@ -1,6 +1,6 @@
 # ARE 评估到公开传播标准流程（S0–S13）
 
-**版本**：1.1 / 2026-11-16　**性质**：可复用 SOP、内容标准、门禁；**非已部署的软件流水线**。公开提示词以英文版为准；中文仅辅助阅读。
+**版本**：1.2 / 2026-11-16　**性质**：可复用 SOP、内容标准、门禁；**非已部署的软件流水线**。公开提示词以英文版为准；中文仅辅助阅读。
 **现有 ARE 标准**：`adoption/ARE-A02-agent-ready-maturity-model.md`、`conformance/README.md`、`adoption/templates/ARE-T05-eval-report.md`、`adoption/templates/ARE-T07-maturity-assessment.md`
 **本次实操案例**：[Solarstorm public read-only case](../cases/solarstorm-2026-11-16.md)
 **域名与品牌**：[ADR-001](ADR-001-world2-are-publishing.md)
@@ -85,7 +85,7 @@
 | **第三方 GitHub Issue** | 源码维护者、具体故障跟进者 | [GitHub Issue Reproduction](../prompts/channels/GITHUB_ISSUE_REPRODUCTION.md)，单问题、固定 commit/版本、最小复现、允许的修复范围；不应把 ARE 营销帖发到项目方 Issue | **针对单个 Issue** |
 | **X / LinkedIn / HF / Reddit / 魔搭 / 视频** | 对真实实验感兴趣的公共读者 | [Public Project Review](../prompts/channels/PUBLIC_PROJECT_REVIEW.md)，提供该项目**仅公共只读**的自助复测提示词（可选），以报告 URL 为依据；短平台只放链接，长平台可展示正文 | **针对已完成测试的项目** |
 
-注意：**`are.world2.co/mcp` 是目标地址，2026-11-16 尚未完成 DNS 和生产验证。** 不得将还未上线的 URL 作为目前已可连接的地址发送给开发者。上线前以 `https://are.fde.fan/mcp` 为现网入口；迁移后按受测版本记录新 canonical URL，旧地址保留兼容期。
+注意：**`https://are.world2.co/mcp` 已正式上线并在 2026-11-16 通过实际 MCP 新旧客户端检查**，`https://are.fde.fan/mcp` 保留兼容。所有网站、邮件和项目专属提示词默认使用 World2 管理的正式 ARE 入口，第三方受测 MCP 的原生入口仍独立；不要将主平台地址误作第三方服务地址。
 
 [Developer Self Evaluate](../prompts/SELF_EVALUATE_MCP.md) 和 [Independent Third-party Evaluation](../prompts/INDEPENDENT_MCP_EVALUATION.md) 是完整方法参考，不能代替有服务名称、工具和 Oracle 的渠道专用实例。
 
@@ -117,3 +117,13 @@
 - 不修改 ARE、World2、OWL LAB 的任何运行代码或部署行为；不迁移域名。
 - 不在第三方仓库创建营销 Issue、不向不匹配品牌账号发帖，不在没有复现/披露审查时公开敏感故障。
 - 每项第三方发布必须记录公开 URL 与审批/账户是否可用，失败即保留草稿，不声称成功。
+
+## 8. 可执行的证据、提示词与渠道回执门禁（v1.2）
+
+上一版 SOP 是规范，不是可复用软件。本版新增 [ARE Publication Runner](ARE-PUBLICATION-RUNNER-v1.md) 的实现和 13 项回归测试；`scripts/are_publication.py` 为零外部写入的准入/状态检查器和渠道素材生成器。
+
+每个项目必须先准备 `are.publication.case.v1` JSON 清单，保存 World2 来源、原生服务身份、源码 SHA 与部署绑定、全部工具静态/执行覆盖率、真实 Agent Oracle、39 项分布、维护者邮箱发信凭证范围、S0–S13 状态、渠道实际链接与阻塞。生成的角色提示词与发布素材必须可由清单确定性重建。
+
+真实跨平台发布仍须使用明确授权的各平台工具/账号；只有回读公开 URL + 保存真实 Provider/API/浏览器回执才能通过 `receipt` 门禁，不允许仅靠点击按钮或草稿建立 PUBLISHED。连接中断后同一渠道同一回执幂等；不同 URL 触发冲突，需要人工审阅，不允许自动重复发帖。
+
+**S13 依赖维护者新版本和独立业务 Oracle**。发送 S9 邮件本身不能满足 S12 回信或 S13 修复验收。可公开的技术评估闭环与外部合作/修复闭环分别列示。

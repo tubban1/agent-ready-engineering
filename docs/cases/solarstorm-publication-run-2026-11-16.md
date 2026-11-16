@@ -11,7 +11,7 @@
 | S0–S8 technical evaluation and report | COMPLETE_WITH_LIMITATIONS | 4/4 public tools, 9 bounded protocol checks, one Claude MCP task, NOAA comparisons, and 39 evidence statuses; case linked above |
 | S9 private maintainer feedback | EMAIL_SENT / DELIVERY_UNKNOWN | Email sent to officially published project address on 2026-11-16; no acknowledgement asserted; original outreach retained privately |
 | S10 public case in ARE GitHub | PUBLISHED | [Case on main](solarstorm-2026-11-16.md) and three [public prompts](../prompts/README.md) |
-| S10 ARE site evidence dashboard | PUBLISHED | [are.fde.fan/evaluations](https://are.fde.fan/evaluations/) → search **Solarstorm MCP** → detail → seven evidence links. The entry is `source_review`, `assessment_level=NULL`, never `verified` |
+| S10 ARE site evidence dashboard | PUBLISHED | [are.fde.fan/evaluations](https://are.world2.co/evaluations/) → search **Solarstorm MCP** → detail → seven evidence links. The entry is `source_review`, `assessment_level=NULL`, never `verified` |
 | S11 methodology discussion in ARE-owned GitHub | PUBLISHED | [ARE Issue #4: evidence needed for Agent MCP evaluation](https://github.com/tubban1/agent-ready-engineering/issues/4); open discussion, **not** a promotional issue against Solarstorm |
 | S11 X / Twitter | PENDING_HUMAN_POST | @tubban1 was signed in, a short public case post was filled in its background Chrome composer; the click required human confirmation (`CURSOR_ACTION_REQUIRES_HUMAN`). No post URL exists. User must inspect and press Post; don't count as published |
 | S11 Hugging Face forum | BLOCKED_BY_MODERATION | Prior ARE thread received a 2026-11-15 notice that post #5 was hidden pending staff review. Do not send a repeated promotional reply while moderation is pending |
@@ -22,6 +22,12 @@
 | S13 post-fix independent retest | WAITING_MAINTAINER_UPDATE | Original public test is the immutable baseline |
 
 This ledger is an auditable **example of statuses**, not proof that every social platform is connected or published.
+
+## 2026-11-16 operational status update
+
+The source-of-truth **public** case manifest is [solarstorm.json](data/solarstorm.json), validated against the existing 39-check independent evidence; run status is [Solarstorm S0–S13](solarstorm-run-status-2026-11-16.md). The tested reusable CLI and its safety gates are described in [ARE Publication Runner](../standards/ARE-PUBLICATION-RUNNER-v1.md).
+
+[Public replay prompt](solarstorm-public-replay-2026-11-16.md) and [maintainer retest prompt](solarstorm-maintainer-retest-2026-11-16.md) are now generated from that fixed case manifest. The initial Gmail send is not repeated; no owner reply or production fix is verified as of the review. X repost attempt again hit `CURSOR_ACTION_REQUIRES_HUMAN`. LinkedIn editor was filled but did not yield a publish URL or unambiguous visible post; it remains CONTENT_READY rather than PUBLISHED. These may only change status after a real receipt.
 
 ## Copy for X (prepared, not submitted)
 

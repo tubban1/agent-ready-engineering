@@ -57,6 +57,14 @@ To reproduce ethically, use the independent [Third-Party MCP Review prompt](../p
 
 For the operator, use the [Maintainer Retest prompt](../prompts/MAINTAINER_RETEST_MCP.md) in the team's own authorized environment.
 
+### Reproduce the public read-only test yourself
+
+- [Project-specific public Agent replay prompt](solarstorm-public-replay-2026-11-16.md) — includes the exact public endpoint, four allowed tools, NOAA independent oracle and strict request budget. This is a community recheck, not ARE certification.
+- [Project-specific maintainer retest prompt](solarstorm-maintainer-retest-2026-11-16.md) — for the operator's own authorized code/sandbox, addressing the observed validation behavior and source-version uncertainty. This document is **not** a second outbound email.
+- [Machine-readable pipeline case](data/solarstorm.json) and [S0–S13 status report](solarstorm-run-status-2026-11-16.md) — explicit PASS/LIMITED/WAITING and channel receipts, no fabricated maturity grade.
+
+ARE's canonical MCP and self-evaluation entry now live at https://are.world2.co/mcp and https://are.world2.co/. Both evaluation providers are first-party to World2; no operator endorsement is implied.
+
 ### Feedback and updates
 
 - **2026-11-16:** Evidence-based results sent privately to the public project contact. Gmail accepted the message; this does **not** establish recipient delivery, acknowledgement or agreement.
