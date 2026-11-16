@@ -1,29 +1,55 @@
-# ADR-001 — World2 与 ARE 的发布、评估与执行边界
+# ADR-001 — World2 as the Unified Agent Service Platform
 
-**状态：Accepted for process design / architecture migration NOT approved**
-**日期：2026-11-16**
-**原则：不修改产品代码，不迁移现有公开 MCP Endpoint。**
+**Status:** Accepted product direction; production migration NOT YET EXECUTED
+**Date:** 2026-11-16
+**English canonical; Chinese summary:** [ADR-001.zh.md](ADR-001-world2-are-publishing.zh.md)
+**Applies to:** All first-party remote MCP services managed by World2 (ARE, Interior, future services).
+**Scope of this revision:** Documentation and prompt design ONLY. Do not change code, DNS, Vercel routing, client configurations or existing public endpoints as part of this document change.
 
-## 决策
+## Decision — corrected after explicit owner clarification
 
-1. **World2 是发现与分发层。** 使用其现有 MCP 目录（2026-11-16 盘点约 67,144 条服务记录）作为 ARE Discovery 的初始数据来源。可索引/引用 ARE 评估公开结果，但 World2 目录记录不等于 ARE 认证，不能擅自宣称第三方所有权。
-2. **ARE 是独立的评估与证据层。** 保留 `https://are.fde.fan/mcp` 为稳定、直接可用的评估端点；`are.fde.fan` 为方法、案例和可下载提示词的权威来源。
-3. **自有其他 MCP 仍保持独立执行/授权/持久状态责任。** World2 可以作为单一入口的能力目录或带明确分发身份的路由，但不能由目录权限替代 OWL LAB、Interior、Bloomroom 各自的执行权限和审计记录。
-4. **发布双标识而不是强制合并为一个服务：** 规范身份 `publisher/service-name`、原始 `canonical_endpoint`、World2 目录 `world2_service_id`、ARE 报告 `assessment_id`、源码和版本证据分开存储。若将来开放 World2 Gateway，只作为可选别名；认证作用域、OAuth 回调、streaming/Tasks、客户端缓存和错误语义必须做双协议回归。
-5. **利益关系透明。** ARE 评估 World2 收录、乃至同团队自有的 MCP 时，公开 `catalog_origin=World2`、`evaluation_by=ARE`、`affiliation`，区分内部评估和独立第三方观察。不能自评当作外部权威认证。
+**World2 is an agent-facing MCP service platform, NOT merely a catalog or link directory.** It should be the **central control plane** responsible for onboarding first-party MCP services, service identity, managed publishing, canonical service subdomains, version inventory, routing, operational health, auditing, access policy, lifecycle and governance. Its API and discovery model should be agent-native. Individual tools remain discoverable and callable through their own service endpoints.
 
-## 不采用的选项
+### Canonical intended endpoints
 
-- 不立即把每一个 MCP 的原生 HTTPS 地址迁移到 `world2.co/mcp`：会将域名、OAuth、可靠性、版本、回滚和限流风险集中化，且让 ARE 的独立品牌难以辨认。
-- 不把 World2 单一入口下的工具集无条件暴露给任何 Agent：发现权限不是执行授权。
-- 不让 ARE 报告缺少可审查证据而只在 World2 目录上显示一个等级/徽章。
+| Service | Intended World2-managed URL | Observed current state on 2026-11-16 |
+|---|---|---|
+| World2 platform | `https://world2.co/mcp` | Existing public MCP URL |
+| Agent-Ready Engineering (ARE) | **`https://are.world2.co/mcp`** | **NOT DEPLOYED**: `are.world2.co` DNS currently fails to resolve. Current functioning address is `https://are.fde.fan/mcp` |
+| Interior | `https://interior.world2.co/mcp` | Existing public MCP URL and separate Vercel project |
+| Other owned MCPs | `https://<service>.world2.co/mcp` | Names reserved by future per-service registration; do not assert they exist |
 
-## 未来考虑迁移的准入条件
+For ARE, **`https://are.world2.co/`** will also host the public entry page with the English-first, copyable **general evaluation prompt** and links to fast preflight, deep review, developer reports and project-specific public prompts. This is an ARE service page managed under World2. World2 itself remains an agent-first services platform, not a consumer social network.
 
-维护版本化身份和可验证路由、客户端兼容、新旧 MCP 协议回归、OAuth scopes、隔离、取消/恢复、Origin 校验、长期缓存策略、端到端 Trace 和备援直连。满足后单独编写迁移 ADR 并要求用户确认；本 ADR 不触发技术变更。
+### Control plane and execution plane
 
-## 参考
+**World2 Control Plane** (centrally owned and managed): service registry/identity, project→domain mapping, source & deployed revision, endpoint lifecycle, health, SLO policy (measurement not invented), publishing approval, routing configuration, version inventory, shared observability / audit reference, opt-in registry/discovery and account/role governance.
 
-- ARE 本地标准：[Public evaluation & outreach SOP](ARE-EVALUATION-PUBLICATION-SOP-v1.md)
-- World2 官方发现、发布和资源验证能力：保留原生对象 ID 与权属；公开发布必须符合 Owner 授权。
-- MCP Registry 的 remote 元数据对发布者身份与 URL 进行区分。
+**Service Data/Execution Plane** (per-service isolation): ARE's evaluation logic, Interior's 3D scene lifecycle, Bloomroom's design runtime, OWL LAB's device execution. Each service owns its business state, authorization/consent enforcement, scopes, rate limits, idempotency, audit records and error semantics. The platform must NOT implicitly grant one service access to another service's data or credentials.
+
+**Domain management vs proxy routing:** World2 can manage independent Vercel projects through a registry, domains, deployments and health without introducing a single HTTP proxy hop for every MCP call. A future gateway is optional after explicit performance/security verification. Domain unification is a management decision, **not** a requirement to merge all tools into `world2.co/mcp` or share one Runtime.
+
+### Migration of ARE — planned, not done
+
+1. **P0: Identify live truth**: inventory ARE production project, `are.fde.fan`, current clients and World2 Vercel ownership, active SDK support, OAuth callbacks if any; record current protocol/headers behavior and baseline.
+2. **P1: World2 registration and domain preparation**: create the authoritative first-party service entry, publish metadata & owner, plan `are.world2.co` DNS/TLS and attach the hostname to the correct ARE deployment or management-plane routing. Keep existing `are.fde.fan` operational.
+3. **P2: Staging and real Agent acceptance**: verify GET landing page separately from **POST MCP** on `are.world2.co/mcp`; test `server/discover` (2026-07-28), legacy `initialize` (supported older clients), `tools/list` all pages and result envelopes, actual safe ARE tool calls, auth/origins, streaming/request semantics, and at least one real ChatGPT and one Claude/Codex task where supported. No assertion of success without actual saved evidence.
+4. **P3: Controlled canonical cutover**: update primary links/docs/registry/Agent setup to `are.world2.co/mcp` only **after** P2 gates pass; keep `are.fde.fan/mcp` as a tested compatibility endpoint for a published transition window. Do **not** depend on 301/302/308 alone for POST or stateful MCP clients; check actual clients.
+5. **P4: Monitor and rollback**: compare error rates, auth/session continuity, per-host call outcomes and latency (measured), DNS/TLS correctness and client adoption. Roll back the canonical link to the known-good address upon defined regression; never silently drop clients or approvals.
+
+**Acceptance:** new domain DNS+TLS works; real MCP requests behave correctly on both addresses; World2 registry represents ARE identity, deployment and health accurately; users can copy the evaluation prompt on `are.world2.co/`; no auth/scope regressions; published case URLs and email links remain valid; rollback has been demonstrated. An HTTP 405 from GET on a POST-only MCP route is NOT a failed MCP handshake.
+
+### Tradeoffs and guardrails
+
+- **Advantages:** one World2 service portfolio, coherent agent-first brand, central version/health/release management, scalable service onboarding and a stable `<service>.world2.co` naming convention.
+- **Risks:** DNS/deployment concentration, platform blast radius, cross-service authorization confusion, origin/OAuth migration, proxy buffering/streaming breakage and report link drift.
+- **Mitigations:** isolate service runtimes and credentials, preserve rollback/legacy host, keep full traceable service identity and domain history, test new-host MCP with real clients rather than merely probing homepage.
+- **ARE's independent assessment methodology remains identifiable:** World2 and ARE are related first-party services; disclose that affiliation, and never label self-evaluation as independent third-party certification.
+
+### Related specifications
+
+- [Service migration acceptance plan](ARE-WORLD2-ENDPOINT-MIGRATION-PLAN.md)
+- [S0–S13 evaluation & publication SOP](ARE-EVALUATION-PUBLICATION-SOP-v1.md)
+- [English-first channel prompt directory](../prompts/README.md)
+
+**This ADR supersedes the previous "World2 = discovery/distribution only" interpretation.**

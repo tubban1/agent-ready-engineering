@@ -51,8 +51,8 @@ Public ARE knowledge endpoint: `https://are.fde.fan/mcp` (Streamable HTTP, no si
 ARE now has a documented, evidence-scoped public case and reusable prompts. **This is a process/documentation publication, not a new automated testing feature or certification.**
 
 - [Evaluation → public report → distribution → retest SOP](docs/standards/ARE-EVALUATION-PUBLICATION-SOP-v1.md) — S0–S13, including safe GitHub/community publishing gates.
-- [World2 / ARE architecture decision](docs/standards/ADR-001-world2-are-publishing.md) — discover and distribute via World2; keep ARE's canonical endpoint independent for now.
-- [Copyable prompts (English / 中文)](docs/prompts/README.md) — developer [Self Evaluate](docs/prompts/SELF_EVALUATE_MCP.md), maintainer [Retest](docs/prompts/MAINTAINER_RETEST_MCP.md), and [Independent Third-Party Evaluation](docs/prompts/INDEPENDENT_MCP_EVALUATION.md).
+- [World2 / ARE platform architecture decision](docs/standards/ADR-001-world2-are-publishing.md) — World2 centrally **manages all first-party MCP services**; planned ARE canonical URL is **`https://are.world2.co/mcp`** (not yet live); [migration gates](docs/standards/ARE-WORLD2-ENDPOINT-MIGRATION-PLAN.md) preserve the current host until verified.
+- [English-first, channel-specific prompts](docs/prompts/README.md) — [website general](docs/prompts/channels/WEBSITE_GENERAL_EVALUATION.md), [personalized maintainer email](docs/prompts/channels/MAINTAINER_EMAIL_RETEST.md), [GitHub Issue reproduction](docs/prompts/channels/GITHUB_ISSUE_REPRODUCTION.md), optional [public project-specific review](docs/prompts/channels/PUBLIC_PROJECT_REVIEW.md), plus core self/retest/third-party methodology (EN/中文).
 - [Solarstorm MCP technical case](docs/cases/solarstorm-2026-11-16.md) — four public read-only tools, one real model task and independent NOAA comparisons, with no unsupported maturity grade.
 - The [ARE Benchmark](https://are.fde.fan/benchmark/) already offers a copyable **preliminary** self-evaluation prompt. It is deliberately narrower than the deep developer self-evaluation prompt above. Neither path provides official MCP certification.
 
