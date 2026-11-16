@@ -1,10 +1,10 @@
 # Website entry: General MCP evaluation prompt (English-first)
 
-**Target surface:** `https://are.world2.co/` — the desired future ARE service landing page, managed by World2.
-**Target MCP:** `https://are.world2.co/mcp` — **planned and not yet live as of 2026-11-16**.
-**Current working ARE MCP for interim use:** `https://are.fde.fan/mcp`.
+**Target surface:** `https://are.world2.co/` — the canonical ARE service landing page, registered in World2.
+**Target MCP:** `https://are.world2.co/mcp` — **online; World2-managed canonical service URL**.
+**Legacy supported MCP:** `https://are.fde.fan/mcp`.
 
-This is the **canonical English prompt** to make available as “Copy evaluation prompt” on the new website **only after endpoint cutover passes**. It is not the same as the current ARE Benchmark tool's preliminary score action. A Chinese translation can be a secondary localized choice.
+This is the **canonical English prompt** now available as “Copy prompt” on the new World2-managed website. It is not the same as the current ARE Benchmark tool's preliminary score action. A Chinese translation can be a secondary localized choice.
 
 ## Website short instruction
 
@@ -38,6 +38,6 @@ If neither route is lawful, stop and state BLOCKED.
 Start with the permitted test scope, exact tools seen and the intended task oracle. At the end say what was actually performed and what remains unverified.
 ```
 
-**Legacy website note while migration is pending:** substitute `https://are.fde.fan/mcp` for the first ARE MCP URL until World2's new host has passed the acceptance plan, and label the target host “legacy/current” rather than “new canonical.”
+**Compatibility note:** the previous `https://are.fde.fan/mcp` endpoint remains supported for existing clients. Use `https://are.world2.co/mcp` for new connections.
 
 **Separate website paths:** `/` = human-readable entry and prompt, `/mcp` = Agent interface, `/benchmark/` = low-cost preflight, `/evaluations/` = evidence-indexed public case list. Actual routing must be implemented and verified, not assumed from this Markdown file.

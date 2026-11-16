@@ -1,4 +1,5 @@
 # ARE Independent MCP Evaluation — 第三方公开评估提示词（中文）
+> 对应英文版：`INDEPENDENT_MCP_EVALUATION.md` EN v1.0
 
 **用途：** 社交媒体、社区和独立技术人员可复测公开 MCP 的行为。**公共第三方测试不拥有运营者的源码内网、私有凭据和生产故障注入权。**
 

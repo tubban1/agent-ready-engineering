@@ -1,4 +1,5 @@
 # ARE Maintainer Retest — Fix verification prompt
+> v1.0 | 2026-11-16 | English canonical
 
 **Status:** Operator-managed pre/post regression testing, **not** ARE independent sign-off. See [Chinese](MAINTAINER_RETEST_MCP.zh.md).
 

@@ -1,4 +1,5 @@
 # ARE Independent Third-Party MCP Evaluation — Public review prompt
+> v1.0 | 2026-11-16 | English canonical
 
 **Status:** Public community research, **not** ARE-issued certification or project-owner permission to write. See [Chinese](INDEPENDENT_MCP_EVALUATION.zh.md).
 

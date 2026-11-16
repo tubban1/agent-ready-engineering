@@ -1,4 +1,5 @@
 # ARE Maintainer Retest — 维护者修复后自检提示词（中文）
+> 对应英文版：`MAINTAINER_RETEST_MCP.md` EN v1.0
 
 **用途：** 对收到 ARE 报告的维护者，让其在拥有的代码仓库/测试环境核对问题并产生前后对照证据。不可将“自报修复”直接等同 ARE 独立复测通过。
 
