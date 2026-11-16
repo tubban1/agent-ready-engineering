@@ -95,7 +95,7 @@ titleOracle:"Independent NOAA comparison",oracleFoot:"Instantaneous GOES flux ca
 titleExplorer:"Explore all 39 checks",explainer:"These are not 39 test passes. Missing owner-only evidence remains NOT_VERIFIED.",
 thState:"State",thReason:"Evidence and limitation",titlePrompt:"Build a safe Agent replay prompt",
 promptIntro:"A copyable project-specific public read-only test instruction, not an executed test or permission grant.",
-titleSource:"Scope and provenance"},
+methodTitle:"Method, provenance & evidence"},
 zh:{eyebrow:"独立工程评审 · 2026-11-16 · 公开只读",heroTitle:"Solarstorm MCP — 独立工程评审与证据",
 lead:"一张页面完整展示评审结论、测试证据、NOAA 独立核验、39 项 ARE 状态和安全复测方法。非官方认证，不授成熟度等级。",
 metTools:"实际调用的公开工具",metProtocol:"通过的有限范围协议检查",metAgent:"真实 Agent 任务次数",metUnknown:"仍缺少证据的 ARE 项",
@@ -105,7 +105,7 @@ titleOracle:"NOAA 独立对照",oracleFoot:"瞬时 GOES 通量会随采样时刻
 titleExplorer:"查看全部 39 项",explainer:"这是对 39 项的状态归档，不是 39 项全部通过；未取得的维护者证据仍标未验证。",
 thState:"状态",thReason:"证据及边界",titlePrompt:"生成安全的 Agent 复测提示词",
 promptIntro:"复制的项目专属只读测试指令，不会从页面执行测试，也不授予额外权限。",
-titleSource:"范围与来源"}};
+methodTitle:"方法、来源与证据"}};
 const $=id=>document.getElementById(id);
 const escapeHtml=s=>String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 function setText(){const map=labels[zh?"zh":"en"];for(const [id,text] of Object.entries(map))$(id).textContent=text;document.documentElement.lang=zh?"zh":"en";}
