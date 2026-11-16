@@ -1,6 +1,6 @@
 # Agent-Ready Engineering 标准交付物模板
 > 文档编号：ARE-T00
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN v0.7｜术语见 `ARE-R03` 术语表
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN v0.8｜术语见 `ARE-R03` 术语表
 > v0.2｜2026-11-12｜配套：`../ARE-A01-agent-ready-implementation-checklist.zh.md`（P0–P8）、`../ARE-A02-agent-ready-maturity-model.zh.md`（L0–L4）
 
 ## 使用规则
@@ -21,6 +21,7 @@
 | `ARE-T07-maturity-assessment.zh.md` 成熟度评估表 | 任意阶段 | 现在处在哪一级？差什么？能开放到什么程度？ | 每个场景每次评估一份 |
 | `ARE-T08-scenario-screening.zh.md` 场景筛选表 | P0（组合） | 多个候选想法中，哪些值得填价值卡片？ | 每个项目或每轮筛选一份 |
 | `ARE-T09-portfolio-report.zh.md` 组合报告与路线图 | 每轮评估 | 等级分布如何？风险和共同短板在哪？下一步做什么？ | 每轮评估一份 |
+| `ARE-T10-operation-risk-profile.md` 操作风险画像（英文规范） | 每次新评估 | 每个工具具有哪些独立风险属性，哪些检查适用？ | 每个场景一份 JSON |
 
 ## 机器可读取值
 本地检查会读取已填写的模板，因此部分字段使用固定取值。中英文文件都使用这些取值；它们属于标识符，不翻译。
@@ -61,6 +62,7 @@ engagements/<组织>/                   # 架构师 / 顾问：每个项目一�
     ARE-T05-eval-report-<日期>.md
     ARE-T06-value-review-<日期>.md
     ARE-T07-maturity-assessment-<日期>.md
+    ARE-T10-operation-risk-profile.json
     evidence/                         # 客户提供的材料，由“证据位置”引用
 ```
 - 在单个项目仓库中，把一个场景的文件直接放在 `docs/agent-ready/` 下，文件名相同。

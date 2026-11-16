@@ -1,7 +1,7 @@
 // Workspace checks (local mode only): validate filled deliverables, assess a scenario and
 // aggregate a portfolio. Rule-based and deterministic. Results report codes, line numbers
 // and short quotes only; text inside client files is never followed as an instruction.
-import { basename, dirname } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { assess, dimensionLevels, isSatisfied, parseAssessment, satisfiedCheckIds, type CheckRow } from "./assessment.js";
 import { loadChecks, loadFramework } from "./data.js";
 import { KnowledgeError, META } from "./knowledge.js";
@@ -10,6 +10,9 @@ import { tableCells } from "./markdown.js";
 const CHECK_ROW = /^L\d+-[A-Z]\d+$/;
 import type { Workspace } from "./workspace.js";
 import { validateAuthorizationMatrix, validateCapabilityMatrix, validateOperationContract, type Issue } from "./validators.js";
+import { semanticReview, coverageReview, authorizationReview } from "./audit-semantics.js";
+import { reviewNA } from "./na-review.js";
+import { loadRiskProfile, reviewRiskProfile } from "./risk-profile.js";
 
 const framework = loadFramework();
 const checks = loadChecks();
@@ -53,12 +56,63 @@ function evidenceIssue(ws: Workspace, dir: string, location: string, line: numbe
     : { code: "evidence_location_missing", line, check, message: `Evidence file not found: ${quote(location)}`, hint: "Use a path relative to the scenario folder, e.g. evidence/<file>; optionally add a section after a space." };
 }
 
+/** Combined evidence gate for ARE-T07. Never certifies a project or runs project code.
+ * Historical T07 without a version remains a legacy snapshot, not a current grade.
+ */
+function reviewT07(ws:Workspace,file:string,text:string){
+  const parsed=parseAssessment(text),dir=dirname(file);
+  const modern=parsed.standardVersion==="ARE-A02@0.5";
+  const issues:Issue[]=[];
+  const approvedNAs=new Set<string>();
+  if(!modern){
+    return {modern:false,issues,approvedNAs,verdict:"LEGACY_UNPINNED_PROVISIONAL"};
+  }
+  if(!parsed.targetRevision || /^\s*<|replace|unknown/i.test(parsed.targetRevision))
+    issues.push({code:"assessed_revision_required",message:"Pin the target source/deployment revision in T07.",hint:"Use the same immutable source revision as in the risk profile."});
+  if(!parsed.riskProfile || !parsed.riskProfile.endsWith(".json")){
+    issues.push({code:"risk_profile_required",message:"ARE-A02@0.5 needs a complete operation-level risk profile.",hint:"Provide an ARE-T10-operation-risk-profile.json with inspected tool coverage."});
+  }else try{
+    const profile=join(dir,parsed.riskProfile);
+    const facts=loadRiskProfile(ws,profile);
+    if(parsed.targetRevision && parsed.targetRevision.trim()!==facts.source_revision)
+      issues.push({code:"risk_profile_revision_mismatch",message:"T07 assessed revision differs from its operation risk profile.",hint:"Rebuild the profile against the pinned target revision."});
+    const r=reviewRiskProfile(ws,profile,dir);
+    for(const issue of r.issues)issues.push({code:issue.code,message:issue.message,hint:"Inspect the entire operation inventory before approving N/A."});
+  }catch{
+    issues.push({code:"invalid_risk_profile",message:"Risk profile missing, invalid, or outside authorized workspace.",hint:"Use a complete bounded local ARE-T10 JSON profile."});
+  }
+  for(const row of parsed.rows){
+    if(row.result==="➖"){
+      const r=reviewNA(ws,dir,row.id,row.location,parsed.riskProfile?join(dir,parsed.riskProfile):null);
+      if(r.ok)approvedNAs.add(row.id);
+      else for(const code of r.issues)issues.push({code,check:row.id,message:row.id+": "+code,hint:"Give scoped evidence, human reviewer, review date and a complete operation profile."});
+    }
+    if(row.result!=="✅")continue;
+    if(ws.evidenceStatus(dir,row.location)!=="ok")continue; // already flagged by file evidence check
+    const evidencePath=row.location.trim().split(/\s+/)[0]!.split("#")[0]!;
+    let excerpt="";
+    try{
+      const resolved=ws.resolve(join(dir,evidencePath),"file");
+      const data=ws.read(resolved);
+      excerpt=Buffer.byteLength(data)<=1_000_000?data.slice(0,8000):"";
+    }catch{/* already flagged */}
+    for(const issue of [
+      ...semanticReview({id:row.id,state:"VERIFIED_PASS",evidence:row.location},excerpt),
+      ...coverageReview({id:row.id,state:"VERIFIED_PASS",evidence:row.location},excerpt),
+      ...authorizationReview({id:row.id,state:"VERIFIED_PASS",evidence:row.location},excerpt)
+    ])if(issue.severity==="blocker")issues.push({code:issue.code,check:row.id,message:issue.message,hint:issue.hint});
+  }
+  return {modern:true,issues,approvedNAs,verdict:issues.length?"REVIEW_REQUIRED":"STRUCTURALLY_REVIEWABLE_NOT_CERTIFIED"};
+}
+
 function validateAssessment(ws: Workspace, file: string, text: string): Issue[] {
   const issues: Issue[] = [];
   const dir = dirname(file);
   if (!/^ARE-T07-maturity-assessment-\d{4}-\d{2}-\d{2}\.md$/.test(basename(file)))
     issues.push({ code: "invalid_file_name", message: "Assessment file name lacks a YYYY-MM-DD date.", hint: "Name it ARE-T07-maturity-assessment-<YYYY-MM-DD>.md." });
   const parsed = parseAssessment(text);
+  const review=reviewT07(ws,file,text);
+  if(review.modern)issues.push(...review.issues);
   if (!parsed.exposure || !framework.values.exposure.includes(parsed.exposure))
     issues.push({ code: "invalid_exposure", message: `“Currently exposed to agents” is ${quote(parsed.exposure ?? "missing")}.`, hint: "Use none, read-only or write." });
   const lineOf = new Map<string, number>();
@@ -183,7 +237,7 @@ function valueCardDecision(ws: Workspace, dir: string): string | null {
   return m?.[1] ?? null;
 }
 
-function rowsOf(ws: Workspace, file: string): { rows: CheckRow[]; exposure: string | null } {
+function rowsOf(ws: Workspace, file: string): ReturnType<typeof parseAssessment> {
   return parseAssessment(ws.read(file));
 }
 
@@ -196,21 +250,28 @@ export function assessScenario(ws: Workspace, userPath: string) {
   const previous = files.length > 1 ? files.at(-2)! : null;
   const exists = (loc: string) => ws.evidenceStatus(dir, loc) === "ok";
   const parsed = rowsOf(ws, latest.path);
-  const f = assess(parsed, exists);
+  const review = reviewT07(ws,latest.path,ws.read(latest.path));
+  const options=review.modern?{approvedNAs:review.approvedNAs}:{};
+  const f = assess(parsed, exists, options);
   const outside = parsed.rows.filter((r) => r.result === "✅" && r.location && ws.evidenceStatus(dir, r.location) === "outside").map((r) => r.id);
   let change = null;
   if (previous) {
     const prev = rowsOf(ws, previous.path);
-    const pf = assess(prev, exists);
-    const before = new Map(prev.rows.map((r) => [r.id, isSatisfied(r, exists)]));
+    const previousReview=reviewT07(ws,previous!.path,ws.read(previous!.path));
+    const pf = assess(prev, exists,previousReview.modern?{approvedNAs:previousReview.approvedNAs}:{});
+    const before = new Map(prev.rows.map((r) => [r.id, isSatisfied(r, exists,previousReview.modern?previousReview.approvedNAs:undefined)]));
     change = {
       previous_date: previous.date,
       previous_level: pf.level,
-      newly_satisfied: parsed.rows.filter((r) => isSatisfied(r, exists) && before.get(r.id) === false).map((r) => r.id),
-      no_longer_satisfied: parsed.rows.filter((r) => !isSatisfied(r, exists) && before.get(r.id) === true).map((r) => r.id),
+      previous_standard_version: prev.standardVersion || "legacy_unpinned",
+      comparable: Boolean(prev.standardVersion&&prev.standardVersion===parsed.standardVersion),
+      newly_satisfied: parsed.rows.filter((r) => isSatisfied(r, exists,options.approvedNAs) && before.get(r.id) === false).map((r) => r.id),
+      no_longer_satisfied: parsed.rows.filter((r) => !isSatisfied(r, exists,options.approvedNAs) && before.get(r.id) === true).map((r) => r.id),
     };
   }
   const warnings: string[] = [];
+  if(!review.modern)warnings.push("Legacy/unpinned assessment: this computed level is a historical provisional indication, not a new ARE-A02@0.5 review.");
+  if(review.issues.length)warnings.push("ARE-T07 semantic and operation-risk review has "+review.issues.length+" blocking evidence issues; no verified maturity level is issued.");
   if (f.missingChecks.length || f.duplicateChecks.length || f.unknownChecks.length)
     warnings.push(`Assessment integrity: ${f.missingChecks.length} missing, ${f.duplicateChecks.length} duplicated and ${f.unknownChecks.length} unknown checks. Scoring is based only on authoritative checks.`);
   if (f.consistent === false)
@@ -228,14 +289,22 @@ export function assessScenario(ws: Workspace, userPath: string) {
     assessment: ws.rel(latest.path),
     assessment_date: latest.date,
     value_card_decision: valueCardDecision(ws, dir),
-    level: f.level,
+    level: f.level, // legacy API compatibility; ALWAYS provisional, never an official certification
+    provisional_level: f.level,
+    verified_level: null,
+    level_status: review.modern ? "PROVISIONAL_EVIDENCE_REVIEW" : "LEGACY_UNPINNED_PROVISIONAL",
+    assessment_standard_version: parsed.standardVersion || "legacy_unpinned",
+    risk_profile: parsed.riskProfile || null,
+    evidence_gate: {verdict:review.verdict,blocker_count:review.issues.length,issues:review.issues.slice(0,100),maturity_certified:false},
     level_name: levelInfo.name.en,
     allows: levelInfo.allows,
     exposure: f.exposure,
-    consistent: f.consistent,
+    consistent: review.modern && review.issues.length ? null : f.consistent,
+    provisional_consistent: f.consistent,
+    exposure_consistency_status: review.modern && review.issues.length ? "UNVERIFIED_EVIDENCE_BLOCKERS" : "PROVISIONAL_ONLY",
     next_level: f.nextLevel,
     blocking_checks: f.blockingChecks,
-    dimension_levels: dimensionLevels(parsed.rows, exists),
+    dimension_levels: dimensionLevels(parsed.rows, exists, options),
     failed_checks: f.failedChecks,
     missing_checks: f.missingChecks,
     duplicate_checks: f.duplicateChecks,
@@ -266,6 +335,9 @@ export function aggregatePortfolio(ws: Workspace, userPath?: string) {
       assessment_date: a.assessment_date,
       value_card_decision: a.value_card_decision,
       level: a.level,
+      level_status: a.level_status,
+      verified_level: null,
+      assessment_standard_version: a.assessment_standard_version,
       exposure: a.exposure,
       consistent: a.consistent,
       next_level: a.next_level,
@@ -273,7 +345,9 @@ export function aggregatePortfolio(ws: Workspace, userPath?: string) {
       blocking_checks: a.blocking_checks,
       documented_on_inspection_recommended: a.documented_on_inspection_recommended,
       passes: a.passes,
-      previous_level: a.change_since_previous?.previous_level ?? null,
+      previous_level: a.change_since_previous?.comparable ? a.change_since_previous.previous_level : null,
+      previous_standard_version: a.change_since_previous?.previous_standard_version ?? null,
+      comparison_valid: a.change_since_previous?.comparable ?? false,
     };
   });
   const assessed = scenarios.filter((s): s is Extract<typeof s, { assessed: true }> => s.assessed);
@@ -293,6 +367,7 @@ export function aggregatePortfolio(ws: Workspace, userPath?: string) {
     workspace: ".",
     scenarios,
     distribution: Object.fromEntries(framework.levels.map((l) => [l.id, assessed.filter((s) => s.level === l.id).length])),
+    distribution_status:"PROVISIONAL_ONLY_NO_CERTIFIED_LEVELS",
     not_assessed: scenarios.filter((s) => !s.assessed).map((s) => s.scenario),
     high_risk_inconsistencies: assessed.filter((s) => s.consistent === false).map((s) => ({ scenario: s.scenario, exposure: s.exposure, level: s.level, blocking_checks: s.blocking_checks })),
     recurring_weak_dimensions: Object.fromEntries([...byDim].filter(([, v]) => v.length >= 2).sort()),
@@ -313,7 +388,12 @@ export function evidenceRequestForScenario(ws: Workspace, userPath: string, targ
   const files = ws.assessmentFiles(dir);
   const exists = (loc: string) => ws.evidenceStatus(dir, loc) === "ok";
   const done = new Set<string>();
-  if (files.length) for (const id of satisfiedCheckIds(rowsOf(ws, files.at(-1)!.path), exists)) done.add(id);
+  if (files.length){
+    const latest=files.at(-1)!.path, parsed=rowsOf(ws,latest);
+    const review=reviewT07(ws,latest,ws.read(latest));
+    for (const id of satisfiedCheckIds(parsed, exists, review.modern?{approvedNAs:review.approvedNAs}:{}))done.add(id);
+    if(review.modern)for(const issue of review.issues)if(issue.check)done.delete(issue.check);
+  }
   return {
     ...META,
     scenario: ws.scenarioName(dir),

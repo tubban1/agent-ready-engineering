@@ -266,7 +266,7 @@ export function listChecks(level?: string, dimension?: string, lang: Lang = "en"
 
 export function getTemplate(id: string, lang: Lang = "en", cursor = 0, maxChars = DEFAULT_MAX_CHARS) {
   const docId = normalizeDocId(id);
-  if (!/^ARE-T\d\d$/.test(docId)) throw new KnowledgeError("unknown_id", "Templates are T00–T09.");
+  if (!/^ARE-T\d\d$/.test(docId)) throw new KnowledgeError("unknown_id", "Templates are T00–T10.");
   const doc = getDocument(docId, lang, undefined, cursor, maxChars);
   return {
     ...doc,

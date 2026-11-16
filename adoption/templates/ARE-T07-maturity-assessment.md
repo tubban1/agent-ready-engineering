@@ -1,6 +1,6 @@
 # Maturity Assessment
 > Document ID: ARE-T07
-> Template v0.4 | One per scenario per assessment | Copy into the project directory before filling in
+> Template v0.5 | One per scenario per assessment | Copy into the project directory before filling in
 > The full definition of each check is in `../ARE-A02-agent-ready-maturity-model.md`; this form lists only IDs and short names.
 > Language: English (canonical). Chinese reading aid: `ARE-T07-maturity-assessment.zh.md`.
 
@@ -10,6 +10,8 @@
 | Scenario name | <same as the value card> |
 | Value card | <path and version> |
 | Assessment date | <YYYY-MM-DD> |
+| Standard version | ARE-A02@0.5 |
+| Risk profile | ARE-T10-operation-risk-profile.json |
 | Assessor / reviewer | <> |
 | Version assessed | <core version, tool definition version or hash> |
 | Previous assessment | <date and level; “none” for the first> |
@@ -18,9 +20,9 @@
 
 ## How to fill in
 - Result is one of: ✅ pass / ❌ fail / ➖ not applicable.
-- A pass needs an evidence location; not applicable needs a reason.
+- A pass requires evidence. ARE-A02@0.5 N/A uses `N/A{scope=operation_id or all; reason=concrete explanation; evidence=proof.md; reviewer=human name; reviewed_at=YYYY-MM-DD}` and a complete version-pinned risk profile. A bare reason cannot pass.
 - Evidence type for a pass: `inspected` (examined or run directly by the assessor) or `documented` (artifact provided by the team). `self-reported` never passes. Inspection is recommended for L3-C1, L3-C2, L3-A2, L3-O2.
-- Reaching level N = everything from L1 to LN is ✅ or ➖.
+- A computed level is **PROVISIONAL**, not certified. A provisional level N requires valid evidence-backed ✅ or scoped and reviewer-backed ➖ from L1 through LN; historical records are not silently rescored.
 
 ## L1 Value Defined
 | ID | Short name | Result | Evidence type | Evidence location / reason for N/A |

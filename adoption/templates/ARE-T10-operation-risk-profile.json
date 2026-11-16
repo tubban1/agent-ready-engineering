@@ -1,0 +1,31 @@
+{
+  "schema": "are.operation-risk.v1",
+  "target": "REPLACE_WITH_SERVICE_NAME",
+  "source_revision": "REPLACE_WITH_REAL_SOURCE_SHA",
+  "standard_version": "ARE-A02@0.5",
+  "tool_catalog_count": 1,
+  "operation_count": 1,
+  "ingress_paths": [
+    "mcp"
+  ],
+  "reviewed_by": "REPLACE_WITH_HUMAN_REVIEWER",
+  "reviewed_at": "2026-11-16",
+  "operations": [
+    {
+      "id": "replace_with_real_tool_name",
+      "read": "public",
+      "write": "none",
+      "external_effect": false,
+      "privileged_execution": false,
+      "financial": false,
+      "long_running": false,
+      "draft_state": false,
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false
+      },
+      "evidence": "evidence/real-source-inspection.md",
+      "evidence_type": "inspected"
+    }
+  ]
+}

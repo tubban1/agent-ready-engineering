@@ -39,8 +39,8 @@ async function call(c: Client, name: string, args: Record<string, unknown>) {
 
 test("workspace tools appear only in local mode", async () => {
   const names = (await client.listTools()).tools.map((t) => t.name);
-  for (const t of ["are_validate_deliverable", "are_validate_local_mcp_audit", "are_assess_scenario", "are_aggregate_portfolio", "are_next_steps"]) assert.ok(names.includes(t), t);
-  assert.equal(names.length, 14);
+  for (const t of ["are_validate_deliverable", "are_validate_local_mcp_audit", "are_review_operation_risk", "are_assess_scenario", "are_aggregate_portfolio", "are_next_steps"]) assert.ok(names.includes(t), t);
+  assert.equal(names.length, 15);
   const knowledgeOnly = await connect();
   const k = (await knowledgeOnly.listTools()).tools.map((t) => t.name);
   assert.equal(k.length, 9);
@@ -62,7 +62,14 @@ for (const [scenario, want] of Object.entries<any>(expected.scenarios)) {
     assert.deepEqual(data.documented_on_inspection_recommended, want.documented_on_inspection_recommended);
     assert.deepEqual(data.passes, want.passes);
     assert.equal(data.value_card_decision, expected.value_card_decisions[scenario]);
-    assert.deepEqual(data.change_since_previous, want.change_since_previous);
+    if (want.change_since_previous) {
+      const { previous_standard_version, comparable, ...legacyChange } = data.change_since_previous;
+      assert.deepEqual(legacyChange, want.change_since_previous);
+      assert.equal(previous_standard_version, "legacy_unpinned");
+      assert.equal(comparable, false);
+    } else assert.equal(data.change_since_previous, null);
+    assert.equal(data.verified_level, null);
+    assert.equal(data.level_status, "LEGACY_UNPINNED_PROVISIONAL");
     assert.equal(data.assessment, `scenarios/${scenario}/ARE-T07-maturity-assessment-${expected.assessment_date}.md`);
   });
 }

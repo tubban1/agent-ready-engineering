@@ -1,5 +1,5 @@
 # ARE：本地 stdio MCP 的独立工程自测（不进入 Benchmark）
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`LOCAL_STDIO_SELF_AUDIT.md` EN v0.3
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`LOCAL_STDIO_SELF_AUDIT.md` EN v0.4
 > v0.3 | 2026-11-15 | 状态：已提供公开只读自测引导工具
 
 适用：在 Antigravity、Claude Code、Codex 或其他具备本地仓库访问和 MCP 调用能力的 coding Agent 中，由开发者评估自己的本地 stdio MCP。
