@@ -1,6 +1,6 @@
 # ARE 评估到公开传播标准流程（S0–S13）
 
-**版本**：1.2 / 2026-11-16　**性质**：可复用 SOP、内容标准、门禁；**非已部署的软件流水线**。公开提示词以英文版为准；中文仅辅助阅读。
+**版本**：1.3 / 2026-11-16　**性质**：可复用 SOP、内容标准、门禁；**部分已部署，平台发布仍需验证**。公开提示词以英文版为准；中文仅辅助阅读。
 **现有 ARE 标准**：`adoption/ARE-A02-agent-ready-maturity-model.md`、`conformance/README.md`、`adoption/templates/ARE-T05-eval-report.md`、`adoption/templates/ARE-T07-maturity-assessment.md`
 **本次实操案例**：[Solarstorm public read-only case](../cases/solarstorm-2026-11-16.md)
 **域名与品牌**：[ADR-001](ADR-001-world2-are-publishing.md)
@@ -44,9 +44,9 @@
 | 阶段 | 标准工作 | 门禁/判断 | 输出 |
 |---|---|---|---|
 | **S10 PUBLIC_CASE** | 将安全的 S8 报告转换成永久链接：范围、事实、正面结果、可验证缺口、工具/Agent 任务、方法、时间、限制、更新史、反馈窗口 | 仅公开可披露资料；不得公开安全漏洞、账号数据、内部日志；默认先邮件告知维护者，重要争议先核实 | `case.md`、公开 GitHub URL、站内案例记录 |
-| **S11 DISTRIBUTE** | GitHub 自有仓库案例、官网、X/LinkedIn、HF 讨论/Space、魔搭、Reddit、短视频/长视频；根据渠道改写而不是全文复制 | GitHub Issue 仅具体可复现且归因的缺陷；不能向他人的 Issue 群发广告；社区规则和账号品牌匹配；媒体与数字可追溯 | 每渠道 `draft / published / blocked / skipped`、真实 URL/时间 |
+| **S11 DISTRIBUTE** | 为每个评估案例提供一个 are.world2.co 子页面：评审结论、39 项检查、Agent/工具/Oracle 证据、实际问题与限制、复测方法。各社区只发布本地化短文并引用同一链接，不再默认生产视频、图片、HF Dataset/Space、魔搭创空间 | 遵守平台规则和账号权限；维护者 Issue 不群发广告；各平台必须回读真实帖子 URL | 一个 canonical 案例 URL、每平台简短文案和实测发布回执 |
 | **S12 ENGAGE** | 关注维护者、外部讨论、引用、邮件回复、纠错、采纳修复；维护者如有反馈，更新案例版本 | 永不将“已发邮件”算成“被认可”；修订须公开变更日志，不抹去原证据 | `feedback.json`、原始线程引用、人工复核日历 |
-| **S13 RETEST/IMPROVEMENT** | 维护者修复后按原输入和新版本重复相同合法任务/协议检查，记录前后差异并再次发布 | 不跨版本比较无可比指标；客观错误纠正必须优先于营销 | `retest.json`、前后证据、第二轮案例与视频 |
+| **S13 RETEST/IMPROVEMENT** | 维护者修复后按原输入和新版本重复合法任务/协议检查，在同一个案例 URL 更新证据与日期版本记录 | 不跨版本比较无可比指标；错误纠正优先；保留前次历史 | retest.json、前后证据与原报告更新日志 |
 
 ### 3.1 S10 公开案例模板
 
@@ -56,14 +56,13 @@
 
 | 渠道 | 内容与注意 | 可量化指标 |
 |---|---|---|
-| **ARE 官网** | 计划在 `https://are.world2.co/` 提供**英文通用评估提示词**及一键复制，含快速预检/完整自评分流；在迁移完成前仍用 `are.fde.fan` 当前功能。站内证据等级不可夸大 | 访问、点击自评、评估申请 |
+| **ARE 官网** | 唯一正本：每项目一张公开评审与 evidence 子页面（如 /evidence/solarstorm/），英文通用评估提示词留在首页，详情含完整证据与安全复测 | 有效回源、真实报告阅读、评估申请 |
 | **ARE GitHub 自有仓库** | 原始开放方法、公开报告和复测脚本/提示词；自有 Discussion 可讨论技术方法 | Stars/引用/Issue、报告点击 |
 | **第三方 GitHub Issue** | **仅**公开且已复现的具体工程缺陷，适当通知维护者，最小复现、非推广语气；优化建议优先 Discussion/邮件 | 维护者回应、关闭/合并 PR |
-| **Hugging Face** | 共享研究方法、开源案例、可交互只读预检 Space（需以后实现，不得假称已发布）；原创内容而非群发 | 有用反馈、试用、Agent 引用 |
-| **魔搭** | 中文案例、第三方自评教程；有 Space 时可支持公开低风险协议预检 | 实际体验次数、开发者联系 |
-| **X/LinkedIn** | 4–7 张证据卡/短 Thread，强调一次真实测试的置信界限，链接唯一案例 | 点击回源、有效回复 |
-| **Reddit/HN** | 先发表方法/实验设计征求批评，遵守社区自推广规则；Show HN 要能实际体验产品 | 讨论与高质量建议 |
-| **视频** | 正面实际成功 + 已确认的边界与独立真值；短 45–75 秒、长 3–5 分钟；禁止动画演示冒充实测 | 观看到跳转、开发者互动 |
+| **Hugging Face** | 社区研究讨论 + 单一正本案例链接；论坛审核中不重复发。默认不做 Dataset/Space | 有用反馈、回源点击 |
+| **魔搭** | 中文技术讨论 + 同一评审子页面链接；不另建创空间 | 实际回源、开发者联系 |
+| **X/LinkedIn** | 平台适配的短文/问题，引用同一个案例 URL；不默认制作数据卡片、视频或长 Thread | 有效回源与回复 |
+| **Reddit/HN** | 技术方法与可复现实验讨论；只有社区规则允许时附同一案例链接，限制自我推广 | 工程反馈质量 |
 
 ### 3.3 发布门禁（状态机）
 
@@ -83,7 +82,7 @@
 | **`are.world2.co/`**（迁移后） | 首次接入 ARE 的任何 Agent/开发者 | [Website General Evaluation](../prompts/channels/WEBSITE_GENERAL_EVALUATION.md)，用户填写其 MCP URL 与授权范围；先区分 public read-only vs owner sandbox | **通用** |
 | **维护者邮件** | 被评估服务的真实运营者 | [Maintainer Email Retest](../prompts/channels/MAINTAINER_EMAIL_RETEST.md)，填入该项目报告、具体 finding、重现输入、预期和实际；可引用 [Core Maintainer Retest](../prompts/MAINTAINER_RETEST_MCP.md) | **针对单个项目/问题** |
 | **第三方 GitHub Issue** | 源码维护者、具体故障跟进者 | [GitHub Issue Reproduction](../prompts/channels/GITHUB_ISSUE_REPRODUCTION.md)，单问题、固定 commit/版本、最小复现、允许的修复范围；不应把 ARE 营销帖发到项目方 Issue | **针对单个 Issue** |
-| **X / LinkedIn / HF / Reddit / 魔搭 / 视频** | 对真实实验感兴趣的公共读者 | [Public Project Review](../prompts/channels/PUBLIC_PROJECT_REVIEW.md)，提供该项目**仅公共只读**的自助复测提示词（可选），以报告 URL 为依据；短平台只放链接，长平台可展示正文 | **针对已完成测试的项目** |
+| **X / LinkedIn / HF / Reddit / 魔搭** | 对真实实验感兴趣的公开读者 | [Public Project Review](../prompts/channels/PUBLIC_PROJECT_REVIEW.md) 作为页面内可选只读复测提示词；渠道正文只需简短技术介绍 + 案例链接 | **针对已评审项目** |
 
 注意：**`https://are.world2.co/mcp` 已正式上线并在 2026-11-16 通过实际 MCP 新旧客户端检查**，`https://are.fde.fan/mcp` 保留兼容。所有网站、邮件和项目专属提示词默认使用 World2 管理的正式 ARE 入口，第三方受测 MCP 的原生入口仍独立；不要将主平台地址误作第三方服务地址。
 
@@ -103,7 +102,7 @@
 
 ## 5. 验收表和责任边界
 
-只有 S10 PUBLIC_CASE 已有在线 URL 才算公开案例走通；S11 DISTRIBUTE 可分渠道局部完成。ARE 已在 https://are.world2.co/ 提供英文通用评估提示词与复制入口；正式 https://are.world2.co/mcp 已上线、旧域名兼容。S11 四渠道实施与实际状态见 [Channel Playbooks](ARE-S11-CHANNEL-PLAYBOOKS-v1.md)。对 HF / ModelScope / X / LinkedIn / Reddit 必须分别保留真实 URL 和授权回执，GitHub 或 ARE 自有站点成功不等于第三方渠道完成。
+只有 S10 PUBLIC_CASE 的唯一案例 URL 公网可访问且包含结论与证据时才算完整案例走通。ARE 已在 https://are.world2.co/ 提供英文通用评估提示词与复制入口；https://are.world2.co/mcp 已上线。S11 的 [唯一案例页与各渠道链接标准](ARE-S11-CHANNEL-PLAYBOOKS-v1.md) 取代图卡/视频和多份托管产物；各外部帖子仍独立保留真实回执。
 
 **批量化门槛**：单案 S0–S10 全部证据、S11 至少一个合法渠道公开、S12 有联系记录、S13 仅在收到可复测更新后完成；源码绑定、维护者治理或认证无法取得时必须标 `LIMITED`。不能因没有维护者回复而伪称完成 S13。
 
@@ -111,10 +110,10 @@
 
 `qualified / discovered`、`tool_contract_checked / tools_discovered`、`tool_calls_tested / lawful_testable_tools`、`agent_tasks_verified / agent_tasks_attempted`、`complete_are_assessments / qualified`、`safe_cases_published / QA_passed`、`channels_with_live_urls / planned_channels`、`verified_contacts / qualified`、`emails_sent / reports_ready`、`maintainer_replies / delivered`、`retests_verified / fixes_submitted`。对不适用和未知分别计数；费用/Token/人工时间仅用真实计量。
 
-## 7. 不修改代码的本轮实施边界
+## 7. 当前生产实现与边界
 
-- 可更新**文档/公开报告内容**，使用现有 GitHub Markdown URL 与已有的 ARE 项目评估数据面。
-- 不修改 ARE、World2、OWL LAB 的任何运行代码或部署行为；不迁移域名。
+- 可以按已审核 S8 事实更新案例页、证据和站点导航；每次变更须经过独立公开读回验证。
+- 当前 ARE 站点由 Vercel 正式部署，唯一案例页与证据来自版本化公开数据；改动不触碰第三方 MCP 生产代码。
 - 不在第三方仓库创建营销 Issue、不向不匹配品牌账号发帖，不在没有复现/披露审查时公开敏感故障。
 - 每项第三方发布必须记录公开 URL 与审批/账户是否可用，失败即保留草稿，不声称成功。
 
@@ -132,4 +131,4 @@
 
 ## S11 实际生产与平台分流
 
-四条渠道生产线详见 [ARE S11 Channel Playbooks v1](ARE-S11-CHANNEL-PLAYBOOKS-v1.md)。证据数据、媒体卡片、短视频已可重建；外部平台是否真正 PUBLISHED 必须有对应独立可访问链接和回执，且与官方报告来源一一关联。现有统一 Google Calendar 调度器仅跟进状态/讨论，不替代各平台的发帖授权。
+S11 现在以 [单一评审子页面与各渠道引用规范](ARE-S11-CHANNEL-PLAYBOOKS-v1.md) 为准：每项目只产生一个官网 canonical URL，包含结论和 evidence；Hugging Face、魔搭、X/LinkedIn、Reddit 不再默认要求图卡、短片、Dataset、Space 或独立 Demo。第三方渠道仅写本地化短文 + 单一链接，保留实际发布 URL/授权/审核状态。现有 Calendar 仅跟进状态，不自动绕过平台发帖权限。

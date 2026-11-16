@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a sanitized, versioned ARE public evaluation dataset and static HF Space."""
+"""Build one canonical, self-contained ARE assessment page and audit evidence downloads."""
 from __future__ import annotations
 import argparse,collections,hashlib,json,re,sys
 from pathlib import Path
@@ -64,88 +64,14 @@ def build(out):
           "ARE design recommendation is not official MCP MUST",
           "Solar-weather observations change between captures"],
         checks=checks,tools=tools,oracle_cases=comparisons)
-    d=Path(out)/"hf-dataset";s=Path(out)/"hf-space"
+    d=Path(out)
     for name,rows in (("checks",checks),("tools",tools),("oracle",comparisons)):
         write(d/(name+".jsonl"),"".join(dump(x)+"\n" for x in rows))
     write(d/"case_summary.json",json.dumps({k:v for k,v in public.items() if k not in ("checks","tools","oracle_cases")},indent=2,ensure_ascii=False)+"\n")
-    card="""---
-license: cc-by-4.0
-language:
-- en
-- zh
-pretty_name: ARE Solarstorm MCP Public Evidence (2026-11-16)
-tags:
-- mcp
-- ai-agents
-- reliability
-- reproducibility
-size_categories:
-- n<1K
----
-
-# ARE Solarstorm MCP Evaluation — Evidence Dataset
-
-Independent World2 / Agent-Ready Engineering limited public-read-only case.
-Not official MCP certification, provider endorsement, security assessment, or a multi-run benchmark.
-
-- 39 ARE checks: 4 PASS, 2 FAIL against ARE optional design criteria, 10 N/A, 23 NOT_VERIFIED.
-- 4 of 4 public read-only tools inspected and actually called.
-- Bounded MCP 2026 checks: 9 PASS, 0 FAIL, 1 UNKNOWN, 1 N/A.
-- Public repository source snapshot: 55 offline and 9 live NOAA tests passed; production source binding UNKNOWN.
-- One real Claude Agent run called 4 MCP tools. This is a single example, not a reliability rate.
-- NOAA comparisons: 2 matched at capture and 1 instantaneous X-ray reading differed;
-  the GOES peak class matched. All time-dependent values are dated.
-- No ARE maturity level was established.
-
-Dataset files: checks.jsonl (39 rows), tools.jsonl (4), oracle.jsonl (3), case_summary.json.
-Open technical report: """+case["report_url"]+"""
-Public safe reproduction prompt: """+GITHUB+"""docs/cases/solarstorm-public-replay-2026-11-16.md
-
-The snapshot source reported 1.0.3 while the live service reported 1.0.0; source-to-production identity is unverified.
-A domain-invalid latitude reported an error text while MCP isError was false; this is an ARE
-contract improvement suggestion, NOT an official MCP MUST violation.
-
-License CC BY 4.0 applies only to ARE's original evaluation records/explanations,
-not to the Solarstorm repository or external NOAA data.
-"""
-    write(d/"README.md",card)
     raw=(ROOT/"examples/are-evidence-space/index.html").read_text()
     assert "ARE_EVIDENCE_DATA_PLACEHOLDER" in raw
     raw=raw.replace("ARE_EVIDENCE_DATA_PLACEHOLDER",json.dumps(public,ensure_ascii=False).replace("<","\\u003c"))
-    write(s/"index.html",raw)
-    write(s/"README.md","""---
-title: ARE MCP Evidence Explorer
-emoji: 🔬
-colorFrom: blue
-colorTo: gray
-sdk: static
-pinned: false
-license: cc-by-4.0
-short_description: MCP evidence, 39 checks and safe Agent replay
----
-
-# ARE MCP Evidence Explorer
-
-Static interactive viewer of a dated Solarstorm MCP evaluation with 39 ARE check states,
-NOAA public comparisons and a safe project-specific replay prompt.
-Not a live MCP testing backend. For a live preflight use https://are.world2.co/benchmark/.
-This demo does not send requests to Solarstorm or any private endpoint.
-""")
-    write(Path(out)/"channel_status.json",json.dumps({
-        "schema":"are.s11.release.v1",
-        "case_id":case["case_id"],
-        "publication_status":{
-          "huggingface_dataset":"PENDING_HUMAN",
-          "huggingface_space":"PENDING_HUMAN",
-          "huggingface_forum":"BLOCKED_MODERATION",
-          "modelscope":"BLOCKED_LOGIN",
-          "x":"BLOCKED_HUMAN",
-          "linkedin":"CONTENT_READY",
-          "reddit":"NOT_ATTEMPTED"
-        },
-        "verified_urls":{},
-        "rule":"PUBLISHED requires verified public platform URL and real readback"
-    },indent=2,ensure_ascii=False)+"\n")
+    write(d/"index.html",raw)
     manifest={}
     for f in sorted(Path(out).rglob("*")):
         if f.is_file() and f.name!="sha256.json":
@@ -153,7 +79,7 @@ This demo does not send requests to Solarstorm or any private endpoint.
     write(Path(out)/"sha256.json",json.dumps(manifest,indent=2,ensure_ascii=False)+"\n")
     print(dump(dict(output=str(out),checks=len(checks),tools=len(tools),oracle=comparisons,files=len(manifest))))
 if __name__=="__main__":
-    p=argparse.ArgumentParser();p.add_argument("--out",type=Path,default=ROOT/"dist/solarstorm-s11-v1")
+    p=argparse.ArgumentParser();p.add_argument("--out",type=Path,default=ROOT/"public/evidence/solarstorm")
     p.add_argument("--evidence-dir",type=Path,default=None)
     a=p.parse_args()
     if a.evidence_dir is not None:ORIGINAL=a.evidence_dir
