@@ -47,6 +47,7 @@ World2 管理的正式 ARE MCP：`https://are.world2.co/mcp`（旧端点 `https:
 ### 公开评估、开发者自检与复测（仅流程文档更新）
 
 - [ARE 统一日历任务与邮件执行调度器](docs/standards/ARE-CALENDAR-OPS-SCHEDULER-v1.md)：仅一条每小时自动化，读取独立的 ARE 跟进日历、Gmail 线程并记录执行回执，不再一项目一条自动任务。
+- [四大渠道 S11 发布流程](docs/standards/ARE-S11-CHANNEL-PLAYBOOKS-v1.md)：HF 数据集与静态 Space、魔搭中文案例、X/LinkedIn 数据卡片及短片、Reddit 技术讨论。各平台独立发布和验收，不以 GitHub 发布代替 HF/魔搭发布。
 - [ARE S0–S13 评估→公开案例→渠道传播→维护者反馈与复测 SOP](docs/standards/ARE-EVALUATION-PUBLICATION-SOP-v1.md)。
 - [World2 与 ARE 的统一 MCP 服务平台架构](docs/standards/ADR-001-world2-are-publishing.zh.md)：World2 将统一管理全部自有 MCP，ARE **已注册并迁至 `are.world2.co/mcp`**；当前旧域名仍可连接，详见 [迁移验收计划](docs/standards/ARE-WORLD2-ENDPOINT-MIGRATION-PLAN.md)。
 - [英文优先的渠道提示词目录](docs/prompts/README.md)：[网站通用接入/评估](docs/prompts/channels/WEBSITE_GENERAL_EVALUATION.md)、[维护者邮件针对性自检](docs/prompts/channels/MAINTAINER_EMAIL_RETEST.md)、[GitHub Issue 单问题复现](docs/prompts/channels/GITHUB_ISSUE_REPRODUCTION.md)、[公共社媒按项目只读复测](docs/prompts/channels/PUBLIC_PROJECT_REVIEW.md)；另有[中文开发者自评](docs/prompts/SELF_EVALUATE_MCP.zh.md)、[中文复测](docs/prompts/MAINTAINER_RETEST_MCP.zh.md)和[中文第三方评估](docs/prompts/INDEPENDENT_MCP_EVALUATION.zh.md)。

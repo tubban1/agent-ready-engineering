@@ -1,0 +1,44 @@
+{
+  "schema": "are.public-evidence.v1",
+  "case_id": "solarstorm-2026-11-16",
+  "project": "Solarstorm MCP",
+  "date": "2026-11-16",
+  "origin": "World2 MCP catalog",
+  "endpoint": "https://mcp.solarstorm.today/mcp",
+  "report_url": "https://github.com/tubban1/agent-ready-engineering/blob/main/docs/cases/solarstorm-2026-11-16.md",
+  "source_commit": "6d0fed8c9ec43bc2b2efb2fe94be81c45e66d650",
+  "source_version": "1.0.3",
+  "live_version": "1.0.0",
+  "production_source_bound": false,
+  "real_agent_runs": 1,
+  "real_agent_mcp_calls": 4,
+  "independent_oracle": "NOAA SWPC",
+  "protocol_bounded": {
+    "PASS": 9,
+    "FAIL": 0,
+    "UNKNOWN": 1,
+    "NOT_APPLICABLE": 1
+  },
+  "full_protocol_certification": false,
+  "source_tests": {
+    "offline": 55,
+    "live_noaa": 9
+  },
+  "are_39": {
+    "PASS": 4,
+    "FAIL": 2,
+    "NOT_APPLICABLE": 10,
+    "NOT_VERIFIED": 23
+  },
+  "maturity_level": "NOT_ESTABLISHED",
+  "noaa": {
+    "matched": 2,
+    "differed": 1
+  },
+  "limitations": [
+    "Single real Agent task; not a multi-run statistical benchmark",
+    "Open source is not proven to be exact deployed source",
+    "ARE design recommendation is not official MCP MUST",
+    "Solar-weather observations change between captures"
+  ]
+}
