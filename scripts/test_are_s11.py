@@ -76,6 +76,13 @@ class SingleCasePageTests(unittest.TestCase):
         self.assertEqual(39,len(content["checks"]))
         self.assertEqual(4,len(content["tools"]))
 
+    def test_browser_bootstrap_and_render_complete(self):
+        result=subprocess.run(
+            ["node",str(ROOT/"scripts/test_are_case_page_ui.mjs"),str(PAGE/"index.html")],
+            capture_output=True,text=True)
+        self.assertEqual(0,result.returncode,result.stdout+result.stderr)
+        self.assertIn("CASE_UI_RENDER_PASS",result.stdout)
+
     def test_public_files_are_redacted(self):
         for f in PAGE.iterdir():
             if f.suffix not in {".html",".json",".jsonl"}:continue
