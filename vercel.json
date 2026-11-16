@@ -18,6 +18,16 @@
   },
   "redirects": [
     {
+      "source": "/datasets/solarstorm-20261116/",
+      "destination": "/evidence/solarstorm/",
+      "permanent": true
+    },
+    {
+      "source": "/media/solarstorm/",
+      "destination": "/evidence/solarstorm/",
+      "permanent": true
+    },
+    {
       "source": "/datasets/solarstorm-20261116/checks.jsonl",
       "destination": "/evidence/solarstorm/checks.jsonl",
       "permanent": true

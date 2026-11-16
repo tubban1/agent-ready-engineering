@@ -94,8 +94,8 @@ class SingleCasePageTests(unittest.TestCase):
         rules=cfg.get("redirects",[])
         self.assertTrue(any(r["source"]=="/media/solarstorm/:path*" for r in rules))
         self.assertTrue(any(r["source"]=="/datasets/solarstorm-20261116/:path*" for r in rules))
-        self.assertFalse((ROOT/"public/media/solarstorm").exists())
-        self.assertFalse((ROOT/"public/datasets/solarstorm-20261116").exists())
+        self.assertEqual({"index.html"},{f.name for f in (ROOT/"public/media/solarstorm").iterdir()})
+        self.assertEqual({"index.html"},{f.name for f in (ROOT/"public/datasets/solarstorm-20261116").iterdir()})
         self.assertFalse((ROOT/"dist/solarstorm-s11-v1").exists())
 
     def test_short_channel_copy_one_url(self):
