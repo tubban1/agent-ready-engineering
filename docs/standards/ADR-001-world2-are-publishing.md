@@ -1,4 +1,5 @@
 # ADR-001 — World2 as the Unified Agent Service Platform
+> v1.1 | 2026-11-16 | English canonical
 
 **Status:** Executed ARE domain registration and public World2 service publication; legacy endpoint preserved.
 **Date:** 2026-11-16

@@ -1,4 +1,5 @@
 # ARE Self Evaluate — Copy-paste prompt for MCP maintainers
+> v1.0 | 2026-11-16 | English canonical
 
 **Status:** Developer self-assessment; not an ARE independent audit, MCP certification, or security approval. You are responsible for granting a safe scope. See the [Chinese version](SELF_EVALUATE_MCP.zh.md).
 

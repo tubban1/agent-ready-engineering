@@ -1,4 +1,5 @@
 # ARE Self Evaluate — MCP 开发者自评提示词（中文）
+> 对应英文版：`SELF_EVALUATE_MCP.md` EN v1.0
 
 **用途：** MCP 维护者使用 ChatGPT、Claude Code、Codex 等真实 Agent，在自己拥有或授权的项目中运行可重复的 ARE 自评。结果明确标注 **SELF-ASSESSMENT**，不是 ARE 独立认证。
 

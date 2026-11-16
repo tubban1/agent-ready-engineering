@@ -1,4 +1,5 @@
 # ADR-001 中文说明：World2 统一管理所有自有 MCP 服务
+> 对应英文版：`ADR-001-world2-are-publishing.md` EN v1.1
 
 > 英文规范以 [ADR-001](ADR-001-world2-are-publishing.md) 为准。日期：2026-11-16；状态：**ARE 已完成 World2 服务注册和新域名路由；旧域名继续兼容**。
 
