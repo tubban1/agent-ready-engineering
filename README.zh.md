@@ -44,6 +44,14 @@
 实现部分：MCP 服务在 `mcp/` 中；设计、进度与安装方法见 `mcp/DESIGN.zh.md`（没有 ARE 编号，它是实现部分，不是框架文档）。
 公共 endpoint：`https://are.fde.fan/mcp`（Streamable HTTP，知识查询工具只读、另有显式提交的 Benchmark 工具，无需登录）。对客户交付物的工作区检查只在本地 stdio 服务中提供，客户文件不离开本机。
 
+### 公开评估、开发者自检与复测（仅流程文档更新）
+
+- [ARE S0–S13 评估→公开案例→渠道传播→维护者反馈与复测 SOP](docs/standards/ARE-EVALUATION-PUBLICATION-SOP-v1.md)。
+- [World2 与 ARE 的品牌、发布和执行边界](docs/standards/ADR-001-world2-are-publishing.md)：目前仍保留 ARE 独立 MCP 入口。
+- [提示词目录](docs/prompts/README.md)：[开发者自评](docs/prompts/SELF_EVALUATE_MCP.zh.md)、[收到反馈后的自检/复测](docs/prompts/MAINTAINER_RETEST_MCP.zh.md)、[公众第三方独立评估](docs/prompts/INDEPENDENT_MCP_EVALUATION.zh.md)。
+- [Solarstorm 真实 MCP 评估案例](docs/cases/solarstorm-2026-11-16.md)，全部四个只读工具、单次真实 Agent 和 NOAA 交叉核验，未擅自授予成熟度等级。
+- [ARE Benchmark](https://are.fde.fan/benchmark/) **已经存在**一键复制的基础自评提示词；它只做公开 Endpoint 静态预检，与上述完整深度自评提示词不同。两者均非官方认证。
+
 ### MCP 2026 协议与 ARE 评估明确分离（实现 v0.8，2026-11-15）
 
 本地实现采用官方 MCP TypeScript SDK v2，同时兼容 `2026-07-28` 的新版无状态协议及旧版 `2025-*` 客户端（HTTP、stdio）。**源码通过不等于已部署，必须通过线上 `node mcp/conformance/probe.mjs https://are.fde.fan/mcp` 核实。**
