@@ -7,6 +7,32 @@
   const $ = id => document.getElementById(id);
   const esc = val => String(val ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const dateStr = iso => iso ? new Date(iso).toLocaleString('zh-CN',{timeZone:'Europe/Zurich',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+  const swissDay = iso => {
+    const date = new Date(iso);
+    return Number.isFinite(date.getTime()) ? new Intl.DateTimeFormat('sv-SE',
+      {timeZone:'Europe/Zurich',year:'numeric',month:'2-digit',day:'2-digit'}).format(date) : null;
+  };
+  function renderLatestAssessmentDate() {
+    const days = items.map(x=>swissDay(x.checked_at)).filter(Boolean).sort();
+    const mostRecent = days.at(-1) || null;
+    const count = mostRecent ? days.filter(day=>day===mostRecent).length : 0;
+    $('latestCount').textContent=mostRecent?String(count):'—';
+    $('latestHint').textContent=mostRecent
+      ? '最近 checked_at：'+mostRecent+'（苏黎世日期，同日记录数；不是独立采样批次）'
+      : '尚无有效的 checked_at 记录';
+    $('latestDateLabel').textContent=mostRecent?'最近更新 '+mostRecent:'最近更新日期未知';
+  }
+  async function loadFrameworkVersion() {
+    try {
+      const res=await fetch('/are-metadata.json',{cache:'no-store'});
+      if(!res.ok)throw Error('metadata_not_available');
+      const data=await res.json();
+      if(!/^\d+\.\d+\.\d+$/.test(data.framework_version))throw Error('invalid_version');
+      $('frameworkVersion').textContent='v'+data.framework_version;
+    }catch{
+      $('frameworkVersion').textContent='版本待核验';
+    }
+  }
   const labels = {source_review:'源码核查',preliminary:'自动预评估',verified:'独立验证',error:'评估失败'};
   const map = (x) => ({
     ...x, strengths:Array.isArray(x.strengths)?x.strengths:[],
@@ -53,10 +79,10 @@
     const total=batches.reduce((n,x)=>n+Number(x.analyzed_count||0),0);
     $('batchDone').textContent=total;
     $('batchProgress').firstElementChild.style.width=Math.min(100,total/240*100)+'%';
-    $('batchHint').textContent='已完成 '+total+' / 240 · 共 '+batches.filter(x=>x.status==='completed').length+' / 8 个批次完成 · 实际完成数可能低于目标';
+    $('batchHint').textContent='已完成 '+total+' / 240（原研究目标）· '+batches.filter(x=>x.status==='completed').length+' / '+batches.length+' 个已记录批次完成';
     $('batchGrid').innerHTML=batches.map(x=>{
-      const t=new Date(x.slot_at).toLocaleTimeString('en-GB',{timeZone:'Europe/Zurich',hour:'2-digit',minute:'2-digit'});
-      return '<article class="batch"><div><b>'+esc(t)+'</b><span class="state '+esc(x.status)+'">'+esc({scheduled:'待执行',running:'执行中',completed:'已完成',partial:'部分完成',failed:'失败'}[x.status]||x.status)+'</span></div><p class="meta">NOV 15 · Europe/Zurich</p><div class="num">'+Number(x.analyzed_count||0)+' <span>/ 30</span></div></article>';
+      const t=new Date(x.slot_at).toLocaleString('zh-CN',{timeZone:'Europe/Zurich',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      return '<article class="batch"><div><b>'+esc(t)+'</b><span class="state '+esc(x.status)+'">'+esc({scheduled:'待执行',running:'执行中',completed:'已完成',partial:'部分完成',failed:'失败'}[x.status]||x.status)+'</span></div><p class="meta">Europe/Zurich · 已记录批次</p><div class="num">'+Number(x.analyzed_count||0)+' <span>/ 30</span></div></article>';
     }).join('');
   }
   async function load(){
@@ -79,7 +105,7 @@
     }
     $('totalCount').textContent=items.length;
     $('sourceCount').textContent=items.filter(x=>x.status==='source_review').length;
-    $('todayCount').textContent=items.filter(x=>{const d=new Date(x.checked_at);return d.toLocaleDateString('en-CA',{timeZone:'Europe/Zurich'})==='2026-11-15';}).length;
+    renderLatestAssessmentDate();
     $('verifiedCount').textContent=items.filter(x=>x.status==='verified').length;
     $('categoryFilter').innerHTML='<option value="">全部类别</option>'+[...new Set(items.map(x=>x.category))].sort().map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join('');
     render();renderBatches();
@@ -90,5 +116,6 @@
   $('categoryFilter').addEventListener('change',render);
   $('refreshBtn').addEventListener('click',load);
   $('closeDetail').addEventListener('click',()=>$('detailDialog').close());
+  loadFrameworkVersion();
   load();
 })();

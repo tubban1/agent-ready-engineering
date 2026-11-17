@@ -26,7 +26,7 @@
       <a class="navitem" href="/benchmark/"><span>◎</span> MCP Benchmark</a>
     </nav>
     <div class="sidebottom">
-      <div class="smalltag">ARE Framework <b>v0.18</b></div>
+      <div class="smalltag">ARE Framework <b id="frameworkVersion">版本待核验</b></div>
       <p>Public Research / Evidence-first</p>
       <a href="/mcp">Explore MCP ↗</a>
     </div>
@@ -37,7 +37,7 @@
       <div class="topactions"><span id="liveIndicator" class="live-dot">加载中</span><button id="refreshBtn" type="button">↻ 刷新</button></div>
     </header>
     <div class="maincontent">
-      <div class="eyebrow">RESEARCH PORTFOLIO <span>2026 · NOV 15</span></div>
+      <div class="eyebrow">RESEARCH PORTFOLIO <span id="latestDateLabel">最近更新日期待读取</span></div>
       <section class="hero">
         <div>
           <h1>Agent-Ready<br><em>评估看板</em></h1>
@@ -49,7 +49,7 @@
       <section class="metrics" aria-label="评估统计">
         <article><span>已收录项目</span><strong id="totalCount">—</strong><small>包括初步评估和源码核查</small></article>
         <article><span>源码已核查</span><strong id="sourceCount">—</strong><small>与仅公开材料的预评估分开</small></article>
-        <article><span>今日新分析</span><strong id="todayCount">—</strong><small>只统计实际写入数据</small></article>
+        <article><span>最近更新日期的记录</span><strong id="latestCount">—</strong><small id="latestHint">按最近 checked_at 的苏黎世日期统计</small></article>
         <article><span>独立正式认证</span><strong id="verifiedCount">—</strong><small>未达到完整证据要求不得授予等级</small></article>
       </section>
       <section id="assessments" class="section">
@@ -60,7 +60,7 @@
         </div>
       </section>
       <section id="batches" class="section">
-        <div class="headingrow"><div><span class="section-no">02 / COLLECTION</span><h2>每小时研究批次</h2><p>2026-11-15 · Europe/Zurich · 02:45–09:45，每小时目标 30 个项目，实际数量以完成记录为准。</p></div></div>
+        <div class="headingrow"><div><span class="section-no">02 / COLLECTION</span><h2>历史采样批次</h2><p>展示数据库中已有的研究批次及原定目标，不表示每天仍按固定计划执行。日期、时间和完成量以批次记录为准。</p></div></div>
         <div class="batch-summary"><div><strong id="batchDone">0</strong><span>/ 240 目标项目</span></div><div id="batchProgress" class="batch-progress"><span style="width:0%"></span></div><p id="batchHint">计划 8 批 · 每批目标 30 · 待实际执行数据</p></div>
         <div class="batchgrid" id="batchGrid"></div>
       </section>
