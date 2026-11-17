@@ -6,7 +6,7 @@
   const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const params=new URLSearchParams(location.search);
   let locale=params.get("lang")==="zh-CN"?"zh-CN":"en";
-  let rows=[],creatorReports=[],cohort=[],active=null,challenge=null,isPublic=false;
+  let rows=[],creatorReports=[],cohort=[],active=null,challenge=null,isPublic=false,portfolioState="connecting";
   const en={};
   document.querySelectorAll("[data-i18n]").forEach(node=>{en[node.dataset.i18n]=node.textContent;});
   const t=(enText,zhText)=>locale==="zh-CN"?(zhText??enText):enText;
@@ -31,6 +31,11 @@
     const node=$(id);node.textContent=t(enText,zhText);node.classList.toggle("error",isError);
   };
   const msgForError=s=>errors[s]?t(...errors[s]):String(s||t("Request failed","请求失败")).slice(0,120);
+  function renderLiveStatus(){
+    if(portfolioState==="ready")message("liveStatus","Live public records","公开记录 · 实时");
+    else if(portfolioState==="error")message("liveStatus","Public directory unavailable","公开目录暂不可用",true);
+    else message("liveStatus","Connecting","正在连接");
+  }
   const formatDate=iso=>{
     const d=new Date(iso);
     return Number.isFinite(d.getTime())?new Intl.DateTimeFormat(locale,{timeZone:"Europe/Zurich",year:"numeric",month:"short",day:"numeric"}).format(d):"—";
@@ -56,7 +61,7 @@
     const u=new URL(location.href);
     if(locale==="zh-CN")u.searchParams.set("lang","zh-CN");else u.searchParams.delete("lang");
     history.replaceState(null,"",u.pathname+u.search+u.hash);
-    renderRows();renderCreators();renderMetrics();renderCohort();
+    renderRows();renderCreators();renderMetrics();renderCohort();renderLiveStatus();
     if(active)renderReport(active,false);
     $("publishBtn").textContent=isPublic?t("Withdraw publication","撤回公开"):t("Publish voluntarily","自愿公开");
     $("historyResults").textContent="";
@@ -151,11 +156,13 @@
       const data=await getJSON(PORTFOLIO_API);
       if(!Array.isArray(data.assessments))throw Error("invalid_response");
       rows=data.assessments.filter(recordIsPublic);
+      portfolioState="ready";
       // Never use internal seed snapshots as a fallback in a public experience.
-      message("liveStatus","Live public records","公开记录 · 实时");
+      renderLiveStatus();
     }catch(e){
       rows=[];
-      message("liveStatus","Public directory unavailable","公开目录暂不可用",true);
+      portfolioState="error";
+      renderLiveStatus();
       console.warn("ARE public portfolio unavailable",String(e.message||"error").slice(0,90));
     }
     renderRows();renderMetrics();

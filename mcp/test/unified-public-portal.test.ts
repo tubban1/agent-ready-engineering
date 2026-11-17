@@ -20,6 +20,7 @@ test("unified public portal defaults to English and supports complete Chinese UI
  assert.deepEqual(missing,[],"Chinese must cover every visible static UI label");
  assert.match(source("public/evaluations/app.js"),/new URLSearchParams\(location.search\)/);
  assert.match(source("public/evaluations/app.js"),/window\.ARE_ZH/);
+ assert.ok(source("public/evaluations/unified.css").includes("@media(max-width:1000px){.shell{grid-template-columns:minmax(0,1fr)}"),"mobile shell must not expand to table intrinsic width");
 });
 test("unified UI retains all self-service operations and does not expose unpublished data",()=>{
  const html=source("public/evaluations/index.html");
