@@ -34,7 +34,7 @@ test("latest public checked_at date is calculated dynamically, and local researc
     if(!elements.has(id))elements.set(id,{
       textContent:"",innerHTML:"",value:"",hidden:false,placeholder:"",dataset:{},
       classList:{remove(){},add(){},toggle(){}},style:{},setAttribute(){},
-      addEventListener(){},querySelectorAll(){return[];},showModal(){},close(){},
+      events:{},addEventListener(type:string,fn:()=>void){this.events[type]=fn;},querySelectorAll(){return[];},showModal(){},close(){},
       scrollIntoView(){}
     });
     return elements.get(id);
@@ -69,4 +69,7 @@ test("latest public checked_at date is calculated dynamically, and local researc
   assert.match(getElementById("latestDateLabel").textContent,/2026-11-16/);
   assert.match(getElementById("latestHint").textContent,/1/);
   assert.equal(getElementById("frameworkVersion").textContent,"v0.19.0");
+  assert.equal(getElementById("liveStatus").textContent,"Live public records");
+  getElementById("zhButton").events.click();
+  assert.equal(getElementById("liveStatus").textContent,"公开记录 · 实时","locale switch must preserve loaded-data state");
 });
