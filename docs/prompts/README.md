@@ -10,7 +10,7 @@
 
 ## Channel-specific prompts (English)
 
-- **Future ARE website general prompt:** [Website General Evaluation](channels/WEBSITE_GENERAL_EVALUATION.md) — generic visitor intent with explicit public/owner scope; planned `are.world2.co/mcp`.
+- **Current ARE website general prompt:** [Website General Evaluation](channels/WEBSITE_GENERAL_EVALUATION.md) — generic visitor intent with explicit public/owner scope; planned `are.world2.co/mcp`.
 - **Verified maintainer email:** [Project-specific Maintainer Email Retest](channels/MAINTAINER_EMAIL_RETEST.md) — fill with the exact report/finding/evidence before sending.
 - **Third-party GitHub Issue:** [Single-Issue Reproduction](channels/GITHUB_ISSUE_REPRODUCTION.md) — narrow, reproducible and not promotional.
 - **X / HF / Reddit / ModelScope / video:** [Public Project Review](channels/PUBLIC_PROJECT_REVIEW.md) — **optional** read-only replay prompt bound to the tested project, with different formats per platform.
@@ -20,3 +20,20 @@
 Never use a public third-party prompt as authorization to write, pay, message, delete, bypass authentication or run high-volume tests. Reports must distinguish full contract inspection, lawful actual tool coverage, independent Agent business outcomes, and source-to-deployment identity.
 
 The publication & feedback workflow is at [ARE SOP](../standards/ARE-EVALUATION-PUBLICATION-SOP-v1.md).
+
+
+## Single source for all eight public evaluation prompt copies
+
+The authoritative wording lives in [\`data/are-evaluation-prompts.json\`](../../data/are-evaluation-prompts.json).
+The English/Chinese Self Evaluate, Independent Evaluation and Maintainer Retest prompts, plus the website Markdown reference and the copyable textarea on the homepage, are **generated** from this one source.
+
+After changing the source, run:
+
+\`\`\`bash
+node scripts/sync-are-evaluation-prompts.mjs
+node scripts/sync-are-evaluation-prompts.mjs --check
+npm test --prefix mcp
+\`\`\`
+
+The repository test fails when any generated copy diverges from the canonical JSON or omits the ARE-A02@0.5/T10 evidence gates. Never hand-edit generated prompt blocks in the output documents.
+The public ARE MCP is for knowledge/templates. The assessment tools require an authorized local ARE MCP with \`--workspace\`; a prompt cannot install tools or grant credentials.

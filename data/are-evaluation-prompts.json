@@ -1,0 +1,103 @@
+{
+  "schema": "are.evaluation-prompts.v1",
+  "standard": "ARE-A02@0.5",
+  "public_mcp": "https://are.world2.co/mcp",
+  "common": {
+    "en": "Standard: ARE-A02@0.5. Preserve all 39 original check IDs and retrieve their canonical definitions on demand via are_list_checks, are_get_check and are_get_template (T07 and T10); do not paste all 39 descriptions into the Agent context.\nAccess boundary: the public ARE MCP at https://are.world2.co/mcp provides knowledge and templates; it does NOT offer local are_assess_scenario, are_validate_deliverable or are_review_operation_risk. Machine-checked provisional assessments require the local ARE MCP started with --workspace and a complete version-pinned T07/T10 in that authorized workspace. If unavailable, manually report evidence states, never imply a machine-verified grade.\nEvidence: pin the target source SHA, observed deployment version, tool inventory and assessment date. Distinguish discovery, inspection, safe authorized tools/call, actual model-driven Agent tasks and independently verified business outcomes. Missing proof is UNKNOWN or NOT_VERIFIED, never an inferred PASS.\nN/A: use T10 operation-risk inventory and N/A{scope=operation_id; reason=concrete applicability explanation; evidence=relative/path.md; reviewer=human reviewer; reviewed_at=YYYY-MM-DD}. Required fields: scope, reason, evidence, reviewer, reviewed_at. Confirm tool coverage, source revision, reviewer and evidence. A bare reason, missing file, or unchecked readOnlyHint is not evidence.\nMaturity: map each of 39 checks to PASS / FAIL / NOT_APPLICABLE / NOT_VERIFIED, with evidence and scope. Any machine-computed L0–L4 is PROVISIONAL and not certification; with unsupported version, incomplete risk profile or global evidence blocker, return MATURITY_NOT_ESTABLISHED rather than a grade. Historical v0.4 or unpinned L4 is not current validation; do not inherit its checks or authorization.",
+    "zh": "标准：ARE-A02@0.5。保留原有 39 项检查 ID，用公共 ARE MCP 的 are_list_checks、are_get_check、are_get_template 按需取得定义与 T07/T10，不要把 39 项详细说明全部塞入 Agent 上下文。\n能力边界：公共端点 https://are.world2.co/mcp 只提供知识和模板，没有本地 are_assess_scenario、are_validate_deliverable、are_review_operation_risk。机器计算的暂定等级必须由带 --workspace 的本地 ARE MCP 对固定版本 T07/T10 进行复核。无法连接本地能力时，只能人工列出证据状态，不能声称已完成机器验收。\n证据：固定源码 SHA、真实部署版本、完整工具清单和评估日期；分开记录工具发现、静态检查、合法授权的 tools/call、模型自主 Agent 任务以及独立业务结果。缺失证据填 UNKNOWN 或 NOT_VERIFIED，不得推测 PASS。\nN/A：根据 T10 操作级风险画像填写 N/A{scope=operation_id; reason=适用性理由; evidence=relative/path.md; reviewer=真实复核人; reviewed_at=YYYY-MM-DD}。五个字段 scope、reason、evidence、reviewer、reviewed_at 均必需，证据应覆盖操作范围并对应相同版本。仅写理由、空文件或 readOnlyHint 注解不构成豁免证明。\n成熟度：39 项各自标 PASS / FAIL / NOT_APPLICABLE / NOT_VERIFIED，并记录范围与证据。机器算出的 L0–L4 一律为 PROVISIONAL（暂定），不是认证；版本不支持、风险画像不完整或存在整体证据阻断时写 MATURITY_NOT_ESTABLISHED。旧 v0.4 或未固定版本的历史 L4 不继承为当前等级，也不得继承旧 PASS 或授权结论。"
+  },
+  "roles": {
+    "website": {
+      "en": {
+        "lead": "Use the Agent-Ready Engineering (ARE) methodology with an authorized Agent. Target MCP: <TARGET_MCP_HTTPS_URL>. Source/version: <GITHUB_REPO_AND_COMMIT_OR_UNKNOWN>. My role and scope: <PUBLIC_READONLY_OR_OWNER_SANDBOX>. Representative task and independent oracle: <TASK_AND_ORACLE>.",
+        "steps": [
+          "Identify whether this is public anonymous discovery or an owner-authorized sandbox. The public ARE MCP provides methodology only, not access to the target's source, OAuth credentials, or local files. Stop if authorization is unavailable.",
+          "Discover and paginate the target's real tools/list and resources/prompts, and examine every tool schema, output, annotations, authentication, limitations and potential external effects. Treat annotations as untrusted.",
+          "Run actual tools/call only where separately lawful and explicitly authorized with safe inputs and strict limits. Do not write, pay, message, delete or stress-test production. An OAuth service or stdio target needs an authorized local/owner execution path, not an invented public result.",
+          "If source and sandbox are authorized, inspect handler behavior and source-to-deployment binding. Have a real Agent attempt a representative task and validate the outcome using an independent oracle; an SDK call or model claim alone does not qualify.",
+          "Fill T07 and T10 for a named scenario. Report all 39 check states with evidence, missing access, applicability and runtime coverage; use the strict standard and N/A fields above. When --workspace is unavailable, do NOT claim are_assess_scenario was called.",
+          "Produce the top 3 evidence-backed fixes, verified facts, suspected conflicts, UNKNOWNs, safe reproduction steps and comparison baseline. Do not automatically publish findings, create issues, contact maintainers or modify production."
+        ],
+        "closing": "End with what was actually tested, the tool-call denominator, true Agent-task outcome and limitations. Do not claim official certification or a verified current maturity level."
+      }
+    },
+    "self": {
+      "en": {
+        "lead": "I own or am explicitly authorized to evaluate MCP <HTTPS_ENDPOINT> at source <REPOSITORY_URL>@<COMMIT_SHA>, deployment <DEPLOYMENT_VERSION_OR_UNKNOWN>, within <SANDBOX_SCOPE>. Representative Agent goal and independent success oracle: <USER_GOAL_AND_ORACLE>.",
+        "steps": [
+          "Inspect all pages of tools/list and applicable resources/prompts; record every tool's input/output schemas, errors, descriptions, annotations, authorization scopes and side effects. Separate metadata inspection coverage from executed-tool coverage.",
+          "In a separately approved isolated tenant, conduct safe parameterized tool-call tests and negative tests; never infer permission from readOnlyHint. Financial, messaging, destructive, external-impact and high-privilege calls require explicit scoped approval and synthetic objects, otherwise NOT_TESTED.",
+          "Inspect source, handler, authorization, idempotency, recovery and audit logs; cite repo@SHA:path:line. Do not equate a public repository SHA with deployment identity without evidence.",
+          "Let a real model-driven Agent solve a predefined multi-step business task, capture the trace and independently verify real outcome. If unavailable, mark NOT_VERIFIED.",
+          "Create version-pinned ARE-T07 and complete ARE-T10 JSON risk profile in your authorized workspace. If local --workspace ARE is connected, run are_review_operation_risk, are_validate_deliverable and are_assess_scenario; otherwise manually annotate and report MATURITY_NOT_ESTABLISHED.",
+          "Produce qualification.json, tool_matrix.json, source_review.md, agent_task_results.md, are_39_checks.json, developer_report.md and a redacted evidence_manifest.json, and identify the top 3 practical fixes."
+        ],
+        "closing": "Label the report Developer Self-Evaluation / Not independently verified by ARE. Do not silently modify code, publish vulnerabilities, contact third parties, submit to Benchmark or deploy."
+      },
+      "zh": {
+        "lead": "我是 MCP <PUBLIC_OR_SANDBOX_MCP_ENDPOINT> 的所有者或已获明确授权者。源码 <SOURCE_REPO_AND_COMMIT>；实际部署版本 <DEPLOYMENT_OR_UNKNOWN>；隔离环境与授权操作 <AUTHORIZED_SCOPE>；代表任务与独立 Oracle <SCENARIO_AND_ORACLE>。",
+        "steps": [
+          "分页读取完整 tools/list 及资源、提示词；逐工具核对输入输出 Schema、错误、描述、注解、权限和副作用。分别报告发现覆盖率与实际 tools/call 覆盖率。",
+          "在单独获批的隔离租户内用合成对象运行合理的只读、错误路径和授权负例；readOnlyHint 不代表允许执行。写入、资金、消息、删除及高权限操作须逐项明确授权，否则 NOT_TESTED。",
+          "固定源码、部署版本及工具定义哈希，检查 handler、鉴权、幂等、恢复和审计日志，引用 repo@SHA:path:line。无部署绑定证据不得将源码直接当现网事实。",
+          "让真实模型驱动的 Agent 完成已预先定义的多步业务任务，用外部 Oracle 独立核对结果。SDK 脚本和模型自报成功不算任务成功。",
+          "在授权工作区生成 ARE-T07 及完整 ARE-T10 JSON。若本地 ARE MCP 已用 --workspace 启动，调用 are_review_operation_risk、are_validate_deliverable、are_assess_scenario；否则人工列出证据并标 MATURITY_NOT_ESTABLISHED。",
+          "输出 qualification.json、tool_matrix.json、source_review.md、agent_task_results.md、are_39_checks.json、developer_report.md 和脱敏 evidence_manifest.json；优先报告三项最有价值的整改建议。"
+        ],
+        "closing": "标注 Developer Self-Evaluation / Not independently verified by ARE；未经单独批准不得发邮件、提交第三方 Issue、公开敏感漏洞、修改生产代码或发布。"
+      }
+    },
+    "independent": {
+      "en": {
+        "lead": "Independently inspect public MCP <PUBLIC_MCP_URL> within <PUBLIC_READONLY_SCOPE>. Optional public source: <GITHUB_REPO>. I have no owner authorization to access private accounts or perform writes.",
+        "steps": [
+          "Respect published conditions, rate limits and consent. No credential bypass, arbitrary business writes, payments, messages, deletion, account/device control or traffic load tests.",
+          "Discover the real protocol and all paginated tools/list metadata. Inspect names, schemas, annotations, authorization requirements and suspected side-effect conflicts. A declared readOnlyHint is NOT execution permission.",
+          "Separate static coverage from tools actually called. Only perform genuinely harmless public calls where expressly permitted and within a bounded budget; otherwise mark NOT_TESTED. If source exists, pin SHA and mark deployment binding BOUND/UNBOUND.",
+          "If a real model-based Agent can lawfully run a safe task, independently verify outcome against a public oracle. An SDK script is a protocol probe, not an Agent task.",
+          "Map a named scenario against the 39 checks and T10 applicability. Without owner source, identity/authorization evidence or local --workspace audit capability, return NOT_VERIFIED and MATURITY_NOT_ESTABLISHED, not a speculative L0–L4.",
+          "Publish only safe, reproducible observed facts, clear unknowns and the top 3 optional improvement suggestions. Share sensitive security findings privately, not in public issue comments."
+        ],
+        "closing": "Label Community independent review / Not an ARE-issued certification. Never contact, register or submit on behalf of an external Creator without approval."
+      },
+      "zh": {
+        "lead": "请在 <PUBLIC_READONLY_SCOPE> 内独立研究公网 MCP <PUBLIC_HTTPS_MCP_URL>；可选公开源码 <PUBLIC_GITHUB_URL>。我未获得运营方私有账号或写入权限。",
+        "steps": [
+          "遵守访问条款、速率限制和授权边界；不得绕过 OAuth、读取他人私有数据、付款、发消息、删除、控制设备或故障施压。",
+          "完整发现协议与 tools/list 分页，逐工具记录 Schema、注解、权限与错误。readOnlyHint 只是提示，不构成真实只读证明或调用许可。",
+          "分开记录静态观察与真实调用覆盖率；只有明确允许且无害的公共只读操作才可少量测试，其他全部 NOT_TESTED。公开源码固定 SHA；部署绑定证明不足填 UNBOUND。",
+          "如有合法的真实 Agent Host，运行预定义无副作用业务任务，独立公共真值判断最终结果；手写 SDK 调用不等于 Agent 测试。",
+          "依据 ARE 39 项与 T10 逐项列出证据/范围。缺少运营方授权、治理资料或本地 --workspace 审计时填 NOT_VERIFIED 和 MATURITY_NOT_ESTABLISHED，绝不编造 L4。",
+          "输出可复核的已观察优点、已复现问题、未知风险及三条可选整改建议；安全漏洞优先私密披露。"
+        ],
+        "closing": "最终标注 Independent community review / Not an ARE-issued certification；不自动联系维护者、发第三方 Issue 或进行公开注册。"
+      }
+    },
+    "retest": {
+      "en": {
+        "lead": "I am authorized to retest MCP <SERVICE>. Original report <REPORT_URL_OR_FILE>, baseline revision <BASELINE_SHA>, candidate revision <FIXED_SHA>, explicit sandbox/actions <SANDBOX_SCOPE>.",
+        "steps": [
+          "Preserve the previous assessment unchanged and distinguish a reproducible defect from an unverified observation or non-binding design recommendation.",
+          "Reproduce each finding with the original inputs and independent oracle, then replay equivalent tests on the candidate without weakening assertions. Record actual tools/call envelopes, isError, source/deployment binding and authorization scope.",
+          "Re-run relevant Agent tasks and verify external results independently. High-risk writes, negative auth tests and fault injection require specifically authorized synthetic data in an isolated tenant.",
+          "Create a new version-pinned T07/T10 for the changed scenario; update only checks with new evidence. Old v0.4 L4 or prior PASS cannot become a new v0.5 verified level merely by copying it.",
+          "Where local ARE --workspace is present, run are_review_operation_risk, are_validate_deliverable and are_assess_scenario. If only the public knowledge endpoint is present, use it for definitions/templates, never claim local tools were used.",
+          "Deliver a before/after report, reproducibility, changed check IDs, tool and task coverage, a redacted evidence manifest and the top 3 remaining fixes."
+        ],
+        "closing": "Each remediation is VERIFIED / NOT_REPRODUCED / STILL_FAILS / NOT_TESTED. The computed maturity remains PROVISIONAL; official revalidation requires a separate authorized review. Do not deploy or publish without separate permission."
+      },
+      "zh": {
+        "lead": "我是 MCP <SERVICE_NAME> 的授权维护者；原 ARE 报告 <REPORT_URL_OR_FILE>，旧版 <BASELINE_COMMIT_OR_DEPLOYMENT>，修复版 <NEW_COMMIT_OR_DEPLOYMENT>，明确隔离测试范围 <AUTHORIZED_SCOPE>。",
+        "steps": [
+          "保持原评估不可变；把已复现缺陷、偶发异常、工程建议、证据不足分开记录。未知源码部署映射不能当作生产 Bug。",
+          "使用原输入、原 Oracle 在旧版尝试重现，再在新版运行等价测试，禁止删掉失败断言。记录 MCP 真实响应、isError、版本与授权边界。",
+          "对受影响的 Agent 业务任务做真实工具调用与独立外部结果核对。写入、负面授权测试和故障注入必须使用额外获批的合成资源和隔离租户。",
+          "针对新版本单独生成 T07/T10，只有确有新证据的检查项才更新。历史 v0.4 L4 和旧 PASS 不可直接继承成 ARE-A02@0.5 的当前等级。",
+          "连接带 --workspace 的本地 ARE MCP 才能执行 are_review_operation_risk、are_validate_deliverable、are_assess_scenario；公网 MCP 只用于读取规范/模板，不能伪称已机器验收。",
+          "提交 before_after.md、reproduction.md、regression.md、脱敏证据清单、真实任务结果及三条后续修复建议。"
+        ],
+        "closing": "每项整改标 VERIFIED / NOT_REPRODUCED / STILL_FAILS / NOT_TESTED，机器等级是 PROVISIONAL，不能当作 ARE 官方认证；未经授权不发布或修改生产。"
+      }
+    }
+  }
+}

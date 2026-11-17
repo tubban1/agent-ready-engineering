@@ -155,8 +155,8 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
     {
       title: "Get a deliverable template",
       description:
-        "Get a deliverable template (T00 overview and workspace layout; T01 value card … T09 portfolio report) and the path where it belongs in an engagement workspace. Copy it there and fill it in; this server never writes files.",
-      inputSchema: z.object({ id: z.string().describe("Template ID T00–T09"), lang, cursor }),
+        "Get a deliverable template (T00 overview and workspace layout; T01 value card … T09 portfolio report, T10 operation-risk profile) and the path where it belongs in an engagement workspace. Copy it there and fill it in; this server never writes files.",
+      inputSchema: z.object({ id: z.string().describe("Template ID T00–T10"), lang, cursor }),
       annotations: READ_ONLY,
     },
     async ({ id, lang, cursor }) => run(() => getTemplate(id, lang, cursor)),
