@@ -3,7 +3,7 @@
 **Status:** Operational pilot connected on 2026-11-16. Python parsing/planning checks implemented and tested; first live calendar/Gmail/manual run completed. The hourly ChatGPT Automation is enabled; autonomous next-run receipt must be verified separately.
 **Timezone:** Europe/Zurich (DST-aware).
 **Platform:** World2-managed ARE `https://are.world2.co/mcp`, individual MCP deployments remain independent.
-**Canonical process:** [ARE S0–S13](ARE-EVALUATION-PUBLICATION-SOP-v1.md) and [ARE Publication Runner](ARE-PUBLICATION-RUNNER-v1.md).
+**Canonical process:** [ARE S0–S13](ARE-EVALUATION-PUBLICATION-SOP-v1.md), [macro-stage orchestration W1–W6](ARE-MACRO-STAGE-ORCHESTRATION-v1.md), and [ARE Publication Runner](ARE-PUBLICATION-RUNNER-v1.md). The Calendar watcher schedules follow-ups and human decisions; it is not the bulk W1–W5 evaluation worker.
 
 ## Why this exists
 

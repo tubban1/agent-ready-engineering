@@ -4,6 +4,7 @@
 **现有 ARE 标准**：`adoption/ARE-A02-agent-ready-maturity-model.md`、`conformance/README.md`、`adoption/templates/ARE-T05-eval-report.md`、`adoption/templates/ARE-T07-maturity-assessment.md`
 **本次实操案例**：[Solarstorm public read-only case](../cases/solarstorm-2026-11-16.md)
 **域名与品牌**：[ADR-001](ADR-001-world2-are-publishing.md)
+**自动化编排层**：[六个自动大阶段 W1–W6 + 五个条件决策门 G1–G5](ARE-MACRO-STAGE-ORCHESTRATION-v1.md)；本文件仍为 S0–S13 唯一微步骤及验收标准，不要求每一步人工交接。
 
 ## 1. 交付定义
 

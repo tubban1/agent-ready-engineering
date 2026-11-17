@@ -1,0 +1,194 @@
+{
+  "schema": "are.standing_autonomy_policy.v1",
+  "version": "1.1.0",
+  "status": "CONFIGURED_AWAITING_PRODUCTION_WORKER",
+  "account_ref": "are_operator_accounts",
+  "identity_binding_file": ".are-private/identity-binding.v1.json",
+  "intent": "Reuse any owner-approved, provider-verified connected ARE operator identity; no per-case reapproval for bounded actions",
+  "allowed_account_roles": [
+    "are_operator"
+  ],
+  "default_decision": "BLOCK",
+  "actions": {
+    "W1_DISCOVER": {
+      "auto": true,
+      "requirements": [
+        "public_data_only",
+        "provenance_recorded"
+      ],
+      "account_required": false
+    },
+    "W2_INSPECT": {
+      "auto": true,
+      "requirements": [
+        "target_identified",
+        "public_or_authorized_source",
+        "read_only",
+        "no_private_network"
+      ],
+      "account_required": false
+    },
+    "W3_PUBLIC_TEST": {
+      "auto": true,
+      "requirements": [
+        "public_mcp_access",
+        "explicit_safe_tool_allowlist",
+        "read_only",
+        "per_target_budget_ok",
+        "no_private_network"
+      ],
+      "account_required": false
+    },
+    "W3_SANDBOX_TEST": {
+      "auto": true,
+      "requirements": [
+        "operator_account_connected",
+        "owner_granted_target_scope",
+        "isolated_test_resource",
+        "authorized_tool_allowlist",
+        "budget_ok",
+        "nonproduction_target",
+        "sandbox_cleanup_plan"
+      ],
+      "account_required": true,
+      "provider_scope": "target_mcp"
+    },
+    "W3_AGENT_EVAL": {
+      "auto": true,
+      "requirements": [
+        "target_identified",
+        "scope_authorized",
+        "independent_oracle",
+        "budget_ok",
+        "no_sensitive_data"
+      ],
+      "account_required": false
+    },
+    "W4_REPORT_QA": {
+      "auto": true,
+      "requirements": [
+        "assessment_39_accounted",
+        "coverage_explicit",
+        "facts_reproducible",
+        "private_data_redacted"
+      ],
+      "account_required": false
+    },
+    "W4_SEND_MAIL": {
+      "auto": true,
+      "requirements": [
+        "operator_account_connected",
+        "sender_allowed_and_verified",
+        "verified_official_contact",
+        "report_qa_pass",
+        "no_sensitive_disclosure",
+        "dedupe_cooldown_pass",
+        "daily_quota_available",
+        "outbox_intent_recorded"
+      ],
+      "account_required": true,
+      "provider_scope": "gmail",
+      "limits": {
+        "new_external_recipients_per_day": 10,
+        "same_recipient_cooldown_days": 30
+      }
+    },
+    "W4_REPLY_TECHNICAL": {
+      "auto": true,
+      "requirements": [
+        "operator_account_connected",
+        "sender_allowed_and_verified",
+        "existing_verified_thread",
+        "no_legal_or_financial_commitment",
+        "safe_scope_only",
+        "outbox_intent_recorded"
+      ],
+      "account_required": true,
+      "provider_scope": "gmail"
+    },
+    "W5_RELEASE_CASE": {
+      "auto": true,
+      "requirements": [
+        "source_evidence_pinned",
+        "public_qa_pass",
+        "private_data_redacted",
+        "no_embargo_or_sensitive_finding",
+        "publication_policy_satisfied",
+        "website_release_authorized"
+      ],
+      "account_required": false,
+      "provider_scope": "owned_site"
+    },
+    "W5_POST_CHANNEL": {
+      "auto": true,
+      "requirements": [
+        "operator_account_connected",
+        "provider_account_verified",
+        "channel_session_authorized",
+        "canonical_case_live",
+        "content_qa_pass",
+        "platform_rules_allow",
+        "daily_quota_available",
+        "outbox_intent_recorded"
+      ],
+      "account_required": true,
+      "provider_scope": "platform",
+      "limits": {
+        "posts_per_channel_per_day": 3
+      }
+    },
+    "W6_MONITOR": {
+      "auto": true,
+      "requirements": [
+        "authorized_source",
+        "read_only",
+        "dedupe_cursor_recorded"
+      ],
+      "account_required": false
+    },
+    "W6_RETEST": {
+      "auto": true,
+      "requirements": [
+        "live_version_changed",
+        "scope_authorized",
+        "read_only_or_owned_sandbox",
+        "independent_oracle",
+        "budget_ok"
+      ],
+      "account_required": false
+    }
+  },
+  "denied_without_new_explicit_scope": [
+    "third_party_production_write",
+    "payment_or_purchase",
+    "financial_commitment",
+    "personal_account_action",
+    "credential_export",
+    "captcha_or_login_bypass",
+    "security_vulnerability_publication",
+    "bulk_unsolicited_contact",
+    "sensitive_personal_data_access"
+  ],
+  "auth": {
+    "model": "reusable_standing_scope_not_global_account_control",
+    "provider_oauth": "once_per_provider_account_and_scope; renew only when expired/revoked/changed",
+    "subject": "allowlist_matches_live_provider_identity_for_each_authenticated_action",
+    "account_rebinding": "valid operator allowlist choice needs only provider login/consent, not per-project approval",
+    "user_intervention": "only_missing_consent_or_expired_oauth, sensitive_disclosure, significant_scope_change, or provider_enforced_interactive_step",
+    "grants_must_be_revocable": true,
+    "never_store": [
+      "password",
+      "oauth_access_token",
+      "oauth_refresh_token",
+      "session_cookie",
+      "private_email_contents"
+    ]
+  },
+  "limitations": [
+    "Policy is an allowlist; it does not install or connect Gmail, OAuth, social accounts, or grant rights over third-party MCP servers",
+    "Only an authenticated provider adapter may supply observed_identity; caller-supplied identity fields are not security proof",
+    "Production runner must enforce transactionally-safe outbox and quotas before actually sending or posting",
+    "This configuration alone is not a running autonomous worker",
+    "ChatGPT sign-in, OpenAI account, and connected Gmail sender are distinct; do not infer one from another"
+  ]
+}

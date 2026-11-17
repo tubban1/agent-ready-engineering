@@ -1,0 +1,274 @@
+{
+  "schema": "are.macro_stage_plan.v1",
+  "version": "1.0.0",
+  "status": "DESIGN_NOT_PRODUCTION_WORKER",
+  "source_sop": "docs/standards/ARE-EVALUATION-PUBLICATION-SOP-v1.md",
+  "stages": [
+    {
+      "id": "W1",
+      "name": "DISCOVER_QUALIFY",
+      "sop_steps": [
+        "S0",
+        "S1"
+      ],
+      "mode": "automatic",
+      "trigger": [
+        "WORLD2_CATALOG_CHANGED",
+        "USER_SUBMISSION",
+        "MAINTAINER_NOMINATION"
+      ],
+      "outputs": [
+        "candidate",
+        "qualification",
+        "source_provenance"
+      ],
+      "boundary": "G1"
+    },
+    {
+      "id": "W2",
+      "name": "INSPECT_PLAN",
+      "sop_steps": [
+        "S2",
+        "S3",
+        "S4"
+      ],
+      "mode": "automatic",
+      "trigger": [
+        "G1_AUTO_PASS",
+        "G1_APPROVED",
+        "SOURCE_CHANGED"
+      ],
+      "outputs": [
+        "protocol",
+        "tool_matrix",
+        "source_review",
+        "risk_inventory",
+        "task_and_oracle_plan"
+      ],
+      "boundary": "G2"
+    },
+    {
+      "id": "W3",
+      "name": "EXECUTE_ASSESS",
+      "sop_steps": [
+        "S5",
+        "S6",
+        "S7"
+      ],
+      "mode": "automatic_with_scoped_consent",
+      "trigger": [
+        "G2_AUTO_PASS",
+        "G2_APPROVED"
+      ],
+      "outputs": [
+        "tool_runs",
+        "agent_runs",
+        "oracle_results",
+        "assessment_39",
+        "evidence_hash"
+      ],
+      "boundary": "G3"
+    },
+    {
+      "id": "W4",
+      "name": "REPORT_CONTACT",
+      "sop_steps": [
+        "S8",
+        "S9"
+      ],
+      "mode": "automatic_with_outbound_policy",
+      "trigger": [
+        "G3_AUTO_PASS",
+        "G3_APPROVED"
+      ],
+      "outputs": [
+        "developer_report",
+        "qa",
+        "email_send_or_blocked_receipt"
+      ],
+      "boundary": "G4"
+    },
+    {
+      "id": "W5",
+      "name": "PUBLISH_DISTRIBUTE",
+      "sop_steps": [
+        "S10",
+        "S11"
+      ],
+      "mode": "automatic_with_disclosure_and_platform_policy",
+      "trigger": [
+        "G4_AUTO_PASS",
+        "G4_APPROVED"
+      ],
+      "outputs": [
+        "canonical_url",
+        "public_release_sha",
+        "channel_receipts"
+      ],
+      "boundary": "G5"
+    },
+    {
+      "id": "W6",
+      "name": "FOLLOWUP_RETEST",
+      "sop_steps": [
+        "S12",
+        "S13"
+      ],
+      "mode": "event_driven_automatic",
+      "trigger": [
+        "G5_AUTO_PASS",
+        "G5_APPROVED",
+        "MAINTAINER_REPLY",
+        "DEPLOYED_VERSION_CHANGE",
+        "PUBLIC_CORRECTION"
+      ],
+      "outputs": [
+        "external_feedback",
+        "retest_record",
+        "public_change_log"
+      ],
+      "boundary": null
+    }
+  ],
+  "gates": [
+    {
+      "id": "G1",
+      "between": [
+        "W1",
+        "W2"
+      ],
+      "decision": "QUALIFICATION",
+      "auto_pass_when": [
+        "verified_service_identity",
+        "scope_route_selected",
+        "eligibility_e1_e6_or_explicit_limited_route"
+      ],
+      "manual_only_when": [
+        "disputed_service_identity",
+        "requires_owner_qualification"
+      ],
+      "on_block": "WAITING_QUALIFICATION"
+    },
+    {
+      "id": "G2",
+      "between": [
+        "W2",
+        "W3"
+      ],
+      "decision": "TEST_SCOPE_AUTHORIZATION",
+      "auto_pass_when": [
+        "public_safe_allowlist_only",
+        "or_valid_bound_owner_sandbox_grant"
+      ],
+      "manual_only_when": [
+        "oauth_consent",
+        "new_sandbox_or_write_scope",
+        "restricted_data_access"
+      ],
+      "on_block": "LIMITED_PUBLIC_ONLY"
+    },
+    {
+      "id": "G3",
+      "between": [
+        "W3",
+        "W4"
+      ],
+      "decision": "EVIDENCE_AND_OUTBOUND_POLICY",
+      "auto_pass_when": [
+        "evidence_qa_pass",
+        "real_oracle_results_accounted",
+        "outbound_policy_preapproved"
+      ],
+      "manual_only_when": [
+        "material_evidence_dispute",
+        "sensitive_disclosure",
+        "unapproved_outbound_contact"
+      ],
+      "on_block": "INTERNAL_DRAFT_ONLY"
+    },
+    {
+      "id": "G4",
+      "between": [
+        "W4",
+        "W5"
+      ],
+      "decision": "DISCLOSURE_RELEASE",
+      "auto_pass_when": [
+        "publication_scope_preapproved",
+        "redaction_and_public_qa_pass",
+        "required_maintainer_notice_handled"
+      ],
+      "manual_only_when": [
+        "missing_publication_authorization",
+        "privacy_or_vulnerability_dispute",
+        "first_release_requires_owner_review"
+      ],
+      "on_block": "PRIVATE_REPORT_ONLY"
+    },
+    {
+      "id": "G5",
+      "between": [
+        "W5",
+        "W6"
+      ],
+      "decision": "CHANNEL_RESOLUTION_AND_MONITORING",
+      "auto_pass_when": [
+        "canonical_page_readback",
+        "channel_receipts_or_explicit_blockers",
+        "monitoring_task_registered"
+      ],
+      "manual_only_when": [
+        "platform_final_post_action_required",
+        "platform_identity_dispute",
+        "moderation_escalation"
+      ],
+      "on_block": "PARTIAL_CHANNELS_CONTINUE_MONITORING"
+    }
+  ],
+  "stage_statuses": [
+    "READY",
+    "RUNNING",
+    "DONE",
+    "LIMITED",
+    "PARTIAL",
+    "WAITING_EXTERNAL",
+    "WAITING_HUMAN",
+    "BLOCKED_POLICY",
+    "FAILED_RETRYABLE"
+  ],
+  "gate_decisions": [
+    "AUTO_PASS",
+    "APPROVED",
+    "WAITING_HUMAN",
+    "WAITING_EXTERNAL",
+    "DENIED"
+  ],
+  "external_side_effects": {
+    "requires": [
+      "approved_scope",
+      "provider_identity",
+      "outbox_idempotency_key",
+      "actual_provider_receipt",
+      "verified_readback_when_public"
+    ],
+    "never_infer_success_from": [
+      "draft",
+      "button_click",
+      "timeout",
+      "unverified_url"
+    ]
+  },
+  "non_goals": [
+    "this JSON is not a live task runner",
+    "no active authorization is created by this plan",
+    "preflight does not imply certification"
+  ],
+  "standing_policy_ref": "data/are-standing-autonomy-policy.v1.json",
+  "authorization_model": "standing_scope_single_onboarding_then_automatic_except_exception",
+  "activation_requirements": [
+    "live_provider_identity_matches_bound_test_account",
+    "provider_specific_oauth_valid",
+    "trusted_adapters_enforce_scope",
+    "outbox_quotas_enforced_transactionally"
+  ]
+}
