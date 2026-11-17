@@ -3,10 +3,10 @@
  * Uses Neon's authenticated HTTP SQL proxy with the injected DATABASE_URL.
  * Only fixed read-only SQL statements are permitted here.
  */
-const origin = "https://are.fde.fan";
+const origins = new Set(["https://are.world2.co"]);
 function cors(request) {
   const supplied = request.headers.get("Origin");
-  return supplied === origin || supplied === "https://agent-ready-engineering.vercel.app"
+  return origins.has(supplied)
     ? { "Access-Control-Allow-Origin": supplied, "Vary":"Origin" }
     : {};
 }

@@ -2,7 +2,7 @@
 
 **Decision:** only a publicly reachable, unauthenticated HTTPS Streamable HTTP MCP Endpoint may be registered and scored. There is NO backward compatibility with GitHub-only submissions, manually supplied tool manifests, local `stdio`, local offline scores or the `/v1/*` API. GitHub links may be included later as owner-provided source evidence, not as target identities.
 
-Production: Neon Function `arescore` in ARE Neon project. Source `index.mjs` + `probe.mjs`; migration `migrations/003_https_endpoints_only.sql`; frontend `/benchmark/`; MCP tool `are_score_mcp({endpoint})`.
+Production: Neon Function `arescore` in ARE Neon project. The canonical browser Origin is `https://are.world2.co` only; older domains are intentionally unsupported. Source `index.mjs` + `probe.mjs`; migration `migrations/003_https_endpoints_only.sql`; frontend `/benchmark/`; MCP tool `are_score_mcp({endpoint})`.
 
 ## External API (v2 only)
 

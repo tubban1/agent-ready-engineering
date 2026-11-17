@@ -49,7 +49,7 @@
 <input id="targetInput" required type="url" spellcheck="false" placeholder="https://your-service.example/mcp" maxlength="350" autocomplete="off">
 <p class="small-help">无需上传源码或工具清单。需要能在无需登录的状态下完成 MCP 协议初始化和工具发现；需要 OAuth 的服务暂不能自动评分。GitHub 只用于后续补充源码证据，不是评分入口。</p>
 <details class="manifest-option"><summary>如何让 ChatGPT / Claude 对自己的 MCP 进行 ARE 自评？</summary>
-<p>先在 Agent 中连接 ARE MCP：<code>https://are.fde.fan/mcp</code>，并确认工具列表中有 <code>are_score_mcp</code>。随后调用该工具，只传入 <code>endpoint</code> 参数。单凭提示词不会自动连接 MCP。无法配置连接时，可直接通过本页提交 HTTPS Endpoint。</p>
+<p>先在 Agent 中连接 ARE MCP：<code>https://are.world2.co/mcp</code>，并确认工具列表中有 <code>are_score_mcp</code>。随后调用该工具，只传入 <code>endpoint</code> 参数。单凭提示词不会自动连接 MCP。无法配置连接时，可直接通过本页提交 HTTPS Endpoint。</p>
 <button type="button" id="copyPromptBtn">复制中文自评提示词</button>
 <p>直接用浏览器打开 <code>/mcp</code> 出现 HTTP 406 不等于 MCP 服务故障，必须由支持 MCP 协议的客户端访问。</p>
 </details>
