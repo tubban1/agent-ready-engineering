@@ -15,7 +15,7 @@
 - **Third-party GitHub Issue:** [Single-Issue Reproduction](channels/GITHUB_ISSUE_REPRODUCTION.md) — narrow, reproducible and not promotional.
 - **X / HF / Reddit / ModelScope / video:** [Public Project Review](channels/PUBLIC_PROJECT_REVIEW.md) — **optional** read-only replay prompt bound to the tested project, with different formats per platform.
 
-**Current ARE MCP:** `https://are.fde.fan/mcp`. **Planned World2-managed canonical MCP:** `https://are.world2.co/mcp`, **not live yet** as of 2026-11-16. Connect an Agent to the *actually working* endpoint, select your authorization scope and paste the relevant prompt with filled endpoint/source/goal placeholders. The public ARE MCP offers methodology; an Agent must still actually obtain lawful tool or source access and independently validate evidence.
+**Current ARE MCP (verified live):** `https://are.world2.co/mcp`. The former `are.fde.fan` address is retired and is not supported as an MCP origin. Connect an Agent to the *actually working* endpoint, select your authorization scope and paste the relevant prompt with filled endpoint/source/goal placeholders. The public ARE MCP offers methodology; an Agent must still actually obtain lawful tool or source access and independently validate evidence.
 
 Never use a public third-party prompt as authorization to write, pay, message, delete, bypass authentication or run high-volume tests. Reports must distinguish full contract inspection, lawful actual tool coverage, independent Agent business outcomes, and source-to-deployment identity.
 

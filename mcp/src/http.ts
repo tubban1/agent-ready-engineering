@@ -9,7 +9,7 @@ const handler = createMcpHandler(() => createServer(), { legacy: "stateless", re
 export async function handleMcpRequest(request: Request): Promise<Response> {
   // Reject cross-origin browser requests from untrusted origins, per MCP HTTP spec.
   // Requests without an Origin header (e.g. ordinary MCP clients) are permitted.
-  const rejected = originValidationResponse(request, ["are.fde.fan"]);
+  const rejected = originValidationResponse(request, ["are.world2.co"]);
   if (rejected) return rejected;
   return handler.fetch(request);
 }

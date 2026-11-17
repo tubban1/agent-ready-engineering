@@ -7,7 +7,7 @@
 
 > 请作为一个与 MCP 运营方无关的 Agent，对公开服务 `<PUBLIC_HTTPS_MCP_URL>` 进行**有限的、合法且明确只读**的 ARE 第三方评估。
 >
-> 可选公开源码：`<PUBLIC_GITHUB_URL>`；ARE 规则：`https://are.fde.fan/mcp`。
+> 可选公开源码：`<PUBLIC_GITHUB_URL>`；ARE 规则：`https://are.world2.co/mcp`。
 >
 > 1. 只通过公共 HTTPS 接入；严守服务的访问条款、机器人限制和合理限速。未授权时不能使用别人的账号、伪造令牌、绕过认证或做拒绝服务/故障注入。
 > 2. 使用适用的 MCP 版本完成连接与完整分页 tools/list、资源/提示词发现；逐工具记录 Schema、描述、权限注解（注解不能证明真的只读）、输出与错误契约。

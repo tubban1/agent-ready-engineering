@@ -8,7 +8,7 @@
 
 ## 重要边界
 
-- 公共 ARE MCP：`https://are.fde.fan/mcp`
+- 公共 ARE MCP：`https://are.world2.co/mcp`
 - 只读引导工具：`are_local_mcp_audit_guide({ "service": "项目名", "lang": "zh" })`
 - **ARE 公共 Benchmark 仍然只接受真实可连接的 HTTPS Endpoint**。本地 stdio、自行上传的 Schema、GitHub 链接不能经由 `are_score_mcp` 登记或获得官方 `run_id`。
 - ARE 公共服务器无法主动访问开发者的本地源码、其他本地 stdio MCP 或运行环境。**连接这两种 MCP 的 coding Agent** 才能在自己已获授权的工作区执行检查。

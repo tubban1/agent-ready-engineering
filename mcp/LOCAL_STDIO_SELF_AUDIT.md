@@ -6,7 +6,7 @@
 
 A coding Agent (Antigravity, Claude Code, Codex or equivalent) can inspect the source of a local stdio MCP server and run it in a workspace **already authorized by the developer**. The remote ARE MCP endpoint does not gain access to the Agent's local files, other MCP servers or runtime.
 
-- ARE knowledge endpoint: `https://are.fde.fan/mcp`.
+- ARE knowledge endpoint: `https://are.world2.co/mcp`.
 - New public read-only guide tool: `are_local_mcp_audit_guide({ "service": "Project name", "lang": "zh" })`.
 - The independent ARE public Benchmark `are_score_mcp` accepts **only a reachable public HTTPS MCP Endpoint**, never stdio, a GitHub repository URL or user-provided manifest.
 - Local self-audit produces **no official Benchmark score, run_id, maturity certification, public listing or automatic submission**. Store results locally and let the developer decide what to share.

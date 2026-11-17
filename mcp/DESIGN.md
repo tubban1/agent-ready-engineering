@@ -57,7 +57,7 @@ What it deliberately does **not** do:
 | Client data | read locally, never leaves the machine | never received |
 | Network | none required | inbound only |
 
-**Both modes are implemented.** The public remote endpoint is `https://are.fde.fan/mcp`; its production deployment must be verified separately from this local source. HTTP serves modern `2026-07-28` and legacy `2025-*` through official v2 `createMcpHandler`; local stdio uses `serveStdio`. Both modes share the same read-only framework server factory; benchmark submission remains an explicit opt-in exception.
+**Both modes are implemented.** The public remote endpoint is `https://are.world2.co/mcp`; its production deployment must be verified separately from this local source. HTTP serves modern `2026-07-28` and legacy `2025-*` through official v2 `createMcpHandler`; local stdio uses `serveStdio`. Both modes share the same read-only framework server factory; benchmark submission remains an explicit opt-in exception.
 
 ## 5. Tools
 All tool names use the `are_` prefix. All tools are read-only and declare `readOnlyHint: true`, `idempotentHint: true`; knowledge tools declare `openWorldHint: false`.

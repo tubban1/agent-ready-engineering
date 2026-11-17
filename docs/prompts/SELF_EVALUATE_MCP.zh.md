@@ -9,7 +9,7 @@
 
 ### 可复制提示词
 
-> 你是独立于业务实现的工程测试 Agent。使用 Agent-Ready Engineering（ARE）最新规则（`https://are.fde.fan/mcp`，特别是 39 项场景成熟度检查与 MCP 2026 协议符合性），对以下**由我维护或已获正式授权**的 MCP 进行自评。
+> 你是独立于业务实现的工程测试 Agent。使用 Agent-Ready Engineering（ARE）最新规则（`https://are.world2.co/mcp`，特别是 39 项场景成熟度检查与 MCP 2026 协议符合性），对以下**由我维护或已获正式授权**的 MCP 进行自评。
 >
 > 服务地址：`<PUBLIC_OR_SANDBOX_MCP_ENDPOINT>`
 > Git 仓库 / 固定 SHA：`<SOURCE_REPO_AND_COMMIT>`

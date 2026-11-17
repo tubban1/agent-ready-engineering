@@ -5,7 +5,7 @@
 
 ## Copy this prompt
 
-> Evaluate the public HTTPS MCP endpoint `<PUBLIC_MCP_URL>` independently using ARE's latest public methodology `https://are.fde.fan/mcp`. Optional public source: `<GITHUB_REPO>`. I have **no claim of owner authorization** for sensitive operations.
+> Evaluate the public HTTPS MCP endpoint `<PUBLIC_MCP_URL>` independently using ARE's latest public methodology `https://are.world2.co/mcp`. Optional public source: `<GITHUB_REPO>`. I have **no claim of owner authorization** for sensitive operations.
 >
 > 1. Respect published access policies and rate limits. Never bypass auth, captcha, membership, tenant boundaries or server scopes. No financial, messaging, destructive, device-control or personal-data tool calls.
 > 2. Negotiate the server's **actual advertised** MCP protocol versions and exhaust all applicable list pagination. Inspect all tool definitions, descriptions, schemas and annotations; don't assume an annotation proves an operation is safe.

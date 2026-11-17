@@ -7,7 +7,7 @@
 
 > I own or am authorized to assess the MCP at `<HTTPS_ENDPOINT>`, whose source is `<REPOSITORY_URL>@<COMMIT_SHA>`. My permitted test boundary is `<SANDBOX_OR_PUBLIC_READ_ONLY_SCOPE>`. A representative user goal and independent success oracle are `<USER_GOAL_AND_ORACLE>`.
 >
-> Use **Agent-Ready Engineering (ARE)** at `https://are.fde.fan/mcp` and its published 39 scenario checks. Perform a **developer self-evaluation** with evidence and no claim of ARE endorsement.
+> Use **Agent-Ready Engineering (ARE)** at `https://are.world2.co/mcp` and its published 39 scenario checks. Perform a **developer self-evaluation** with evidence and no claim of ARE endorsement.
 >
 > 1. Pin the server protocol/version, source SHA, observed deployment version, test time, agent/model and authorization boundary; do not infer that an open repository is the deployed build.
 > 2. Exhaust all pages of `tools/list` and applicable resources/prompts. Validate the contract of **every tool**: names, required fields, input schema, optional output schema, error semantics, descriptions, effect annotations and access controls. Distinguish **100% metadata coverage** from actual execution coverage.
