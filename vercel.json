@@ -73,6 +73,16 @@
       "permanent": true
     },
     {
+      "source": "/benchmark",
+      "destination": "/evaluations/",
+      "permanent": true
+    },
+    {
+      "source": "/benchmark/",
+      "destination": "/evaluations/",
+      "permanent": true
+    },
+    {
       "source": "/datasets/solarstorm-20261116/",
       "destination": "/evidence/solarstorm/",
       "permanent": true

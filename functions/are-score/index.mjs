@@ -4,7 +4,7 @@
  */
 import {randomBytes,createHash,timingSafeEqual} from "node:crypto";
 import {probeMcpTools,readPublicProof} from "./probe.mjs";
-const VERSION="are-preflight-v2-endpoint-only";
+const VERSION="are-preflight-v3-risk-observations";
 const ORIGINS=new Set(["https://are.world2.co"]);
 const sha=x=>createHash("sha256").update(String(x)).digest("hex");
 const same=(a,b)=>typeof a==="string"&&typeof b==="string"&&a.length===b.length&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
@@ -43,6 +43,44 @@ export function normalize(text){
  return {url,identity:"url:"+url.toLowerCase()};
 }
 const CHECK_IDS=("L1-V1 L1-V2 L1-V3 L1-V4 L1-A1 L1-C1 L2-C1 L2-C2 L2-X1 L2-X2 L2-X3 L2-X4 L2-A1 L2-A2 L2-I1 L2-O1 L2-O2 L3-C1 L3-C2 L3-C3 L3-C4 L3-S1 L3-S2 L3-S3 L3-S4 L3-A1 L3-A2 L3-A3 L3-A4 L3-O1 L3-O2 L4-O1 L4-O2 L4-I1 L4-I2 L4-R1 L4-R2 L4-R3 L4-R4").split(" ");
+// Observe operation intent cautiously. Names and annotations alone are untrusted
+// signals: a false readOnlyHint is a suspected conflict, never proof of behavior.
+export function operationSignals(tools){
+ const findings=[];
+ const primary=(name)=>{
+   const words=String(name||"").replace(/([a-z])([A-Z])/g,"$1_$2")
+     .toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+   const prefix=["mcp","tool","api","operation","action"];
+   while(words.length>1&&prefix.includes(words[0]))words.shift();
+   return {verb:words[0]||"",words};
+ };
+ const destructive=new Set(["delete","destroy","remove","erase","wipe","purge","truncate","drop"]);
+ const financial=new Set(["refund","charge","pay","transfer","withdraw"]);
+ const broad=new Set(["execute","exec","shell","eval","run","command","anything","invoke"]);
+ for(const item of tools){
+   const name=String(item?.name||"").slice(0,100);
+   const {verb,words}=primary(name);
+   const read=item?.annotations?.readOnlyHint===true;
+   const declaredHigh=item?.annotations?.destructiveHint===true||item?.annotations?.readOnlyHint===false;
+   const schema=JSON.stringify(item?.inputSchema?.properties||{}).slice(0,3000).toLowerCase();
+   const arbitrary=words.includes("anything")||words.includes("arbitrary")||
+     (broad.has(verb)&&(/command|code|script|shell|expression/.test(schema)||words.includes("anything")));
+   if(read&&(destructive.has(verb)||financial.has(verb))){
+     findings.push({code:"suspected_annotation_risk_conflict",status:"suspected",
+       tool:name,note:"Operation name suggests high-impact behavior but declares readOnlyHint=true. Verify handler and permissions; not a proven exploit."});
+   }else if(arbitrary){
+     findings.push({code:"broad_capability_review",status:"review_needed",
+       tool:name,note:"Potentially broad or arbitrary execution capability. Inspect parameter constraints and actual effects before relying on annotations."});
+   }else if(read&&(verb==="send"||verb==="publish"||verb==="update")){
+     findings.push({code:"annotation_requires_review",status:"review_needed",
+       tool:name,note:"Action verb may have external effects; inspect the implementation before treating a read-only declaration as reliable."});
+   }else if((destructive.has(verb)||financial.has(verb))&&declaredHigh){
+     findings.push({code:"declared_high_impact",status:"observed",
+       tool:name,note:"High-impact operation is declared as such; authorization and safe execution remain unverified."});
+   }
+ }
+ return findings;
+}
 export function staticScore(t){
  if(!Array.isArray(t)||!t.length||t.length>250)throw Error("invalid_tool_manifest");
  const n=t.length,bytes=Buffer.byteLength(JSON.stringify({tools:t}));
@@ -57,14 +95,16 @@ export function staticScore(t){
   tool_guidance:Math.round(25*described/n),
   annotations:Math.max(0,Math.round(20*annotated/n)-contradiction*5),
   payload_footprint:bytes<=8192?20:bytes<=32768?16:bytes<=65536?10:bytes<=131072?5:0};
- const findings=[];
+ const findings=operationSignals(t);
  if(valid<n)findings.push({code:"schema_review",status:"observed",note:(n-valid)+" tools have no observed object inputSchema."});
  if(described<n)findings.push({code:"description_review",status:"heuristic",note:(n-described)+" tools have short/missing descriptions; test Agent tool selection."});
  if(annotated<n)findings.push({code:"annotations_review",status:"observed",note:(n-annotated)+" tools lack explicit readOnlyHint/destructiveHint declarations; source review required."});
  if(contradiction)findings.push({code:"annotation_conflict",status:"observed",note:contradiction+" tools have contradictory read-only and destructive declarations."});
  if(bytes>32768)findings.push({code:"context_hypothesis",status:"hypothesis",note:"Serialized tool manifest is "+bytes+" bytes; measure actual Host tokens before recommending progressive discovery."});
- if(!findings.length)findings.push({code:"unknown_runtime",status:"unknown",note:"Limited static scan found no signals; actual task behavior, security and recovery are unverified."});
- return {score:Object.values(parts).reduce((a,b)=>a+b,0),parts,n,bytes,findings};
+ findings.push({code:"unknown_runtime",status:"unknown",note:"All business behavior, real Agent outcomes, permissions, security and recovery remain UNKNOWN; tool annotations are not execution authorization."});
+ return {score:Object.values(parts).reduce((a,b)=>a+b,0),parts,n,bytes,findings,
+    assessment_status:"STATIC_OBSERVATIONS_ONLY",
+    runtime_status:"UNKNOWN",safety_score:null,maturity_level:null};
 }
 async function prepare(target){
  const parsed=normalize(target);
@@ -89,14 +129,15 @@ async function record(study,force=false){
   study.n,study.bytes,JSON.stringify(study.findings),JSON.stringify(study.evidence),
   JSON.stringify(unknown),study.version,study.provenance]);
  return {target_id:target.id,run_id:run.id,created_at:run.created_at,
-  status:study.status,score:study.score,score_components:study.parts,
+  status:study.status,evaluator_version:VERSION,score_components:study.parts,
+  safety_score:null,assessment_status:"STATIC_OBSERVATIONS_ONLY",runtime_status:"UNKNOWN",
   observed_tools:study.n,manifest_bytes:study.bytes,findings:study.findings,
   evidence:study.evidence,provenance:study.provenance,
   maturity_level:null,maturity_checks_verified:0,maturity_checks_total:CHECK_IDS.length,
   public:false,owner_claim_required:true};
 }
-const OVERVIEW="SELECT json_build_object('schema','are.benchmark.v2','generated_at',now(),'cohort_count',(SELECT COUNT(*) FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115'),'cohort_tools',(SELECT COALESCE(SUM(observed_tool_count),0) FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115'),'public_submissions',(SELECT COUNT(*) FROM are_eval.benchmark_targets WHERE is_public),'recent',(SELECT COALESCE(json_agg(x ORDER BY x.created_at DESC),'[]'::json) FROM (SELECT t.id,t.display_name,t.submitted_url,t.owner_proof_status,t.created_at,r.score,r.status,r.observed_tools,r.manifest_bytes,r.created_at AS assessed_at FROM are_eval.benchmark_targets t LEFT JOIN LATERAL (SELECT score,status,observed_tools,manifest_bytes,created_at FROM are_eval.benchmark_runs WHERE target_id=t.id ORDER BY created_at DESC LIMIT 1) r ON true WHERE t.is_public ORDER BY t.created_at DESC LIMIT 70) x),'cohort_preview',(SELECT COALESCE(json_agg(z ORDER BY z.manifest_bytes DESC),'[]'::json) FROM (SELECT repository_key,display_name,tool_count,manifest_bytes,sampling_bucket,stage,repository_match_verified,source_probe_checked_at FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115' ORDER BY manifest_bytes DESC LIMIT 100) z))::text";
-const REPORT="SELECT COALESCE((SELECT json_build_object('target',row_to_json(t),'runs',(SELECT COALESCE(json_agg(row_to_json(r) ORDER BY r.created_at DESC),'[]'::json) FROM (SELECT id,created_at,status,score,score_components,observed_tools,manifest_bytes,findings,evidence,maturity_checks,source_version,source_provenance FROM are_eval.benchmark_runs WHERE target_id=t.id ORDER BY created_at DESC LIMIT 20) r)) FROM (SELECT id,display_name,submitted_url,owner_proof_status,created_at FROM are_eval.benchmark_targets WHERE id=$1::uuid AND is_public=true) t),'null'::json)::text";
+const OVERVIEW="SELECT json_build_object('schema','are.benchmark.v2','generated_at',now(),'cohort_count',(SELECT COUNT(*) FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115'),'cohort_tools',(SELECT COALESCE(SUM(observed_tool_count),0) FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115'),'public_submissions',(SELECT COUNT(*) FROM are_eval.benchmark_targets WHERE is_public),'recent',(SELECT COALESCE(json_agg(x ORDER BY x.created_at DESC),'[]'::json) FROM (SELECT t.id,t.display_name,t.submitted_url,t.owner_proof_status,t.created_at,r.evaluator_version,r.status,r.observed_tools,r.manifest_bytes,r.created_at AS assessed_at FROM are_eval.benchmark_targets t LEFT JOIN LATERAL (SELECT evaluator_version,status,observed_tools,manifest_bytes,created_at FROM are_eval.benchmark_runs WHERE target_id=t.id ORDER BY created_at DESC LIMIT 1) r ON true WHERE t.is_public ORDER BY t.created_at DESC LIMIT 70) x),'cohort_preview',(SELECT COALESCE(json_agg(z ORDER BY z.manifest_bytes DESC),'[]'::json) FROM (SELECT repository_key,display_name,tool_count,manifest_bytes,sampling_bucket,stage,repository_match_verified,source_probe_checked_at FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115' ORDER BY manifest_bytes DESC LIMIT 100) z))::text";
+const REPORT="SELECT COALESCE((SELECT json_build_object('target',row_to_json(t),'runs',(SELECT COALESCE(json_agg(row_to_json(r) ORDER BY r.created_at DESC),'[]'::json) FROM (SELECT id,created_at,evaluator_version,status,score_components,observed_tools,manifest_bytes,findings,evidence,maturity_checks,source_version,source_provenance FROM are_eval.benchmark_runs WHERE target_id=t.id ORDER BY created_at DESC LIMIT 20) r)) FROM (SELECT id,display_name,submitted_url,owner_proof_status,created_at FROM are_eval.benchmark_targets WHERE id=$1::uuid AND is_public=true) t),'null'::json)::text";
 const HISTORY="SELECT json_build_object('target',(SELECT row_to_json(t) FROM (SELECT id,display_name,submitted_url,owner_proof_status,is_public,created_at FROM are_eval.benchmark_targets WHERE id=$1::uuid) t),'runs',(SELECT COALESCE(json_agg(r ORDER BY r.created_at DESC),'[]'::json) FROM (SELECT id,evaluator_version,status,score,score_components,observed_tools,manifest_bytes,findings,source_provenance,source_version,created_at FROM are_eval.benchmark_runs WHERE target_id=$1::uuid ORDER BY created_at DESC LIMIT 30) r),'events',(SELECT COALESCE(json_agg(e ORDER BY e.created_at DESC),'[]'::json) FROM (SELECT id,event_type,details,created_at FROM are_eval.benchmark_submission_events WHERE target_id=$1::uuid ORDER BY created_at DESC LIMIT 70) e))::text";
 async function limitWrites(){
  for(const [bucket,window,max] of [["minute","minute",8],["day","day",90]]){

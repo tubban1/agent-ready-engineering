@@ -1,78 +1,161 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#10283a"/>
-  <link rel="icon" type="image/svg+xml" href="/evaluations/favicon.svg"/>
-  <meta name="description" content="Agent-Ready Engineering 证据驱动的跨项目预评估看板。"/>
-  <title>ARE | 项目评估与证据看板</title>
-  <link rel="stylesheet" href="/evaluations/styles.css"/>
-  <script src="/evaluations/app.js" defer></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10283a">
+<meta name="description" content="Evaluate MCP tools with evidence. Browse published research, run a safe preflight, and track independent verification.">
+<link rel="canonical" href="https://are.world2.co/evaluations/">
+<title>ARE Evaluations — Evidence-first MCP Reviews</title>
+<link rel="icon" href="/evaluations/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/evaluations/unified.css">
+<script defer src="/evaluations/i18n.js"></script>
+<script defer src="/evaluations/app.js"></script>
 </head>
 <body>
 <div class="shell">
-  <aside class="sidebar">
-    <a class="brand" href="/" aria-label="Agent-Ready Engineering 首页">
-      <span class="brand-mark">A<span>R</span>E</span>
-      <span class="brand-desc">AGENT-READY<br>ENGINEERING</span>
-    </a>
-    <div class="navlabel">WORKSPACE</div>
-    <nav aria-label="主菜单">
-      <a class="navitem active" href="#overview"><span>▦</span> 评估总览</a>
-      <a class="navitem" href="#assessments"><span>☷</span> 项目评估</a>
-      <a class="navitem" href="#batches"><span>◷</span> 批次进度</a>
-      <a class="navitem" href="#methodology"><span>◈</span> 评估方法</a>
-      <a class="navitem" href="/benchmark/"><span>◎</span> MCP Benchmark</a>
-    </nav>
-    <div class="sidebottom">
-      <div class="smalltag">ARE Framework <b id="frameworkVersion">版本待核验</b></div>
-      <p>Public Research / Evidence-first</p>
-      <a href="/mcp">Explore MCP ↗</a>
+<aside class="sidebar">
+  <a href="/" class="brand"><span class="brandmark">ARE<span class="degree">°</span></span><span class="brandline">AGENT-READY<br>ENGINEERING</span></a>
+  <p class="side-label" data-i18n="navigation">WORKSPACE</p>
+  <nav aria-label="Main navigation">
+    <a href="#overview" class="navlink"><span>◈</span><span data-i18n="overview">Overview</span></a>
+    <a href="#preflight" class="navlink"><span>⊕</span><span data-i18n="preflight">MCP preflight</span></a>
+    <a href="#projects" class="navlink"><span>▦</span><span data-i18n="projects">Public research</span></a>
+    <a href="#published" class="navlink"><span>☷</span><span data-i18n="creators">Creator reports</span></a>
+    <a href="#method" class="navlink"><span>◎</span><span data-i18n="method">Method & limits</span></a>
+  </nav>
+  <div class="side-footer"><div>ARE Framework <strong id="frameworkVersion">—</strong></div><small data-i18n="publicOnly">Public evidence only · Not certification</small><a href="/mcp" data-i18n="mcpDocs">Connect ARE MCP</a></div>
+</aside>
+<main id="overview">
+<header class="topbar">
+  <div class="crumb">ARE / <span data-i18n="workspace">MCP Evaluations</span></div>
+  <div class="top-actions">
+    <span class="status-pill" id="liveStatus" role="status" aria-live="polite" data-i18n="connecting">Connecting</span>
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button type="button" id="enButton" lang="en" aria-pressed="true">EN</button>
+      <button type="button" id="zhButton" lang="zh-CN" aria-pressed="false">中文</button>
     </div>
-  </aside>
-  <main id="overview">
-    <header class="topbar">
-      <div class="crumb">ARE <span>/</span> Research <span>/</span> <strong>Assessment Portfolio</strong></div>
-      <div class="topactions"><span id="liveIndicator" class="live-dot">加载中</span><button id="refreshBtn" type="button">↻ 刷新</button></div>
-    </header>
-    <div class="maincontent">
-      <div class="eyebrow">RESEARCH PORTFOLIO <span id="latestDateLabel">最近更新日期待读取</span></div>
-      <section class="hero">
-        <div>
-          <h1>Agent-Ready<br><em>评估看板</em></h1>
-          <p>把 Agent 接入能力转换为可审阅的工程证据。逐项目呈现契约、授权、状态恢复、上下文效率与运行验证，不用单一分数掩盖未知风险。</p>
-          <div class="hero-foot"><span class="hbadge">8 ARE dimensions</span><span class="hbadge">39 evidence checks</span><span class="hbadge">Source-linked findings</span></div>
-        </div>
-        <div class="hero-shape" aria-hidden="true"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="center">ARE<span>°</span></div></div>
-      </section>
-      <section class="metrics" aria-label="评估统计">
-        <article><span>已收录项目</span><strong id="totalCount">—</strong><small>包括初步评估和源码核查</small></article>
-        <article><span>源码已核查</span><strong id="sourceCount">—</strong><small>与仅公开材料的预评估分开</small></article>
-        <article><span>最近更新日期的记录</span><strong id="latestCount">—</strong><small id="latestHint">按最近 checked_at 的苏黎世日期统计</small></article>
-        <article><span>独立正式认证</span><strong id="verifiedCount">—</strong><small>未达到完整证据要求不得授予等级</small></article>
-      </section>
-      <section id="assessments" class="section">
-        <div class="headingrow"><div><span class="section-no">01 / RESULTS</span><h2>项目评估</h2><p>点击项目查看证据、重要发现和待验证问题。支持筛选、检索、追溯来源。</p></div><div class="legend"><span><i class="key inspected"></i> 源码检查</span><span><i class="key preliminary"></i> 初步研究</span></div></div>
-        <div class="table-panel">
-          <div class="filters"><label class="searchbox">⌕ <input id="searchInput" aria-label="搜索项目" placeholder="搜索项目、类别或发现…" autocomplete="off"/></label><select id="statusFilter" aria-label="按阶段筛选"><option value="">全部阶段</option><option value="source_review">源码核查</option><option value="preliminary">自动预评估</option><option value="verified">正式验证</option></select><select id="categoryFilter" aria-label="按类别筛选"><option value="">全部类别</option></select><span id="shownCount" class="resultcount"></span></div>
-          <div class="table-scroll"><table><thead><tr><th>项目 / 来源</th><th>领域</th><th>证据阶段</th><th>ARE 维度</th><th>重要发现</th><th>最近分析</th><th></th></tr></thead><tbody id="assessmentRows"><tr><td colspan="7" class="empty">正在读取评估记录…</td></tr></tbody></table></div>
-        </div>
-      </section>
-      <section id="batches" class="section">
-        <div class="headingrow"><div><span class="section-no">02 / COLLECTION</span><h2>历史采样批次</h2><p>展示数据库中已有的研究批次及原定目标，不表示每天仍按固定计划执行。日期、时间和完成量以批次记录为准。</p></div></div>
-        <div class="batch-summary"><div><strong id="batchDone">0</strong><span>/ 240 目标项目</span></div><div id="batchProgress" class="batch-progress"><span style="width:0%"></span></div><p id="batchHint">计划 8 批 · 每批目标 30 · 待实际执行数据</p></div>
-        <div class="batchgrid" id="batchGrid"></div>
-      </section>
-      <section id="methodology" class="section method">
-        <div class="headingrow"><div><span class="section-no">03 / METHODOLOGY</span><h2>ARE 如何判断</h2><p>评估不是排行榜，也不把工具调用成功等同于业务目标完成。</p></div></div>
-        <div class="dimensions" id="dimensionLegend"></div>
-        <div class="principles"><div><b>证据优先</b><p>源码、可重放测试、历史文档及待核实信息分别呈现；README 自述不能代替实测。</p></div><div><b>等级不猜测</b><p>L0–L4 需要完整且有效的 39 项检查记录。自动预扫描只产生发现与下一步建议，不发正式等级。</p></div><div><b>可追溯 / 可复测</b><p>保留项目 URL、审阅版本、证据引用、更新时间和问题类别；缺失数据明确标注。</p></div></div>
-      </section>
-      <footer>© 2026 Agent-Ready Engineering · <a href="/">返回首页</a> · <a href="/mcp">ARE MCP</a><span>Evidence-based, not self-certified.</span></footer>
+  </div>
+</header>
+<div class="content">
+<section class="hero">
+  <span class="eyebrow" data-i18n="eyebrow">PUBLIC EVIDENCE WORKSPACE</span>
+  <h1 data-i18n="headline">Know what an MCP can do. Verify what actually works.</h1>
+  <p class="lead" data-i18n="lead">Explore research, run an authorized static preflight, and follow evidence-backed improvements. No unverified safety scores. No invented maturity ratings.</p>
+  <div class="hero-actions">
+    <a class="action primary" href="#preflight" data-i18n="runPreflight">Run MCP preflight</a>
+    <a class="action secondary" href="#projects" data-i18n="exploreCases">Explore public research</a>
+  </div>
+  <div class="trust-line"><span>ARE-A02@0.5</span><span data-i18n="noCalls">Preflight does not call business tools</span><span data-i18n="unknown">Unverified ≠ Failed</span></div>
+</section>
+<section class="metrics" aria-label="Public research overview">
+  <article><span data-i18n="publicProjects">Public research entries</span><strong id="totalCount">—</strong><small data-i18n="publicProjectNote">Public GitHub metadata and approved cases only</small></article>
+  <article><span data-i18n="reviewedCases">Published case reviews</span><strong id="sourceCount">—</strong><small data-i18n="publishedCaseNote">Explicitly released independent cases</small></article>
+  <article><span data-i18n="recentGroup">Latest research date</span><strong id="latestDateLabel">—</strong><small id="latestHint" data-i18n="latestNote">Based on published checked_at</small></article>
+  <article><span data-i18n="verifiedCountLabel">Certified MCPs</span><strong id="verifiedCount">0</strong><small data-i18n="certNote">Preflight is not ARE certification</small></article>
+</section>
+
+<section class="section" id="preflight">
+  <div class="section-head"><div><span class="eyebrow" data-i18n="stepOne">01 / SELF-SERVICE</span><h2 data-i18n="preflightTitle">Start with your MCP endpoint</h2><p data-i18n="preflightExplanation">We safely initialize the public HTTPS endpoint and inspect tools/list. No credentials, payments, writes or business tools/call.</p></div></div>
+  <div class="preflight-grid">
+    <div class="panel">
+      <form id="submitForm">
+        <label for="targetInput" data-i18n="endpointLabel">Public HTTPS MCP endpoint</label>
+        <input id="targetInput" type="url" required autocomplete="url" placeholder="https://example.com/mcp" maxlength="350" spellcheck="false">
+        <p class="field-help" data-i18n="publicAccessOnly">Anonymous publicly accessible MCP only. OAuth, local stdio and private-network targets need an authorized local evaluation route.</p>
+        <button class="action primary" type="submit" id="submitBtn" data-i18n="inspectNow">Inspect endpoint</button>
+        <button class="text-button" type="button" id="copyPromptBtn" data-i18n="copyPrompt">Copy Agent preflight prompt</button>
+        <p id="submitStatus" class="message" role="status" aria-live="polite"></p>
+      </form>
     </div>
-  </main>
+    <div class="panel notes">
+      <h3 data-i18n="scopeTitle">What this tells you</h3>
+      <div class="scope-item"><strong data-i18n="scopeYes">Observed</strong><span data-i18n="scopeYesText">Tool schemas, declarations, discovery payload and possible contradictions</span></div>
+      <div class="scope-item"><strong data-i18n="scopeMaybe">Unknown</strong><span data-i18n="scopeMaybeText">Actual permissions, runtime effects, Agent outcomes and recovery without authorized testing</span></div>
+      <div class="scope-item"><strong data-i18n="scopeNo">Not a certification</strong><span data-i18n="scopeNoText">L0–L4 requires a pinned T07/T10 and independently reviewed evidence</span></div>
+      <a class="minor-link" href="https://github.com/tubban1/agent-ready-engineering/blob/main/docs/prompts/SELF_EVALUATE_MCP.md" target="_blank" rel="noopener noreferrer" data-i18n="deepGuide">Deep evaluation guide</a>
+    </div>
+  </div>
+
+  <div id="reportPanel" class="panel result-panel" hidden>
+    <div class="section-head"><div><span class="eyebrow" data-i18n="preliminary">PRELIMINARY / NOT CERTIFIED</span><h3 id="reportTitle" data-i18n="preflightResult">Preflight observations</h3></div><span id="reportStage" class="pill">—</span></div>
+    <p id="reportTrust" class="field-help"></p><p id="reportMethod" class="field-help"></p>
+    <h4 data-i18n="componentsTitle">Declared contract components · legacy method</h4>
+    <div id="scoreBreakdown" class="components"></div>
+    <h4 data-i18n="evidenceAndUnknown">Evidence, possible conflicts and unknowns</h4>
+    <div id="reportFindings" class="finding-list"></div>
+    <h4 data-i18n="topFixes">Three priorities to verify next</h4><div id="topFixes" class="finding-list"></div>
+    <p class="field-help" data-i18n="legacyCaveat">Historical static components are not a security rating. Unknown effects remain UNKNOWN.</p>
+    <div class="actions"><button type="button" id="copyReportBtn" class="action secondary" data-i18n="copyReport">Copy evidence summary</button><button type="button" id="claimBtn" class="action primary" data-i18n="claim">Verify ownership & improve</button></div>
+    <p class="message" id="targetId"></p>
+  </div>
+
+  <div id="claimPanel" class="panel" hidden>
+    <h3 data-i18n="claimTitle">Creator claim, reassessment and publication</h3>
+    <p class="field-help" data-i18n="claimIntro">Control of the endpoint hostname must be proven before making changes to its assessment history. Publication is opt-in.</p>
+    <button id="startClaimBtn" type="button" class="action secondary" data-i18n="startClaim">Get domain verification challenge</button>
+    <div id="claimChallenge" hidden>
+      <p data-i18n="challengeExplain">Serve this exact text at /.well-known/are-verification.txt on the MCP host:</p><pre id="challengeText"></pre>
+      <button type="button" class="action primary" id="verifyClaimBtn" data-i18n="verifyClaim">Verify domain control</button>
+    </div>
+    <div id="ownerArea">
+      <label for="ownerToken" data-i18n="ownerToken">One-time owner token</label><input id="ownerToken" type="password" autocomplete="off" placeholder="Owner token">
+      <div class="actions">
+        <button type="button" id="copyOwnerBtn" class="action secondary" data-i18n="copyToken">Copy token</button>
+        <button type="button" id="retestBtn" class="action secondary" data-i18n="reassess">Reassess</button>
+        <button type="button" id="publishBtn" class="action secondary" data-i18n="publish">Publish voluntarily</button>
+        <button type="button" id="historyBtn" class="action secondary" data-i18n="history">Review history</button>
+      </div>
+      <h4 data-i18n="evidenceTitle">Supply additional evidence for review</h4>
+      <div class="formrow">
+        <label><span data-i18n="checkId">Check ID</span><input id="evidenceId" maxlength="20" placeholder="L2-X3"></label>
+        <label><span data-i18n="evidenceType">Evidence type</span><select id="evidenceType"><option value="documented" data-i18n="documented">Documented</option><option value="inspected" data-i18n="inspected">Inspected</option><option value="tested" data-i18n="tested">Tested</option><option value="self_reported" data-i18n="selfReported">Self-reported</option></select></label>
+      </div>
+      <label for="evidenceUrl" data-i18n="evidenceUrl">Public evidence URL</label><input id="evidenceUrl" type="url" placeholder="https://github.com/...">
+      <label for="evidenceNote" data-i18n="evidenceNote">Context / reproduction steps</label><textarea id="evidenceNote" rows="3" maxlength="600"></textarea>
+      <button type="button" id="evidenceBtn" class="action secondary" data-i18n="submitEvidence">Submit evidence for review</button>
+      <div id="historyResults" class="history-results" aria-live="polite"></div>
+    </div>
+    <p id="claimStatus" class="message" aria-live="polite" role="status"></p>
+  </div>
+</section>
+
+<section class="section" id="projects">
+  <div class="section-head"><div><span class="eyebrow" data-i18n="stepTwo">02 / RESEARCH</span><h2 data-i18n="projectHeading">Public project directory</h2><p data-i18n="projectDesc">Repository discovery is not runtime testing. Public case reviews are clearly separated from preliminary directory entries.</p></div></div>
+  <div class="panel directory">
+    <div class="filters">
+      <label class="sr-only" for="searchInput" data-i18n="searchProjects">Search projects</label><input id="searchInput" type="search" autocomplete="off" data-i18n-placeholder="searchPlaceholder" placeholder="Search projects, repositories, categories…">
+      <label class="sr-only" for="statusFilter" data-i18n="filter">Filter by evidence level</label>
+      <select id="statusFilter"><option value="" data-i18n="allStages">All evidence stages</option><option value="published_case" data-i18n="publishedCases">Published case reviews</option><option value="directory_only" data-i18n="directoryEntries">Directory metadata only</option></select>
+      <span id="shownCount" class="record-count"></span>
+    </div>
+    <div class="table-scroll">
+      <table><thead><tr><th data-i18n="projectName">Project / source</th><th data-i18n="category">Category</th><th data-i18n="evidenceStage">Evidence stage</th><th data-i18n="latestChecked">Last checked</th><th data-i18n="details">Details</th></tr></thead><tbody id="assessmentRows"><tr><td colspan="5" data-i18n="loading">Loading public entries…</td></tr></tbody></table>
+    </div>
+  </div>
+</section>
+<details class="panel cohort-archive" id="cohortPanel">
+  <summary data-i18n="cohortTitle">ARE100 research cohort · historical metadata sample</summary>
+  <p class="field-help" data-i18n="cohortDesc">An independent list of observed tools/list entries. This is not a ranked evaluation and must not be added to the public project count.</p>
+  <div id="cohortTable" class="table-scroll"></div>
+</details>
+
+<section class="section" id="published">
+  <div class="section-head"><div><span class="eyebrow" data-i18n="stepThree">03 / CREATOR REPORTS</span><h2 data-i18n="creatorHeading">Creator-published preflight histories</h2><p data-i18n="creatorDesc">Only domain-verified creators can opt into publication. Unclaimed submissions are never listed here.</p></div></div>
+  <div class="cards" id="publicList"><p data-i18n="loadingReports">Loading creator reports…</p></div>
+</section>
+
+<section class="section" id="method">
+  <div class="section-head"><div><span class="eyebrow" data-i18n="stepFour">04 / METHODOLOGY</span><h2 data-i18n="methodHeading">Evidence before maturity</h2></div></div>
+  <div class="cards three">
+    <article class="panel"><h3 data-i18n="method1">Inspect the contract</h3><p data-i18n="method1Text">Safe anonymous initialize and tools/list can reveal a contract, not actual authorization or business outcomes.</p></article>
+    <article class="panel"><h3 data-i18n="method2">Validate real tasks</h3><p data-i18n="method2Text">Authorized agents and independent oracles establish outcomes. A successful SDK call alone does not.</p></article>
+    <article class="panel"><h3 data-i18n="method3">Mark unknowns</h3><p data-i18n="method3Text">39 ARE checks need evidenced results, risk-aware N/A and a local --workspace validation gate.</p></article>
+  </div>
+  <p class="method-note" data-i18n="researchBoundary">Public GitHub directory entries are not official reviews. Internal batches and private source reviews are excluded from this public API. ARE is not an OpenAI or Anthropic certification service.</p>
+</section>
+<footer>© 2026 ARE · World2 <a href="/" data-i18n="home">Home</a><a href="/mcp">MCP</a><a href="https://github.com/tubban1/agent-ready-engineering" target="_blank" rel="noopener noreferrer">GitHub</a></footer>
 </div>
-<dialog id="detailDialog" aria-label="项目评估详情"><div class="dialog-inner"><div class="dialoghead"><div><span class="section-no">ASSESSMENT DETAIL</span><h2 id="detailName"></h2></div><button id="closeDetail" aria-label="关闭详情">✕</button></div><div id="detailContent"></div></div></dialog>
-</body>
-</html>
+</main></div>
+<dialog id="detailDialog" aria-label="Project details"><div class="dialog-content"><div class="dialog-head"><h2 id="detailName"></h2><button id="closeDetail" type="button" aria-label="Close details">✕</button></div><div id="detailContent"></div></div></dialog>
+</body></html>
