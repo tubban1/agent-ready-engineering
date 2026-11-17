@@ -1,20 +1,28 @@
 # ARE Independent Third-Party MCP Evaluation — Public review prompt
-> v1.0 | 2026-11-16 | English canonical
+> v1.1 | 2026-11-17 | English canonical
 
 **Status:** Public community research, **not** ARE-issued certification or project-owner permission to write. See [Chinese](INDEPENDENT_MCP_EVALUATION.zh.md).
 
 ## Copy this prompt
 
-> Evaluate the public HTTPS MCP endpoint `<PUBLIC_MCP_URL>` independently using ARE's latest public methodology `https://are.world2.co/mcp`. Optional public source: `<GITHUB_REPO>`. I have **no claim of owner authorization** for sensitive operations.
+<!-- ARE_PROMPT_AUTOGEN_START: run node scripts/sync-are-evaluation-prompts.mjs -->
+> Independently inspect public MCP <PUBLIC_MCP_URL> within <PUBLIC_READONLY_SCOPE>. Optional public source: <GITHUB_REPO>. I have no owner authorization to access private accounts or perform writes.
 >
-> 1. Respect published access policies and rate limits. Never bypass auth, captcha, membership, tenant boundaries or server scopes. No financial, messaging, destructive, device-control or personal-data tool calls.
-> 2. Negotiate the server's **actual advertised** MCP protocol versions and exhaust all applicable list pagination. Inspect all tool definitions, descriptions, schemas and annotations; don't assume an annotation proves an operation is safe.
-> 3. With a reasonable request budget, call only public, clearly read-only tools with innocuous arguments, and optionally a harmless validation negative. Record transport results and actual response semantics. Mark other tool execution NOT_TESTED, with scope reasons.
-> 4. If source exists, pin the SHA and inspect handler code/testing; classify deployed source identity BOUND/UNBOUND rather than conflating code and live behavior.
-> 5. If a genuine model-based Agent host is available, pre-register a non-state-changing user task and verify its result against independent **public** truth. Distinguish actual Agent/tool calls from direct SDK scripts. Otherwise report Agent assessment NOT_VERIFIED.
-> 6. Complete the per-scenario 39-item ARE evidence table with PASS/FAIL/N/A/NOT_VERIFIED and explain limits. Do not issue an unsupported L0–L4 grade or claim official MCP certification.
-> 7. Publish a privacy-safe technical review: reproducible positives, precise observed problems, optional improvement ideas, source links, time/version, and unknowns. Sensitive vulnerabilities follow private disclosure. **Do not automatically post issues, contact maintainers or submit claims of endorsement.**
+> Standard: ARE-A02@0.5. Preserve all 39 original check IDs and retrieve their canonical definitions on demand via are_list_checks, are_get_check and are_get_template (T07 and T10); do not paste all 39 descriptions into the Agent context.
+> Access boundary: the public ARE MCP at https://are.world2.co/mcp provides knowledge and templates; it does NOT offer local are_assess_scenario, are_validate_deliverable or are_review_operation_risk. Machine-checked provisional assessments require the local ARE MCP started with --workspace and a complete version-pinned T07/T10 in that authorized workspace. If unavailable, manually report evidence states, never imply a machine-verified grade.
+> Evidence: pin the target source SHA, observed deployment version, tool inventory and assessment date. Distinguish discovery, inspection, safe authorized tools/call, actual model-driven Agent tasks and independently verified business outcomes. Missing proof is UNKNOWN or NOT_VERIFIED, never an inferred PASS.
+> N/A: use T10 operation-risk inventory and N/A{scope=operation_id; reason=concrete applicability explanation; evidence=relative/path.md; reviewer=human reviewer; reviewed_at=YYYY-MM-DD}. Required fields: scope, reason, evidence, reviewer, reviewed_at. Confirm tool coverage, source revision, reviewer and evidence. A bare reason, missing file, or unchecked readOnlyHint is not evidence.
+> In T07, the Result column accepts only ✅ / ❌ / ➖. Record NOT_VERIFIED as ❌ and explain missing evidence in the final column; this blocks the check but is not a confirmed product defect. ➖ requires the full N/A{scope=...; reason=...; evidence=...; reviewer=...; reviewed_at=YYYY-MM-DD} format. ✅ requires evidence type inspected or documented and a valid evidence reference.
+> Maturity: map each of 39 checks to PASS / FAIL / NOT_APPLICABLE / NOT_VERIFIED, with evidence and scope. Any machine-computed L0–L4 is PROVISIONAL and not certification; with unsupported version, incomplete risk profile or global evidence blocker, return MATURITY_NOT_ESTABLISHED rather than a grade. Historical v0.4 or unpinned L4 is not current validation; do not inherit its checks or authorization.
 >
-> Label output **Community independent review / Not an ARE-issued certification**. The purpose is to improve reproducibility, not rank vendors based on partial access.
+> 1. Respect published conditions, rate limits and consent. No credential bypass, arbitrary business writes, payments, messages, deletion, account/device control or traffic load tests.
+> 2. Discover the real protocol and all paginated tools/list metadata. Inspect names, schemas, annotations, authorization requirements and suspected side-effect conflicts. A declared readOnlyHint is NOT execution permission.
+> 3. Separate static coverage from tools actually called. Only perform genuinely harmless public calls where expressly permitted and within a bounded budget; otherwise mark NOT_TESTED. If source exists, pin SHA and mark deployment binding BOUND/UNBOUND.
+> 4. If a real model-based Agent can lawfully run a safe task, independently verify outcome against a public oracle. An SDK script is a protocol probe, not an Agent task.
+> 5. Map a named scenario against the 39 checks and T10 applicability. Without owner source, identity/authorization evidence or local --workspace audit capability, return NOT_VERIFIED and MATURITY_NOT_ESTABLISHED, not a speculative L0–L4.
+> 6. Publish only safe, reproducible observed facts, clear unknowns and the top 3 optional improvement suggestions. Share sensitive security findings privately, not in public issue comments.
+>
+> Label Community independent review / Not an ARE-issued certification. Never contact, register or submit on behalf of an external Creator without approval.
+<!-- ARE_PROMPT_AUTOGEN_END -->
 
 Use [Self Evaluate](SELF_EVALUATE_MCP.md) for owner-controlled testing and [Maintainer Retest](MAINTAINER_RETEST_MCP.md) after a fix.

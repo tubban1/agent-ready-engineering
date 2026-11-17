@@ -1,5 +1,5 @@
 # ARE Self Evaluate — MCP 开发者自评提示词（中文）
-> 对应英文版：`SELF_EVALUATE_MCP.md` EN v1.0
+> 对应英文版：`SELF_EVALUATE_MCP.md` EN v1.1
 
 **用途：** MCP 维护者使用 ChatGPT、Claude Code、Codex 等真实 Agent，在自己拥有或授权的项目中运行可重复的 ARE 自评。结果明确标注 **SELF-ASSESSMENT**，不是 ARE 独立认证。
 
@@ -9,22 +9,24 @@
 
 ### 可复制提示词
 
-> 你是独立于业务实现的工程测试 Agent。使用 Agent-Ready Engineering（ARE）最新规则（`https://are.world2.co/mcp`，特别是 39 项场景成熟度检查与 MCP 2026 协议符合性），对以下**由我维护或已获正式授权**的 MCP 进行自评。
+<!-- ARE_PROMPT_AUTOGEN_START: run node scripts/sync-are-evaluation-prompts.mjs -->
+> 我是 MCP <PUBLIC_OR_SANDBOX_MCP_ENDPOINT> 的所有者或已获明确授权者。源码 <SOURCE_REPO_AND_COMMIT>；实际部署版本 <DEPLOYMENT_OR_UNKNOWN>；隔离环境与授权操作 <AUTHORIZED_SCOPE>；代表任务与独立 Oracle <SCENARIO_AND_ORACLE>。
 >
-> 服务地址：`<PUBLIC_OR_SANDBOX_MCP_ENDPOINT>`
-> Git 仓库 / 固定 SHA：`<SOURCE_REPO_AND_COMMIT>`
-> 授权环境与允许操作：`<AUTHORIZED_SCOPE>`
-> 代表性业务任务和最终状态核验：`<SCENARIO_AND_ORACLE>`
+> 标准：ARE-A02@0.5。保留原有 39 项检查 ID，用公共 ARE MCP 的 are_list_checks、are_get_check、are_get_template 按需取得定义与 T07/T10，不要把 39 项详细说明全部塞入 Agent 上下文。
+> 能力边界：公共端点 https://are.world2.co/mcp 只提供知识和模板，没有本地 are_assess_scenario、are_validate_deliverable、are_review_operation_risk。机器计算的暂定等级必须由带 --workspace 的本地 ARE MCP 对固定版本 T07/T10 进行复核。无法连接本地能力时，只能人工列出证据状态，不能声称已完成机器验收。
+> 证据：固定源码 SHA、真实部署版本、完整工具清单和评估日期；分开记录工具发现、静态检查、合法授权的 tools/call、模型自主 Agent 任务以及独立业务结果。缺失证据填 UNKNOWN 或 NOT_VERIFIED，不得推测 PASS。
+> N/A：根据 T10 操作级风险画像填写 N/A{scope=operation_id; reason=适用性理由; evidence=relative/path.md; reviewer=真实复核人; reviewed_at=YYYY-MM-DD}。五个字段 scope、reason、evidence、reviewer、reviewed_at 均必需，证据应覆盖操作范围并对应相同版本。仅写理由、空文件或 readOnlyHint 注解不构成豁免证明。
+> 在 T07 的 Result 列中，只允许填写 ✅ / ❌ / ➖。NOT_VERIFIED 必须暂记为 ❌，并在最后的证据列说明缺少哪些证据；这会阻断该项通过，但不表示已确认产品缺陷。➖ 必须附完整 N/A{scope=...; reason=...; evidence=...; reviewer=...; reviewed_at=YYYY-MM-DD}，✅ 必须填写 inspected 或 documented 证据类型，并引用有效的证据文件。
+> 成熟度：39 项各自标 PASS / FAIL / NOT_APPLICABLE / NOT_VERIFIED，并记录范围与证据。机器算出的 L0–L4 一律为 PROVISIONAL（暂定），不是认证；版本不支持、风险画像不完整或存在整体证据阻断时写 MATURITY_NOT_ESTABLISHED。旧 v0.4 或未固定版本的历史 L4 不继承为当前等级，也不得继承旧 PASS 或授权结论。
 >
-> 1. 首先标记环境、声明的 MCP 版本、源码/线上部署版本关联证据及工具版本。没有证据标 UNKNOWN，不能猜测。
-> 2. 完整读取 tools/list 的所有页及适用的资源和提示词。**对每一个工具**校验名称、描述、inputSchema、可选 outputSchema、注解、权限/副作用和错误契约。把“静态检查”和“实际执行”覆盖率分开。
-> 3. 对所有合法、明确公共只读工具尽可能执行单次成功路径与合理的无害错误路径。不能仅信任 readOnlyHint。非只读、高影响或需付费工具，只有获得明确隔离对象和对应操作批准才运行；否则标 NOT_TESTED，不能绕过登录/OAuth、使用主账户误操作。
-> 4. 逐项复核源码的鉴权、handler、错误、恢复、幂等、监控、测试等，使用 `repo@SHA:path:line` 引证。仅当能证明部署版本对应时才将源码结论用于生产。
-> 5. 让一个**实际 Agent**完成至少一个预注册的用户价值任务，保存工具调用、真实返回和独立业务 Oracle。不能将手写 SDK 脚本调用冒充 Agent，也不能把模型口头“成功”当 Oracle。若不能执行 Agent，明确标 BLOCKED。
-> 6. 按场景填写 **39/39 ARE 检查**：PASS/FAIL/NOT_APPLICABLE/NOT_VERIFIED（每条 N/A 写理由），严格逐级判断 L0–L4。若关键证据不足写 MATURITY_NOT_ESTABLISHED，不能简单平均打分。
-> 7. 输出 `qualification.json`、`tool_matrix.json`、`source_review.md`、`agent_task_results.md`、`are_39_checks.json`、`developer_report.md`、`evidence_manifest.json`，标明测试日期、完整性和可复测步骤，脱敏所有访问凭据/用户数据。
-> 8. 将结果标为 **Developer Self-Evaluation / Not independently verified by ARE**。如果需要 ARE 独立评估，附上授权范围、可重现样例和联系邮箱申请复核。**不要自动发邮件、提交第三方 Issue、修改生产代码或部署。**
+> 1. 分页读取完整 tools/list 及资源、提示词；逐工具核对输入输出 Schema、错误、描述、注解、权限和副作用。分别报告发现覆盖率与实际 tools/call 覆盖率。
+> 2. 在单独获批的隔离租户内用合成对象运行合理的只读、错误路径和授权负例；readOnlyHint 不代表允许执行。写入、资金、消息、删除及高权限操作须逐项明确授权，否则 NOT_TESTED。
+> 3. 固定源码、部署版本及工具定义哈希，检查 handler、鉴权、幂等、恢复和审计日志，引用 repo@SHA:path:line。无部署绑定证据不得将源码直接当现网事实。
+> 4. 让真实模型驱动的 Agent 完成已预先定义的多步业务任务，用外部 Oracle 独立核对结果。SDK 脚本和模型自报成功不算任务成功。
+> 5. 在授权工作区生成 ARE-T07 及完整 ARE-T10 JSON。若本地 ARE MCP 已用 --workspace 启动，调用 are_review_operation_risk、are_validate_deliverable、are_assess_scenario；否则人工列出证据并标 MATURITY_NOT_ESTABLISHED。
+> 6. 输出 qualification.json、tool_matrix.json、source_review.md、agent_task_results.md、are_39_checks.json、developer_report.md 和脱敏 evidence_manifest.json；优先报告三项最有价值的整改建议。
 >
-> 完成后先报告：实际执行了哪些项目、39 项的状态分布、所有工具覆盖率、真实 Agent 结果、未验证原因和最大的三条可落实改进。
+> 标注 Developer Self-Evaluation / Not independently verified by ARE；未经单独批准不得发邮件、提交第三方 Issue、公开敏感漏洞、修改生产代码或发布。
+<!-- ARE_PROMPT_AUTOGEN_END -->
 
 **注意：** Self Evaluate 是帮助维护者发现和修复问题的入口，不是授予公开 ARE Verified 徽章的捷径。
