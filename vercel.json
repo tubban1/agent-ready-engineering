@@ -62,6 +62,17 @@
       "permanent": true
     },
     {
+      "source": "/:path*/",
+      "has": [
+        {
+          "type": "host",
+          "value": "are.fde.fan"
+        }
+      ],
+      "destination": "https://are.world2.co/:path*/",
+      "permanent": true
+    },
+    {
       "source": "/datasets/solarstorm-20261116/",
       "destination": "/evidence/solarstorm/",
       "permanent": true
