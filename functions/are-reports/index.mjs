@@ -36,23 +36,38 @@ async function readonlySql(query) {
   if (!Array.isArray(data.rows)||!data.rows[0]||!data.rows[0][0]) throw Error("unexpected_sql_result");
   return JSON.parse(data.rows[0][0]);
 }
-const PORTFOLIO_SQL = `
+// Public API is a curated projection, not the internal research database.
+// Only public GitHub research enters the directory. Local repos and internal
+// batch schedules never appear, even when querying directly outside a browser.
+export const PUBLIC_PORTFOLIO_SQL = `
 SELECT json_build_object(
-  'schema','are.portfolio.v1',
+  'schema','are.public-portfolio.v2',
   'source','neon',
   'generated_at',now(),
+  'publication_policy','github_public_metadata_plus_explicit_case',
   'assessments',(SELECT COALESCE(json_agg(q ORDER BY q.checked_at DESC,q.project_key),'[]'::json) FROM (
-    SELECT project_key,display_name,source_kind,repo_url,source_ref,category,
-           status,CASE WHEN status='verified' THEN assessment_level ELSE NULL END AS assessment_level,
-           title,summary,strengths,findings,dimensions,evidence,metrics,checked_at
-    FROM are_eval.assessments ORDER BY checked_at DESC,project_key LIMIT 500
+    SELECT project_key,display_name,'github_public'::text AS source_kind,
+           CASE WHEN repo_url ~ '^https://github.com/[^/]+/[^/]+/?$' THEN repo_url ELSE NULL END AS repo_url,
+           CASE WHEN project_key='mcp/solarstorm.today' THEN source_ref ELSE NULL END AS source_ref,
+           category,status,checked_at,
+           CASE WHEN project_key='mcp/solarstorm.today' THEN 'published_case' ELSE 'directory_only' END AS publication,
+           CASE WHEN project_key='mcp/solarstorm.today' THEN 'zh-CN' ELSE 'none' END AS narrative_lang,
+           CASE WHEN project_key='mcp/solarstorm.today' THEN summary ELSE '' END AS summary,
+           CASE WHEN project_key='mcp/solarstorm.today' THEN strengths ELSE '[]'::jsonb END AS strengths,
+           CASE WHEN project_key='mcp/solarstorm.today' THEN findings ELSE '[]'::jsonb END AS findings,
+           CASE WHEN project_key='mcp/solarstorm.today' THEN dimensions ELSE '{}'::jsonb END AS dimensions,
+           CASE WHEN project_key='mcp/solarstorm.today' THEN evidence ELSE '[]'::jsonb END AS evidence,
+           NULL::text AS assessment_level
+    FROM are_eval.assessments
+    WHERE source_kind='github_public'
+      AND status IN ('preliminary','source_review','verified')
+    ORDER BY checked_at DESC,project_key LIMIT 500
   ) q),
-  'batches',(SELECT COALESCE(json_agg(b ORDER BY b.slot_at),'[]'::json) FROM (
-    SELECT slot_at,target_count,status,discovered_count,analyzed_count,error_count,started_at,finished_at
-    FROM are_eval.batches ORDER BY slot_at LIMIT 20
-  ) b)
+  'batches','[]'::json,
+  'internal_batches_exposed',false
 )::text`;
-const HEALTH_SQL = "SELECT json_build_object('ok',true,'source','neon','assessments',(SELECT COUNT(*) FROM are_eval.assessments))::text";
+const HEALTH_SQL = "SELECT json_build_object('ok',true,'source','neon','public_projects',(SELECT COUNT(*) FROM are_eval.assessments WHERE source_kind='github_public' AND status <> 'error'))::text";
+
 export default {
   async fetch(request) {
     if (request.method==="OPTIONS")return new Response(null,{status:204,headers:{
@@ -63,7 +78,7 @@ export default {
     const path=new URL(request.url).pathname;
     if(!["/","/v1/portfolio","/v1/health"].includes(path))return respond(request,404,{error:"not_found"});
     try {
-      return respond(request,200,await readonlySql(path==="/v1/health"?HEALTH_SQL:PORTFOLIO_SQL));
+      return respond(request,200,await readonlySql(path==="/v1/health"?HEALTH_SQL:PUBLIC_PORTFOLIO_SQL));
     } catch(e) {
       console.error("ARE read query:", String(e?.message||"unknown").slice(0,130));
       return respond(request,503,{error:"database_temporarily_unavailable"},{"Cache-Control":"no-store"});

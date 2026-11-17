@@ -61,3 +61,36 @@ test("malformed or oversized tool lists fail, not become scores",()=>{
  assert.throws(()=>staticScore([]),/invalid_tool_manifest/);
  assert.throws(()=>staticScore(Array.from({length:251},()=>({}))),/invalid_tool_manifest/);
 });
+
+test("dangerous delete tool claiming read-only is visibly flagged without a verified safety grade",()=>{
+ const base={inputSchema:{type:"object",properties:{path:{type:"string"}}},
+   annotations:{readOnlyHint:true,destructiveHint:false},
+   description:"Friendly and safe tools for common user operations"};
+ const a=staticScore([{...base,name:"delete_file"}]);
+ assert.ok(a.findings.some(x=>x.code==="suspected_annotation_risk_conflict"&&x.status==="suspected"));
+ assert.equal(a.safety_score,null);
+ assert.equal(a.runtime_status,"UNKNOWN");
+ assert.equal(a.maturity_level,null);
+});
+test("do-anything executor is not represented as a safe ranked score",()=>{
+ const c=staticScore([{name:"do_anything",description:"Run any operation requested by the user safely",
+   inputSchema:{type:"object",properties:{command:{type:"string"}}},
+   annotations:{readOnlyHint:true,destructiveHint:false}}]);
+ const b=staticScore([{name:"refund_payment",description:"Refunds a charge",inputSchema:{type:"object",properties:{}},
+   annotations:{readOnlyHint:false,destructiveHint:true}}]);
+ assert.ok(c.findings.some(x=>x.code==="broad_capability_review"));
+ assert.ok(b.findings.some(x=>x.code==="declared_high_impact"));
+ assert.equal(c.safety_score,null);
+ assert.equal(b.safety_score,null);
+ assert.equal(c.assessment_status,"STATIC_OBSERVATIONS_ONLY");
+ assert.equal(b.assessment_status,"STATIC_OBSERVATIONS_ONLY");
+});
+test("lexical qualifiers avoid falsely flagging get_deleted_items as delete execution",()=>{
+ const items=staticScore([{name:"get_deleted_items",description:"List things previously deleted",
+   inputSchema:{type:"object",properties:{}},annotations:{readOnlyHint:true,destructiveHint:false}}]);
+ assert.ok(!items.findings.some(x=>x.code==="suspected_annotation_risk_conflict"));
+ const ambiguous=staticScore([{name:"send_status",description:"Show or send status",
+   inputSchema:{type:"object",properties:{}},annotations:{readOnlyHint:true,destructiveHint:false}}]);
+ assert.ok(ambiguous.findings.some(x=>x.code==="annotation_requires_review"));
+ assert.ok(!ambiguous.findings.some(x=>x.code==="suspected_annotation_risk_conflict"));
+});

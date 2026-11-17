@@ -1,4 +1,4 @@
-# ARE Benchmark v2 — Endpoint-only self-assessment
+# ARE Preflight v3 — Risk observations (endpoint-only)
 
 **Decision:** only a publicly reachable, unauthenticated HTTPS Streamable HTTP MCP Endpoint may be registered and scored. There is NO backward compatibility with GitHub-only submissions, manually supplied tool manifests, local `stdio`, local offline scores or the `/v1/*` API. GitHub links may be included later as owner-provided source evidence, not as target identities.
 
@@ -16,7 +16,8 @@ Production: Neon Function `arescore` in ARE Neon project. The canonical browser 
 - `POST /v2/publish`: same credentials and `public` boolean; verified owners opt in or withdraw public visibility.
 - No other v1 operation aliases, alternate JSON property names, or raw manifest upload.
 
-Public scoring is only a static preflight heuristic (contract 35, descriptions 25, annotations 20, manifest footprint 20). **Not** official platform approval and **not** ARE L0–L4: all 39 ARE checks default to UNKNOWN until independently verified.
+New v3 evaluations include suspected annotation conflicts, broadly capable tool review signals and explicit runtime UNKNOWN; the primary public response has **no security/maturity total**. The database retains historical numeric contract-component sums solely for audit compatibility; owners may inspect them in private run history, but they must not be used to rank safety. v2 public reports are labeled as historical and are never silently rescored. Four legacy component weights are not a security measure.
+No external business tools/call occurs. **Not** official platform approval and **not** ARE L0–L4: all 39 ARE checks default to UNKNOWN until independently verified.
 
 ## Safety and data scope
 - HTTPS public DNS address pinned to a public IPv4 target; validated TLS; no redirects, query secrets, private IPs, unauthorized ports, or arbitrary HTTP.
