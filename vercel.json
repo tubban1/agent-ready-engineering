@@ -18,6 +18,39 @@
   },
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "are.fde.fan"
+        }
+      ],
+      "destination": "https://are.world2.co/",
+      "permanent": true
+    },
+    {
+      "source": "/benchmark/",
+      "has": [
+        {
+          "type": "host",
+          "value": "are.fde.fan"
+        }
+      ],
+      "destination": "https://are.world2.co/benchmark/",
+      "permanent": true
+    },
+    {
+      "source": "/evaluations/",
+      "has": [
+        {
+          "type": "host",
+          "value": "are.fde.fan"
+        }
+      ],
+      "destination": "https://are.world2.co/evaluations/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {
