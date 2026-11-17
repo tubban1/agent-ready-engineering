@@ -189,7 +189,7 @@
  $("refreshBtn").addEventListener("click",load);
  $("copyPromptBtn").addEventListener("click",async()=>{
   const endpoint=$("targetInput").value.trim()||"https://YOUR-SERVICE.example/mcp";
-  const prompt="请使用已连接的 ARE MCP（https://are.fde.fan/mcp）的 are_score_mcp 工具，对我的公网 HTTPS MCP Endpoint 进行自助预评估：\n"+endpoint+
+  const prompt="请使用已连接的 ARE MCP（https://are.world2.co/mcp）的 are_score_mcp 工具，对我的公网 HTTPS MCP Endpoint 进行自助预评估：\n"+endpoint+
    "\n请只传 endpoint 参数，明确区分预评分与正式 39 项成熟度验收，返回评分、证据和 run_id。若当前 Agent 无法连接 ARE MCP，请直接说明，不要自行假称官方注册成功。";
   try{await navigator.clipboard.writeText(prompt);status("submitStatus","中文提示词已复制；先确认 Agent 中已连接 ARE MCP。");}
   catch{status("submitStatus","无法自动复制，请通过本页直接提交 Endpoint 进行评分。",true);}

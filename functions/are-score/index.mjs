@@ -5,7 +5,7 @@
 import {randomBytes,createHash,timingSafeEqual} from "node:crypto";
 import {probeMcpTools,readPublicProof} from "./probe.mjs";
 const VERSION="are-preflight-v2-endpoint-only";
-const ORIGINS=new Set(["https://are.world2.co","https://are.fde.fan","https://agent-ready-engineering.vercel.app"]);
+const ORIGINS=new Set(["https://are.world2.co"]);
 const sha=x=>createHash("sha256").update(String(x)).digest("hex");
 const same=(a,b)=>typeof a==="string"&&typeof b==="string"&&a.length===b.length&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
 function res(req,status,data) {

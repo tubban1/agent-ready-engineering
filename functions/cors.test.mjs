@@ -4,8 +4,8 @@ import score from "./are-score/index.mjs";
 import reports from "./are-reports/index.mjs";
 
 const canonical="https://are.world2.co";
-const allowed=[canonical,"https://are.fde.fan","https://agent-ready-engineering.vercel.app"];
-const disallowed=["https://evil.are.world2.co","https://are.world2.co.attacker.example","http://are.world2.co","https://world2.co","null"];
+const allowed=[canonical];
+const disallowed=["https://are.fde.fan","https://agent-ready-engineering.vercel.app","https://evil.are.world2.co","https://are.world2.co.attacker.example","http://are.world2.co","https://world2.co","null"];
 
 for(const [name,service,url] of [
   ["Benchmark API",score,"https://are-score.example/v2/health"],
