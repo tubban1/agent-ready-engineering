@@ -70,13 +70,19 @@ test("implementation: are_next_steps groups the blocking checks by stage", async
   const { data } = await call(client, "are_next_steps", { scenario_path: SUPPLIER });
   assert.equal(data.level, "L2");
   assert.equal(data.target_level, "L3");
-  assert.deepEqual(data.steps.map((s: { stage: string }) => s.stage), ["P2", "P3", "P4", "P7"]);
+  assert.deepEqual(data.steps.map((s: { stage: string }) => s.stage), ["P0", "P2", "P3", "P4", "P5", "P6", "P7"]);
+  assert.equal(data.level_status, "LEGACY_UNPINNED_PROVISIONAL");
+  assert.equal(data.consistent, null);
+  const request = await call(client, "are_evidence_request", { scenario_path: SUPPLIER, target_level: "L3" });
+  assert.equal(request.data.already_satisfied, 0, "Legacy PASSes cannot waive current evaluation work");
+  assert.deepEqual(data.steps.flatMap((s: { checks: { id: string }[] }) => s.checks.map(c => c.id)).sort(), request.data.checks.map((c: { id: string }) => c.id).sort());
   const p4 = data.steps.find((s: { stage: string }) => s.stage === "P4");
   assert.equal(p4.template, "ARE-T04");
   assert.equal(p4.template_present, true);
-  assert.deepEqual(p4.checks.map((c: { id: string }) => c.id), ["L3-A1", "L3-A2", "L3-A3", "L3-A4"]);
+  assert.ok(["L3-A1", "L3-A2", "L3-A3", "L3-A4"].every(id => p4.checks.some((c: { id: string }) => c.id === id)));
   const inv = await call(client, "are_next_steps", { scenario_path: "scenarios/invoice-matching" });
-  assert.match(inv.data.urgent, /beyond L1/);
+  assert.equal(inv.data.consistent, null, "Historical T07 cannot attest present exposure");
+  assert.equal(inv.data.urgent, null);
 });
 
 test("implementation: a scenario without an assessment starts at the Value Gate", async () => {

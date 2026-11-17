@@ -65,6 +65,14 @@ Claude's second review found backdating as a legacy-score shortcut (R1/R2) and i
 
 **Known provenance limitation:** A backdated document's filename is still user-controlled; this change segregates its effects rather than cryptographically verifying when the file was created. Pinning original Git commit/time and any signed source/provenance must be reviewed separately. These local checks never grant formal certifications.
 
+## Additional consistency fix — `are_next_steps` (2026-11-17)
+
+Following Claude's MCP coverage recommendations, `are_next_steps` no longer invokes `assess(parsed, exists)` independently. It imports `assessScenario` and `evidenceRequestForScenario` from the canonical review path. The same T07 must now yield identical `level`, `provisional_level`, `consistent`, `level_status` and evidence blockers, while planned open checks match the evidence request exactly. Historical assessments remain visible but never waive current checks. Presence detection now includes T10.
+
+A new `mcp/test/nextsteps-consistency.test.ts` tests junk evidence, source revision mismatch, missing standard version and a legacy L4 snapshot. Historical fixture expectations in `roles.test.ts` were updated to reflect the intentionally isolated v0.4 state. All 114 MCP tests and six Benchmark tests pass locally, as do TypeScript typecheck and build.
+
+**Independent reviewer:** Try a syntactically complete T07 with all 39 rows ✅ and nonexistent or filler evidence; the `are_next_steps` API must never assert L4 or empty outstanding work if `are_assess_scenario` rejects the evidence. Check every consumer rather than trusting this report.
+
 ## Acceptance decision
 
 Please report concrete defects with filename, line, reproduction, impact and minimal fix. Return `APPROVE`, `REQUEST_CHANGES` or `BLOCKED`, with regression outcomes and your assessment of unnecessary complexity. Do not merge or deploy on the user's behalf before review.
