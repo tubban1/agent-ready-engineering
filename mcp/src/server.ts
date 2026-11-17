@@ -21,9 +21,10 @@ import type { Workspace } from "./workspace.js";
 import { PROMPTS, buildPrompt, type PromptName } from "./prompts.js";
 import { nextSteps } from "./nextsteps.js";
 import { validateLocalMcpAudit } from "./audit-gate.js";
+import { reviewRiskProfile } from "./risk-profile.js";
 
 export const SERVER_NAME = "are";
-export const SERVER_VERSION = "0.9.0";
+export const SERVER_VERSION = "0.10.0";
 
 const BASE_INSTRUCTIONS = [
   "ARE (Agent-Ready Engineering): knowledge tools are read-only; are_score_mcp accepts ONLY a publicly reachable HTTPS MCP Endpoint and saves an evidence-scoped preliminary report after a successful live tools/list. It never certifies L0-L4 or executes external business operations.",
@@ -348,6 +349,16 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
   );
 
   if (ws) {
+    server.registerTool(
+      "are_review_operation_risk",
+      {
+        title:"Review version-pinned per-operation risk profile",
+        description:"Read a bounded local ARE operation-risk JSON inventory, compare tool counts, source evidence and declared annotations; return check applicability hints. Never executes project tools, never authorizes actions, never certifies a maturity level.",
+        inputSchema:{path:z.string().min(1).max(350).describe("Path inside authorized workspace, e.g. scenarios/my-service/ARE-T10-operation-risk-profile.json")},
+        annotations:READ_ONLY,
+      },
+      async ({path})=>run(()=>reviewRiskProfile(ws,path)),
+    );
     // Local-only independent evidence integrity check. Never exposed over HTTP.
     server.registerTool(
       "are_validate_local_mcp_audit",
@@ -377,7 +388,7 @@ export function createServer(options: { workspace?: Workspace } = {}): McpServer
       {
         title: "Assess a scenario",
         description:
-          "Compute a scenario's maturity level from its latest ARE-T07 by the ARE-A02 rules: level, checks blocking the next level, per-dimension levels, evidence problems, exposure consistency and changes since the previous assessment. Deterministic; reads files only.",
+          "Compute a PROVISIONAL scenario maturity indication from its version-pinned ARE-T07 plus operation-risk and evidence review. N/A needs scoped, reviewed proof; legacy snapshots remain unverified; NO certification. Reads files only.",
         inputSchema: z.object({ scenario_path: z.string().describe("Scenario folder, e.g. scenarios/supplier-order-change") }),
         annotations: READ_ONLY,
       },

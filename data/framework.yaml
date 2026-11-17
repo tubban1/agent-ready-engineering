@@ -81,3 +81,4 @@ workspace_paths:
   ARE-T07: "scenarios/<scenario-slug>/ARE-T07-maturity-assessment-<date>.md"
   ARE-T08: "portfolio/ARE-T08-scenario-screening.md"
   ARE-T09: "portfolio/ARE-T09-portfolio-report-<round>.md"
+  ARE-T10: "scenarios/<scenario-slug>/ARE-T10-operation-risk-profile.json"

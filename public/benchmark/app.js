@@ -39,8 +39,8 @@
  function publicRender(){
   $("publicList").innerHTML=publicReports.length?publicReports.map(x=>
    '<article class="public-item"><h3>'+esc(x.display_name)+'</h3><p>'+ 'HTTPS MCP · '+esc(x.status||"等待证据")+
-   '</p><div class="report-score"><b>'+ (x.score===null||x.score===undefined?"未评分":Number(x.score)+"/100")+
-   '</b><span class="preflight-tag">静态预评估</span></div><p>已观察工具：'+esc(x.observed_tools??"未知")+
+   '</p><div class="report-score"><b>工具契约预检</b>'+
+   '<span class="preflight-tag">查看独立分项 · 非成熟度评分</span></div><p>已观察工具：'+esc(x.observed_tools??"未知")+
    '</p><a href="/benchmark/?report='+encodeURIComponent(x.id)+'">查看公开报告 ↗</a></article>'
   ).join(""):'<div class="bench-card"><p class="small-help">目前还没有 Creator 主动认领并公开的自评分报告。研究样本不自动等同于公开认证。</p></div>';
  }
@@ -69,8 +69,7 @@
   $("claimChallenge").hidden=true;
   $("reportTitle").textContent=r.existing?"该项目已在库中":"ARE 自助预评估";
   $("reportStage").textContent=r.existing?"已有记录":r.status==="preflight_scored"?"实测工具契约静态预检":"证据不足";
-  $("scoreNumber").textContent=r.score===null||r.score===undefined?"—":String(r.score);
-  $("scoreTag").textContent=r.score===null||r.score===undefined?"待提供工具定义":"静态预检 / 100";
+  $("scoreTag").textContent=r.score===null||r.score===undefined?"待提供工具定义":"工具契约四项静态观察（非综合服务质量）";
   $("reportTrust").textContent=(r.provenance||"暂无可复核的工具定义")+" · 不表示真实运行成功或平台审核结果";
   const parts=r.score_components||{};
   $("scoreBreakdown").innerHTML=Object.keys(parts).map(k=>'<div class="component"><span>'+
@@ -83,7 +82,7 @@
   $("claimBtn").onclick=()=>{$("claimPanel").scrollIntoView({behavior:"smooth"});};
   $("copyReportBtn").onclick=()=>navigator.clipboard?.writeText(
    "ARE Preflight · "+(r.target_id||"")+"\n"+JSON.stringify({
-    score:r.score,components:r.score_components,findings:r.findings,evidence:r.evidence,
+    evaluator_version:r.evaluator_version,components:r.score_components,findings:r.findings,evidence:r.evidence,
     maturity:"39 checks not independently verified"},null,2));
   $("reportPanel").scrollIntoView({behavior:"smooth",block:"start"});
  }
@@ -163,7 +162,7 @@
    $("historyResults").innerHTML=
     '<h4>评估版本（'+runs.length+'）</h4>'+
     (runs.length?runs.map(r=>'<article><b>'+esc(r.created_at)+' · '+esc(r.status)+
-       '</b><p>静态预检：'+(r.score===null?"证据不足":Number(r.score)+"/100")+
+       '</b><p>工具契约分项：'+esc(Object.keys(r.score_components||{}).length)+' 项'+
        ' · 工具：'+esc(r.observed_tools??"未知")+' · 来源：'+esc(r.source_provenance)+
        '</p><p>'+esc((r.findings||[]).map(f=>f.note).slice(0,3).join("；"))+'</p></article>').join(""):"<p>没有历史记录。</p>")+
     '<h4>提交事件（'+events.length+'）</h4>'+
@@ -179,7 +178,7 @@
    if(!run)return;
    showReport({target_id:id,status:run.status,score:run.score,score_components:run.score_components,
     provenance:run.source_provenance,findings:run.findings,evidence:run.evidence,
-    run_id:run.id,observed_tools:run.observed_tools});
+    run_id:run.id,observed_tools:run.observed_tools,evaluator_version:run.evaluator_version});
    $("reportTitle").textContent="公开预评估："+data.target.display_name;
    $("claimBtn").disabled=true;
    $("claimPanel").hidden=true;
@@ -190,7 +189,7 @@
  $("copyPromptBtn").addEventListener("click",async()=>{
   const endpoint=$("targetInput").value.trim()||"https://YOUR-SERVICE.example/mcp";
   const prompt="请使用已连接的 ARE MCP（https://are.world2.co/mcp）的 are_score_mcp 工具，对我的公网 HTTPS MCP Endpoint 进行自助预评估：\n"+endpoint+
-   "\n请只传 endpoint 参数，明确区分预评分与正式 39 项成熟度验收，返回评分、证据和 run_id。若当前 Agent 无法连接 ARE MCP，请直接说明，不要自行假称官方注册成功。";
+   "\n请只传 endpoint 参数，明确区分四项静态观察与正式 39 项成熟度验收，返回各分项、证据和 run_id。若当前 Agent 无法连接 ARE MCP，请直接说明，不要自行假称官方注册成功。";
   try{await navigator.clipboard.writeText(prompt);status("submitStatus","中文提示词已复制；先确认 Agent 中已连接 ARE MCP。");}
   catch{status("submitStatus","无法自动复制，请通过本页直接提交 Endpoint 进行评分。",true);}
  });

@@ -26,6 +26,13 @@ export interface CheckRow {
 export interface ParsedAssessment {
   exposure: string | null;
   rows: CheckRow[];
+  standardVersion?: string | null;
+  riskProfile?: string | null;
+  targetRevision?: string | null;
+}
+export interface AssessmentOptions {
+  approvedNAs?: ReadonlySet<string>;
+  excludedChecks?: ReadonlySet<string>;
 }
 
 export interface AssessmentFindings {
@@ -49,6 +56,9 @@ export interface AssessmentFindings {
 /** Keep duplicate rows intact: a Map would silently hide conflicting check claims. */
 export function parseAssessment(markdown: string): ParsedAssessment {
   let exposure: string | null = null;
+  let standardVersion: string | null = null;
+  let riskProfile: string | null = null;
+  let targetRevision: string | null = null;
   const rows: CheckRow[] = [];
   for (const line of markdown.split("\n")) {
     const cells = tableCells(line);
@@ -56,6 +66,9 @@ export function parseAssessment(markdown: string): ParsedAssessment {
     if (/^(Currently exposed to agents|目前对 Agent 开放的范围)$/.test(cells[0] ?? "")) {
       exposure = cells[1] ?? null;
     }
+    if (/^(Standard version|评估标准版本)$/.test(cells[0] ?? "")) standardVersion = cells[1] ?? null;
+    if (/^(Risk profile|风险画像文件)$/.test(cells[0] ?? "")) riskProfile = cells[1] ?? null;
+    if (/^(Version assessed|被评估版本)$/.test(cells[0] ?? "")) targetRevision = cells[1] ?? null;
     if (CHECK_ROW.test(cells[0] ?? "")) rows.push({
       id: cells[0]!,
       result: cells[2] ?? "",
@@ -63,7 +76,7 @@ export function parseAssessment(markdown: string): ParsedAssessment {
       location: cells[4] ?? "",
     });
   }
-  return { exposure, rows };
+  return { exposure, rows, standardVersion, riskProfile, targetRevision };
 }
 
 /** Location existence is necessary, not proof that its contents establish the claim. */
@@ -78,8 +91,10 @@ function hasNAReason(reason: string): boolean {
   return s.length > 0 && s !== "-" && s !== "—" && !/^<.*>$/.test(s);
 }
 
-export function isSatisfied(row: CheckRow, exists: (location: string) => boolean): boolean {
-  return isValidPass(row, exists) || (row.result === "➖" && hasNAReason(row.location));
+export function isSatisfied(row: CheckRow, exists: (location: string) => boolean, approvedNAs?:ReadonlySet<string>, excludedChecks?:ReadonlySet<string>): boolean {
+  if(excludedChecks?.has(row.id))return false;
+  return isValidPass(row, exists) || (row.result === "➖" &&
+    (approvedNAs ? approvedNAs.has(row.id) : hasNAReason(row.location)));
 }
 
 function groupedRows(rows: CheckRow[]): Map<string, CheckRow[]> {
@@ -89,21 +104,21 @@ function groupedRows(rows: CheckRow[]): Map<string, CheckRow[]> {
 }
 
 /** A check only passes if the authoritative catalog knows it and exactly one row states it. */
-export function satisfiedCheckIds(parsed: ParsedAssessment, exists: (location: string) => boolean): Set<string> {
+export function satisfiedCheckIds(parsed: ParsedAssessment, exists: (location: string) => boolean, options:AssessmentOptions = {}): Set<string> {
   const byId = groupedRows(parsed.rows);
   return new Set(CHECKS.filter((check) => {
     const group = byId.get(check.id) ?? [];
-    return group.length === 1 && isSatisfied(group[0]!, exists);
+    return group.length === 1 && isSatisfied(group[0]!, exists, options.approvedNAs, options.excludedChecks);
   }).map((check) => check.id));
 }
 
-export function assess(parsed: ParsedAssessment, exists: (location: string) => boolean): AssessmentFindings {
+export function assess(parsed: ParsedAssessment, exists: (location: string) => boolean, options:AssessmentOptions = {}): AssessmentFindings {
   const { rows } = parsed;
   const byId = groupedRows(rows);
   const missingChecks = CHECKS.filter((check) => !byId.has(check.id)).map((check) => check.id);
   const duplicateChecks = [...byId.entries()].filter(([, group]) => group.length > 1).map(([id]) => id).sort();
   const unknownChecks = [...byId.keys()].filter((id) => !CHECK_IDS.has(id)).sort();
-  const validCheckIds = satisfiedCheckIds(parsed, exists);
+  const validCheckIds = satisfiedCheckIds(parsed, exists, options);
   // An unknown or duplicated check makes the assessment structurally untrustworthy.
   const structurallyValid = duplicateChecks.length === 0 && unknownChecks.length === 0;
   let level: Level = "L0";
@@ -130,7 +145,8 @@ export function assess(parsed: ParsedAssessment, exists: (location: string) => b
     duplicateChecks,
     unknownChecks,
     evidenceLocationMissing: rows.filter((r) => r.result === "✅" && r.location.trim() !== "" && !exists(r.location)).map((r) => r.id),
-    notApplicableWithoutReason: rows.filter((r) => r.result === "➖" && !hasNAReason(r.location)).map((r) => r.id),
+    notApplicableWithoutReason: rows.filter((r) => r.result === "➖" &&
+      (options.approvedNAs ? !options.approvedNAs.has(r.id) : !hasNAReason(r.location))).map((r) => r.id),
     passWithoutEvidenceType: rows.filter((r) => r.result === "✅" && !["inspected", "documented"].includes(r.evidenceType)).map((r) => r.id),
     documentedOnInspectionRecommended: rows.filter((r) => INSPECTION_RECOMMENDED.has(r.id) && r.result === "✅" && r.evidenceType === "documented").map((r) => r.id),
     invalidValues,
@@ -144,10 +160,10 @@ export function assess(parsed: ParsedAssessment, exists: (location: string) => b
 }
 
 /** Each dimension is independently measured against all its required catalog checks. */
-export function dimensionLevels(rows: CheckRow[], exists: (location: string) => boolean): Record<string, Level> {
+export function dimensionLevels(rows: CheckRow[], exists: (location: string) => boolean, options:AssessmentOptions = {}): Record<string, Level> {
   const parsed: ParsedAssessment = { exposure: null, rows };
-  const findings = assess(parsed, exists);
-  const validCheckIds = findings.duplicateChecks.length || findings.unknownChecks.length ? new Set<string>() : satisfiedCheckIds(parsed, exists);
+  const findings = assess(parsed, exists, options);
+  const validCheckIds = findings.duplicateChecks.length || findings.unknownChecks.length ? new Set<string>() : satisfiedCheckIds(parsed, exists, options);
   const out: Record<string, Level> = {};
   for (const dim of DIMENSIONS) {
     let level: Level = "L0";

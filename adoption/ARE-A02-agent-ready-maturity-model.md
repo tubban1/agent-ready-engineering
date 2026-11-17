@@ -1,11 +1,11 @@
 # Agent-Ready Engineering Maturity Model
 > Document ID: ARE-A02
-> v0.4 | 2026-11-15 | Status: design recommendation; levels and thresholds are not empirically calibrated and are not an industry standard
+> v0.5 | 2026-11-16 | Empirically grounded engineering framework; predictive correlations require separate measurement; not an industry certification
 > Language: English (canonical). Chinese reading aid: `ARE-A02-agent-ready-maturity-model.zh.md`. Terms follow `../references/ARE-R03-glossary.md`.
 > Related: `ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `templates/` (deliverables), `templates/ARE-T07-maturity-assessment.md` (assessment form), `templates/ARE-T08-scenario-screening.md` (screening many candidates), `templates/ARE-T09-portfolio-report.md` (portfolio report and roadmap)
 
 ## Purpose
-- Show an enterprise which level **a given scenario** has reached, what is missing for the next level and what to do next.
+- Show a service maintainer or enterprise which level **a given scenario** has provisionally reached, what evidence is missing and what concrete actions matter for Agent task outcomes.
 - Turn “can this be exposed to agents?” into checkable thresholds: read-only exposure, write exposure and scaling up each require a different level.
 - Make assessments comparable across projects and over time.
 
@@ -14,10 +14,13 @@
 2. **Every item is a binary check**: pass / fail / not applicable. A verbal explanation never counts as a pass; there must be an evidence location (deliverable, code, test record, log).
    Each pass also records its **evidence type**: `inspected` (the assessor examined the code, configuration or logs directly, or ran the test) or `documented` (an artifact provided by the team, such as a document, test report or log export, not independently re-run). A `self-reported` statement is never enough for a pass. For L3-C1, L3-C2, L3-A2 and L3-O2, `inspected` evidence is recommended; documented-only passes of these checks are flagged in the portfolio report.
 3. **Reaching level N = every check from level 1 to level N passes or is not applicable.** If any check fails, the level stops below the level of that check.
-4. **“Not applicable” needs a written reason confirmed in review.** Example: if the scenario has no long-running tasks, L3-S1 may be marked not applicable.
+4. **N/A is operation-scoped and evidence-backed.** ARE-A02@0.5 requires tool/operation scope, concrete reason, source evidence, human reviewer, review date and complete version-pinned risk profile. A reason alone never qualifies. If an operation exhibits the risk addressed by a check, it cannot be declared exempt. See `../docs/standards/ARE-OPERATION-RISK-PROFILE-v1.md`.
 5. **Assessments expire.** When the core, tool definitions or authorization rules change, the affected checks must be reassessed.
 6. **Substance, not document bureaucracy.** A solo maintainer or small open-source project may record its value decision, user, baseline source/measurement plan, real validation, capped first batch, and operation owners in concise project Markdown (e.g. README or AGENTS) rather than separate enterprise-form templates. The evidence must still be attributable, reviewed and checkable. **L1-V1 does not require a wet signature or a corporate approver role.** L1-A1 still requires accountable Owner/approver/responsible for the scoped operations; one person may fulfill multiple roles if clearly recorded. There is no automatic maturity certificate.
 7. **A code reference is not a semantic pass.** The assessor must verify the full check wording, its scope (all applicable tools/operations), and evidence of executed tests where required. A scripted SDK call is protocol integration evidence, not proof of autonomous Agent planning. A long-running operation can exist without an always-on daemon; do not mark L3-S1 N/A on daemon absence alone. Local automatic evidence gates flag review issues but never establish an official level.
+
+8. **Provisional, versioned assessments.** Pin `ARE-A02@0.5`, assessed source/deployment and tool-catalog revisions and an operation-level risk profile. Computed levels remain **PROVISIONAL**, not certified; v0.4 or unpinned historical assessments must not be silently rescored or compared to v0.5.
+9. **Harness vs MCP.** Harnesses plan and select tools; MCP connectors expose capabilities; runtimes/services enforce correct, safe effects. A service need not implement its own general-purpose Agent planning loop.
 
 ## Levels
 | Level | Name | In one sentence | Allowed action | Main stages |
@@ -117,11 +120,18 @@ How to read it:
 ## Relation to industry practice
 Repository readiness already has similar models (for example, Factory Agent Readiness grades repositories on several dimensions in five levels). This model borrows the “binary checks, reached level by level” format, but its subject is **business services and interfaces**, and it makes value judgment the first level. See `../references/ARE-R02-agent-ready-industry-landscape.md`.
 
-## To be validated
-- Whether the levels and checks cover the key risks of real projects needs to be assessed in actual projects and revised.
-- There is currently no data showing that higher levels correspond to higher task completion or fewer incidents; do not claim so.
+## Empirical evidence and living results
+
+ARE has been tested on real engineering projects and public MCP services, including Interior, OWL LAB, Vibe Monitor, the ARE100 cohort and Solarstorm. Evidence spans live protocol negotiation, tool contracts, authorized tool calls, real Agent tasks, recovery checks and measured before/after fixes. Verification depth varies: tool discovery is not verified business-task completion, and cohort research is not 100 maturity certifications.
+
+**Living evidence, not fixed sample counts:** See the continuously updated [ARE evaluation portfolio](https://are.world2.co/evaluations/) and [Benchmark/research index](https://are.world2.co/benchmark/). These are the evidence entry points for new projects and versioned records. Each record must specify assessment version, source/deployment revision, evidence scope, time and independent verification status; offline snapshots must be labeled. This methodology document does not need updating every time a new project is assessed.
+
+**Illustrative verifiable records (not a fixed cohort list):** [Solarstorm live evidence](https://are.world2.co/evidence/solarstorm/) and [Vibe Monitor evidence-gate regression](../docs/research/ARE_SEMANTIC_EVIDENCE_GATE_20261115.md) link to concrete results. The living evaluation index may have narrower coverage than the latest local project studies; absence from that index does not mean no evaluation occurred.
+
+**Specific open quantitative questions:** What is the predictive relationship of ARE levels to Agent task completion, incident frequency, execution costs and remediation effort? Those claims require matched repeated tasks and independent outcome verification. They are separate from ARE's already demonstrated real-project testing. The 39 check IDs remain stable; v0.5 explicitly versions applicability and provisional grading.
 
 ## Change log
+- **v0.5 (2026-11-16)**: living empirical evidence references, precise predictive calibration scope, version-pinned operation risk profiles and scoped N/A, provisional-only computed grades. The 39 check IDs are unchanged.
 - **v0.4 (2026-11-15)**: clarified lightweight equivalent evidence for solo maintainers (without mandatory signatures), strict semantic/coverage review, scripted MCP tests vs autonomous Agent evaluations, and long-task N/A applicability. Unchanged check IDs, binary level rule and exposure requirements.
 - **v0.3 (2026-11-12)**: added evidence types (`inspected` / `documented`; `self-reported` never passes) with inspection recommended for L3-C1, L3-C2, L3-A2, L3-O2; linked scenario screening (ARE-T08) and the portfolio report (ARE-T09). Check IDs and level rules unchanged.
 - **v0.2 (2026-11-12)**: first English canonical version, translated from Chinese v0.1. No change in content; check IDs unchanged. The Chinese text becomes the reading aid `ARE-A02-agent-ready-maturity-model.zh.md`.

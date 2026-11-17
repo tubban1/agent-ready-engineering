@@ -96,7 +96,8 @@ test("P0: validation, assessment, evidence request all see incomplete or duplica
     assert.ok(codes.includes("unknown_check"));
     const a = assessScenario(ws, "scenarios/p0-sample");
     assert.equal(a.level, "L0");
-    assert.equal(a.consistent, false);
+    assert.equal(a.consistent, null, "A legacy file cannot certify current exposure consistency");
+    assert.equal(a.exposure_consistency_status, "LEGACY_NOT_REVALIDATED");
     assert.deepEqual(a.duplicate_checks, ["L1-V1"]);
     assert.deepEqual(a.unknown_checks, ["L9-Z99"]);
     assert.equal(a.missing_checks.length, 38);

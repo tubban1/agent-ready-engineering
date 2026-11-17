@@ -24,7 +24,7 @@ function request(method: string, params: Record<string, unknown> = {}, id = 1, m
   const envelope = modern ? { ...params, _meta: modernMeta() } : params;
   const name = method === "tools/call" || method === "prompts/get" ? String(params.name) :
     method === "resources/read" ? String(params.uri) : null;
-  return new Request("https://are.fde.fan/mcp", {
+  return new Request("https://are.world2.co/mcp", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -101,6 +101,13 @@ test("P0 modern header mismatch is fail-closed", async () => {
   assert.equal(res.status, 400);
   const data = await responsePayload(res);
   assert.equal(data.error.code, -32020);
+});
+test("canonical World2 browser Origin is accepted and retired host is rejected", async () => {
+  const modern = true;
+  const good = await handleMcpRequest(request("tools/list", {}, 1, modern, {"Origin":"https://are.world2.co"}));
+  assert.equal(good.status, 200);
+  const retired = await handleMcpRequest(request("tools/list", {}, 1, modern, {"Origin":"https://are.fde.fan"}));
+  assert.equal(retired.status, 403);
 });
 test("P0 requests with untrusted Origin receive 403", async () => {
   const res = await handleMcpRequest(request("server/discover",{},1,true,{"Origin":"https://malicious.example"}));

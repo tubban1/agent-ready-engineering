@@ -1,15 +1,23 @@
 # ARE — Local stdio MCP Self-Audit (NOT Benchmark registration)
-> v0.3 | 2026-11-15 | Status: public read-only self-audit guidance
+> v0.4 | 2026-11-16 | Status: public read-only self-audit guidance
 > English canonical. Chinese reading aid: `LOCAL_STDIO_SELF_AUDIT.zh.md`.
 
 ## Scope and separation of responsibilities
 
 A coding Agent (Antigravity, Claude Code, Codex or equivalent) can inspect the source of a local stdio MCP server and run it in a workspace **already authorized by the developer**. The remote ARE MCP endpoint does not gain access to the Agent's local files, other MCP servers or runtime.
 
-- ARE knowledge endpoint: `https://are.fde.fan/mcp`.
+- ARE knowledge endpoint: `https://are.world2.co/mcp`.
 - New public read-only guide tool: `are_local_mcp_audit_guide({ "service": "Project name", "lang": "zh" })`.
 - The independent ARE public Benchmark `are_score_mcp` accepts **only a reachable public HTTPS MCP Endpoint**, never stdio, a GitHub repository URL or user-provided manifest.
 - Local self-audit produces **no official Benchmark score, run_id, maturity certification, public listing or automatic submission**. Store results locally and let the developer decide what to share.
+
+## New ARE-A02@0.5 operation profiles and provisional level
+
+The 39 historical check IDs remain intact. Every new T07 pins the standard version and a complete `ARE-T10-operation-risk-profile.json` (sample in `adoption/templates/`). For N/A, include `scope`, `reason`, local `evidence`, `reviewer`, `reviewed_at`; a free-text explanation is insufficient. Local tool `are_review_operation_risk({path})` detects missing operations and annotation-risk conflicts. No project tool is executed.
+
+`are_assess_scenario` is a *provisional* maturity indication with a shared semantic evidence review: see `level_status`, `evidence_gate`, `verified_level:null`. Historical pre-v0.5 T07 files remain legacy snapshots (`LEGACY_NOT_REVALIDATED`, `consistent=null`) in a separate `legacy_distribution`, never the current portfolio grade distribution. Invalid calendar dates cannot bypass version review. A backdated filename alone is not genuine historical provenance; verify source revisions before re-assessment. Review the operation profiles by inspecting actual source and side effects; structured statements cannot prove permission or security.
+
+For continuously updated real-project and public-MCP evidence, follow [ARE evaluations](https://are.world2.co/evaluations/) and [ARE Benchmark](https://are.world2.co/benchmark/); A02 no longer maintains fixed cohort totals.
 
 ## Workflow
 

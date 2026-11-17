@@ -1,7 +1,7 @@
 # Agent-Ready Engineering Standard Deliverable Templates
 > Document ID: ARE-T00
-> v0.7 | 2026-11-13 | Related: `../ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `../ARE-A02-agent-ready-maturity-model.md` (L0–L4)
-> Language: English (canonical). Chinese reading aid: `README.zh.md`. Each template also has a `.zh.md` reading aid. Terms follow `../../references/ARE-R03-glossary.md`.
+> v0.8 | 2026-11-16 | Related: `../ARE-A01-agent-ready-implementation-checklist.md` (P0–P8), `../ARE-A02-agent-ready-maturity-model.md` (L0–L4)
+> Language: English (canonical). Chinese reading aid: `README.zh.md`. Most templates also have a `.zh.md` reading aid; ARE-T10 has English instructions and bilingual risk guidance. Terms follow `../../references/ARE-R03-glossary.md`.
 
 ## Rules of use
 - Each project **copies the templates it needs into its own directory** (for example `docs/agent-ready/`) before filling them in. Do not write project data back into this repository.
@@ -22,8 +22,11 @@
 | `ARE-T07-maturity-assessment.md` Maturity Assessment | Any stage | Which level are we at? What is missing? How far can we expose it? | One per scenario per assessment |
 | `ARE-T08-scenario-screening.md` Scenario Screening | P0 (portfolio) | Which of many candidate ideas deserve a value card? | One per engagement or screening round |
 | `ARE-T09-portfolio-report.md` Portfolio Report and Roadmap | Each assessment round | What is the distribution, where are the risks and shared gaps, what comes next? | One per assessment round |
+| `ARE-T10-operation-risk-profile.md` Operation Risk Profile | Each new v0.5 assessment | Which tools have sensitive reads, writes, external effects, privilege, finance, drafts or long tasks? | One JSON inventory per scenario |
 
 ## Machine-readable values
+
+For ARE-A02@0.5, each T07 must pin the assessed target revision, standard version and companion T10 operation-risk JSON. This template is a profile of **actual operation effects**, not a new 40th maturity check. The generated level is provisional; the dynamic evidence directory is linked from A02.
 Local checks read filled templates, so some fields use fixed values. Use them in English and Chinese files alike; they are identifiers and are never translated.
 
 | Field | Values | Where |
@@ -62,6 +65,7 @@ engagements/<organization>/          # architects / consultants: one workspace p
     ARE-T05-eval-report-<date>.md
     ARE-T06-value-review-<date>.md
     ARE-T07-maturity-assessment-<date>.md
+    ARE-T10-operation-risk-profile.json
     evidence/                        # artifacts received from the client, referenced by evidence location
 ```
 - In a single project repository, put one scenario's files directly in `docs/agent-ready/` with the same names.

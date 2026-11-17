@@ -1,12 +1,14 @@
 # ARE：本地 stdio MCP 的独立工程自测（不进入 Benchmark）
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`LOCAL_STDIO_SELF_AUDIT.md` EN v0.3
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`LOCAL_STDIO_SELF_AUDIT.md` EN v0.4
 > v0.3 | 2026-11-15 | 状态：已提供公开只读自测引导工具
 
 适用：在 Antigravity、Claude Code、Codex 或其他具备本地仓库访问和 MCP 调用能力的 coding Agent 中，由开发者评估自己的本地 stdio MCP。
 
+历史 T07 仅作为旧版本快照，`consistent=null`，`LEGACY_NOT_REVALIDATED`；当前 `distribution` 和历史 `legacy_distribution` 分开统计。不存在的日历日期不能进入旧版分支；仅把文件名日期改早不能证明它是真正的历史证据。新的整改请求不会自动继承旧版 PASS。
+
 ## 重要边界
 
-- 公共 ARE MCP：`https://are.fde.fan/mcp`
+- 公共 ARE MCP：`https://are.world2.co/mcp`
 - 只读引导工具：`are_local_mcp_audit_guide({ "service": "项目名", "lang": "zh" })`
 - **ARE 公共 Benchmark 仍然只接受真实可连接的 HTTPS Endpoint**。本地 stdio、自行上传的 Schema、GitHub 链接不能经由 `are_score_mcp` 登记或获得官方 `run_id`。
 - ARE 公共服务器无法主动访问开发者的本地源码、其他本地 stdio MCP 或运行环境。**连接这两种 MCP 的 coding Agent** 才能在自己已获授权的工作区执行检查。

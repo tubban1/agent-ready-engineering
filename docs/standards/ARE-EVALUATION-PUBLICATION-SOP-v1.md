@@ -84,7 +84,7 @@
 | **第三方 GitHub Issue** | 源码维护者、具体故障跟进者 | [GitHub Issue Reproduction](../prompts/channels/GITHUB_ISSUE_REPRODUCTION.md)，单问题、固定 commit/版本、最小复现、允许的修复范围；不应把 ARE 营销帖发到项目方 Issue | **针对单个 Issue** |
 | **X / LinkedIn / HF / Reddit / 魔搭** | 对真实实验感兴趣的公开读者 | [Public Project Review](../prompts/channels/PUBLIC_PROJECT_REVIEW.md) 作为页面内可选只读复测提示词；渠道正文只需简短技术介绍 + 案例链接 | **针对已评审项目** |
 
-注意：**`https://are.world2.co/mcp` 已正式上线并在 2026-11-16 通过实际 MCP 新旧客户端检查**，`https://are.fde.fan/mcp` 保留兼容。所有网站、邮件和项目专属提示词默认使用 World2 管理的正式 ARE 入口，第三方受测 MCP 的原生入口仍独立；不要将主平台地址误作第三方服务地址。
+注意：**`https://are.world2.co/mcp` 已正式上线并在 2026-11-16 通过实际 MCP 新旧客户端检查**，旧域名不再作为正式入口。所有网站、邮件和项目专属提示词默认使用 World2 管理的正式 ARE 入口，第三方受测 MCP 的原生入口仍独立；不要将主平台地址误作第三方服务地址。
 
 [Developer Self Evaluate](../prompts/SELF_EVALUATE_MCP.md) 和 [Independent Third-party Evaluation](../prompts/INDEPENDENT_MCP_EVALUATION.md) 是完整方法参考，不能代替有服务名称、工具和 Oracle 的渠道专用实例。
 

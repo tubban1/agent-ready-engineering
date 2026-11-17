@@ -109,6 +109,12 @@ documents:
     title: {en: "Portfolio Report and Roadmap", zh: "组合报告与路线图（Portfolio Report and Roadmap）"}
     summary: {en: "Portfolio Report and Roadmap (each assessment round)", zh: "组合报告与路线图（每轮评估）"}
     reading_order: 6
+  - id: ARE-T10
+    path: "adoption/templates/ARE-T10-operation-risk-profile.md"
+    path_zh: null
+    title: {en: "Operation-level Risk Profile", zh: null}
+    summary: {en: "Operation risk inventory, scoped N/A applicability and source evidence", zh: "操作级风险画像与 N/A 范围验证"}
+    reading_order: 6
   - id: ARE-M01
     path: "media/ARE-M01-claude-video-brief-20261111.md"
     path_zh: null

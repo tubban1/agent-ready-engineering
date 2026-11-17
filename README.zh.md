@@ -1,7 +1,7 @@
 # Agent-Ready Engineering | Agent 原生接口与可信执行知识库
-> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN 0.18.0｜术语见 `ARE-R03` 术语表
+> 中文阅读版：不作为规范，与英文不一致时以英文为准｜对应英文版：`README.md` EN 0.19.0｜术语见 `ARE-R03` 术语表
 
-版本：0.18.0（2026-11-13：MCP 支持实施工程师、治理与决策者；ARE-T02/T03/T04 的机器可读取值。0.17.0 MCP 里程碑 M4，4 个流程提示。0.16.0 MCP 里程碑 M3，只读的工作区检查；ARE-T00 规定证据位置格式。0.15.0 `mcp/` 中的本地只读 MCP 知识服务（里程碑 M2）。0.14.0 为本地检查加入机器可读取值与开放范围字段；框架数据放在 `data/`；MCP 里程碑 M1。0.13.0 面向架构师与顾问的组合评估：ARE-T08 场景筛选表、ARE-T09 组合报告与路线图、证据类型、工作区目录约定。0.12.0 全部文档与模板完成英文正式版，中文均为 `.zh.md` 阅读版。0.11.0 主线文档 P01、A01、A02 完成英文正式版。0.10.0 确定语言规则，新增术语表 ARE-R03。0.9.0 项目由 agent-native-knowledge 更名为 agent-ready-engineering。0.8.0 文件名加上文档编号前缀。0.7.0 新增文档编号与阅读顺序。0.6.0 新增成熟度分级与评估表。0.5.0 新增标准交付物模板。0.4.0 明确定位为企业 AI 转型执行层标准。0.3.0 价值关卡纳入 Agent-Ready Engineering，新增行业参考。0.2.0 新增架构文档索引与实施 Checklist；0.1.0 为 2026-11-11 研究初稿）
+版本：0.19.0（2026-11-16：操作级风险画像、N/A 有证据复核、T07 暂定等级和动态实证入口。0.18.0 — 2026-11-13：MCP 支持实施工程师、治理与决策者；ARE-T02/T03/T04 的机器可读取值。0.17.0 MCP 里程碑 M4，4 个流程提示。0.16.0 MCP 里程碑 M3，只读的工作区检查；ARE-T00 规定证据位置格式。0.15.0 `mcp/` 中的本地只读 MCP 知识服务（里程碑 M2）。0.14.0 为本地检查加入机器可读取值与开放范围字段；框架数据放在 `data/`；MCP 里程碑 M1。0.13.0 面向架构师与顾问的组合评估：ARE-T08 场景筛选表、ARE-T09 组合报告与路线图、证据类型、工作区目录约定。0.12.0 全部文档与模板完成英文正式版，中文均为 `.zh.md` 阅读版。0.11.0 主线文档 P01、A01、A02 完成英文正式版。0.10.0 确定语言规则，新增术语表 ARE-R03。0.9.0 项目由 agent-native-knowledge 更名为 agent-ready-engineering。0.8.0 文件名加上文档编号前缀。0.7.0 新增文档编号与阅读顺序。0.6.0 新增成熟度分级与评估表。0.5.0 新增标准交付物模板。0.4.0 明确定位为企业 AI 转型执行层标准。0.3.0 价值关卡纳入 Agent-Ready Engineering，新增行业参考。0.2.0 新增架构文档索引与实施 Checklist；0.1.0 为 2026-11-11 研究初稿）
 
 这是跨项目知识源，不是 OWL LAB、World2、Bloomroom 或 Interior 任一项目的产品规范。
 
@@ -37,12 +37,13 @@
 | ARE-T07 | `adoption/templates/ARE-T07-maturity-assessment.zh.md` | 成熟度评估表 |
 | ARE-T08 | `adoption/templates/ARE-T08-scenario-screening.zh.md` | 场景筛选表（P0，多个候选场景） |
 | ARE-T09 | `adoption/templates/ARE-T09-portfolio-report.zh.md` | 组合报告与路线图（每轮评估） |
+| ARE-T10 | `adoption/templates/ARE-T10-operation-risk-profile.md` | 操作级风险画像与 N/A 范围验证 |
 | ARE-M01 | `media/ARE-M01-claude-video-brief-20261111.md` | 视频任务书（已作废，仅作记录，只有中文；不在阅读路径中） |
 
 本表列出中文阅读版路径；每份文档旁边都有同名的英文正式版（去掉 `.zh`）。ARE-R03 是中英对照文件，ARE-M01 只有中文。
 
 实现部分：MCP 服务在 `mcp/` 中；设计、进度与安装方法见 `mcp/DESIGN.zh.md`（没有 ARE 编号，它是实现部分，不是框架文档）。
-World2 管理的正式 ARE MCP：`https://are.world2.co/mcp`（旧端点 `https://are.fde.fan/mcp` 保留兼容）（Streamable HTTP，知识查询工具只读、另有显式提交的 Benchmark 工具，无需登录）。对客户交付物的工作区检查只在本地 stdio 服务中提供，客户文件不离开本机。
+World2 管理的正式 ARE MCP：`https://are.world2.co/mcp`（Streamable HTTP，知识查询工具只读、另有显式提交的 Benchmark 工具，无需登录）。对客户交付物的工作区检查只在本地 stdio 服务中提供，客户文件不离开本机。
 
 ### 公开评估、开发者自检与复测（仅流程文档更新）
 
@@ -52,7 +53,7 @@ World2 管理的正式 ARE MCP：`https://are.world2.co/mcp`（旧端点 `https:
 - [World2 与 ARE 的统一 MCP 服务平台架构](docs/standards/ADR-001-world2-are-publishing.zh.md)：World2 将统一管理全部自有 MCP，ARE **已注册并迁至 `are.world2.co/mcp`**；当前旧域名仍可连接，详见 [迁移验收计划](docs/standards/ARE-WORLD2-ENDPOINT-MIGRATION-PLAN.md)。
 - [英文优先的渠道提示词目录](docs/prompts/README.md)：[网站通用接入/评估](docs/prompts/channels/WEBSITE_GENERAL_EVALUATION.md)、[维护者邮件针对性自检](docs/prompts/channels/MAINTAINER_EMAIL_RETEST.md)、[GitHub Issue 单问题复现](docs/prompts/channels/GITHUB_ISSUE_REPRODUCTION.md)、[公共社媒按项目只读复测](docs/prompts/channels/PUBLIC_PROJECT_REVIEW.md)；另有[中文开发者自评](docs/prompts/SELF_EVALUATE_MCP.zh.md)、[中文复测](docs/prompts/MAINTAINER_RETEST_MCP.zh.md)和[中文第三方评估](docs/prompts/INDEPENDENT_MCP_EVALUATION.zh.md)。
 - [Solarstorm 真实 MCP 评估案例](docs/cases/solarstorm-2026-11-16.md)，全部四个只读工具、单次真实 Agent 和 NOAA 交叉核验，未擅自授予成熟度等级。
-- [ARE Benchmark](https://are.fde.fan/benchmark/) **已经存在**一键复制的基础自评提示词；它只做公开 Endpoint 静态预检，与上述完整深度自评提示词不同。两者均非官方认证。
+- [ARE Benchmark](https://are.world2.co/benchmark/) **已经存在**一键复制的基础自评提示词；它只做公开 Endpoint 静态预检，与上述完整深度自评提示词不同。两者均非官方认证。
 
 ### MCP 2026 协议与 ARE 评估明确分离（实现 v0.8，2026-11-15）
 

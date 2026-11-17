@@ -5,7 +5,7 @@ import { handleMcpRequest } from "../src/http.js";
 
 async function withClient(options: ConstructorParameters<typeof Client>[1], fn: (client: Client)=>Promise<void>) {
  const client=new Client({name:"are-p0-interop",version:"1.0.0"}, options);
- const transport=new StreamableHTTPClientTransport(new URL("https://are.fde.fan/mcp"),{
+ const transport=new StreamableHTTPClientTransport(new URL("https://are.world2.co/mcp"),{
    fetch:(url,init)=>handleMcpRequest(new Request(url,init))
  });
  try {await client.connect(transport);await fn(client);} finally {await client.close();}
