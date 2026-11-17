@@ -4,6 +4,8 @@ import {readFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {resolve} from "node:path";
 import {fileURLToPath} from "node:url";
+import {loadFramework} from "../src/data.js";
+import {parseAssessment} from "../src/assessment.js";
 
 const root=resolve(fileURLToPath(new URL("../..",import.meta.url)));
 const read=(name:string)=>readFileSync(resolve(root,name),"utf8");
@@ -19,9 +21,9 @@ const generated=[
   "docs/prompts/MAINTAINER_RETEST_MCP.zh.md"
 ];
 const requirements=[
-  "ARE-A02@0.5","T10","scope","reason","evidence","reviewer","reviewed_at",
+  "ARE-A02@0.5","T10","N/A{scope=","reviewed_at=YYYY-MM-DD",
   "PROVISIONAL","MATURITY_NOT_ESTABLISHED","--workspace","are_get_check",
-  "are_assess_scenario"
+  "are_assess_scenario","✅","❌","➖","NOT_VERIFIED","inspected","documented"
 ];
 
 test("all eight copies match the single source, not independent hand edits",()=>{
@@ -52,4 +54,33 @@ test("local validation tools are not falsely promised by the public MCP entry",(
    assert.match(data,/are_assess_scenario/);
    assert.match(data,/NOT_VERIFIED|NOT_TESTED/);
  }
+});
+
+test("prompt T07 instructions match validator result values and do not claim a confirmed failure when unverified",()=>{
+  for(const path of generated){
+    const data=read(path);
+    assert.match(data,/Result|Result 列/);
+    assert.match(data,/NOT_VERIFIED.{0,45}❌/s,path+": no NOT_VERIFIED mapping");
+    assert.match(data,/证据|evidence/);
+  }
+  const commonEn=source.common.en;
+  const commonZh=source.common.zh;
+  assert.match(commonEn,/Result column accepts only ✅ \/ ❌ \/ ➖/);
+  assert.match(commonZh,/Result 列中，只允许填写 ✅ \/ ❌ \/ ➖/);
+  assert.match(commonEn,/not a confirmed product defect/);
+  assert.match(commonZh,/不表示已确认产品缺陷/);
+  assert.match(source.roles.website.en.steps[0],/continue only in the permitted public read-only route/);
+  assert.doesNotMatch(source.roles.website.en.steps[0],/Stop if authorization is unavailable/);
+});
+
+test("T07's actual machine parser accepts emoji result states, not prose status values",()=>{
+  const allowed=loadFramework().values.check_result;
+  assert.deepEqual([...allowed],["✅","❌","➖"]);
+  const rows=["✅","❌","➖","NOT_VERIFIED"].map(result=>
+    "| L1-V1 | value | "+result+" | inspected | evidence/check.md |");
+  for(let i=0;i<rows.length;i++){
+    const parsed=parseAssessment(rows[i]!);
+    assert.equal(parsed.rows[0]?.result,["✅","❌","➖","NOT_VERIFIED"][i]);
+    assert.equal(allowed.includes(parsed.rows[0]!.result),i<3);
+  }
 });

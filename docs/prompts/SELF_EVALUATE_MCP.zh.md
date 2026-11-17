@@ -16,6 +16,7 @@
 > 能力边界：公共端点 https://are.world2.co/mcp 只提供知识和模板，没有本地 are_assess_scenario、are_validate_deliverable、are_review_operation_risk。机器计算的暂定等级必须由带 --workspace 的本地 ARE MCP 对固定版本 T07/T10 进行复核。无法连接本地能力时，只能人工列出证据状态，不能声称已完成机器验收。
 > 证据：固定源码 SHA、真实部署版本、完整工具清单和评估日期；分开记录工具发现、静态检查、合法授权的 tools/call、模型自主 Agent 任务以及独立业务结果。缺失证据填 UNKNOWN 或 NOT_VERIFIED，不得推测 PASS。
 > N/A：根据 T10 操作级风险画像填写 N/A{scope=operation_id; reason=适用性理由; evidence=relative/path.md; reviewer=真实复核人; reviewed_at=YYYY-MM-DD}。五个字段 scope、reason、evidence、reviewer、reviewed_at 均必需，证据应覆盖操作范围并对应相同版本。仅写理由、空文件或 readOnlyHint 注解不构成豁免证明。
+> 在 T07 的 Result 列中，只允许填写 ✅ / ❌ / ➖。NOT_VERIFIED 必须暂记为 ❌，并在最后的证据列说明缺少哪些证据；这会阻断该项通过，但不表示已确认产品缺陷。➖ 必须附完整 N/A{scope=...; reason=...; evidence=...; reviewer=...; reviewed_at=YYYY-MM-DD}，✅ 必须填写 inspected 或 documented 证据类型，并引用有效的证据文件。
 > 成熟度：39 项各自标 PASS / FAIL / NOT_APPLICABLE / NOT_VERIFIED，并记录范围与证据。机器算出的 L0–L4 一律为 PROVISIONAL（暂定），不是认证；版本不支持、风险画像不完整或存在整体证据阻断时写 MATURITY_NOT_ESTABLISHED。旧 v0.4 或未固定版本的历史 L4 不继承为当前等级，也不得继承旧 PASS 或授权结论。
 >
 > 1. 分页读取完整 tools/list 及资源、提示词；逐工具核对输入输出 Schema、错误、描述、注解、权限和副作用。分别报告发现覆盖率与实际 tools/call 覆盖率。

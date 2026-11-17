@@ -20,9 +20,9 @@ function prompt(role,lang){
 }
 function checkRequired(content,label){
  for(const token of [
-   "ARE-A02@0.5","T10","scope","reason","evidence","reviewer","reviewed_at",
+   "ARE-A02@0.5","T10","N/A{scope=","reviewed_at=YYYY-MM-DD",
    "PROVISIONAL","MATURITY_NOT_ESTABLISHED","--workspace","are_get_check",
-   "are_assess_scenario"
+   "are_assess_scenario","✅","❌","➖","NOT_VERIFIED","inspected","documented"
  ]){
    if(!content.includes(token))throw Error(label+": missing required "+token);
  }
