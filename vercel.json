@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "npm ci --prefix mcp",
-  "buildCommand": "npm run build --prefix mcp",
+  "buildCommand": "node scripts/are_release_gate.mjs && npm run build --prefix mcp",
   "outputDirectory": "public",
   "rewrites": [
     {
