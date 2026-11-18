@@ -1,0 +1,32 @@
+{
+  "baseline_commit": "b3ca13e013bda7c5fcdf36765cf3fb1f30f880d6",
+  "files": {
+    "docs/cases/data/remote-desktop-commander-2026-11-18.json": "ea113c1c7694626b745bddb2d7107510a5329b9732ad4f07d96c4bbf48129b0c",
+    "docs/cases/data/solarstorm.json": "10468edc8de7d21c40f0d598df2b09eb7e563eb213b2205aa82280ce817a1b17",
+    "docs/cases/remote-desktop-commander-2026-11-18.md": "ade7d15ec32720d26ce898913ecdcddb0763740b9ba953bed278210ae0e2c033",
+    "docs/cases/solarstorm-2026-11-16.md": "9781c02e1629a42a2d51f94e04255a26b8f05291a85ed7b4ac17248ffe8130eb",
+    "docs/cases/solarstorm-maintainer-retest-2026-11-16.md": "a17e7b51a9a744fba78ecc597fa88e8d8aaa08d5ba35f7a14ffe281979af028c",
+    "docs/cases/solarstorm-public-replay-2026-11-16.md": "fc1a48e5d81cab9755ecad63a28a3453f459ce7ffe136aac4d3b4e3e787a7350",
+    "docs/cases/solarstorm-publication-run-2026-11-16.md": "7bcaaffa648b63e86de2713cc22d351312fa7dbbc46883c79e2746a75e8cbf1a",
+    "docs/cases/solarstorm-run-status-2026-11-16.md": "e731f85c1b3241053e96f67ce35f59dd9a60cf158609ac1f6f4d1aaa346e7809",
+    "public/evidence/remote-desktop-commander/SCOPE.txt": "f10398b6a5e4fb2067e559c8a2621124b19315183021f27f41e8bebbdfddc99f",
+    "public/evidence/remote-desktop-commander/TASK.md": "82a696ff81888c62ad0c7854c30fde910d0c974055924e23381a87c793c02420",
+    "public/evidence/remote-desktop-commander/case_summary.json": "77a4c90696a3cc6d056a44205863eb2a8dc2e51d18bf1c2e83f1447130f12237",
+    "public/evidence/remote-desktop-commander/checks.json": "a70d7fcc73d6ecb9fd6418967256561f02dd86e8ad32859ac9f2cd00c3d941b0",
+    "public/evidence/remote-desktop-commander/evidence_sha256.json": "2ccef038646ad6066edc7558e4b23ccd8f164c0ee2c32c4ab11cedb747217fee",
+    "public/evidence/remote-desktop-commander/fixture_manifest.json": "9c812bfa07170e27c509a0ee0c46fb61f56972778db30981fe09772564075dbd",
+    "public/evidence/remote-desktop-commander/index.html": "72a4ef926af79b8f4cfb90d9dd2628aa8000a7fa52785d3296f2373ce6d16e7f",
+    "public/evidence/remote-desktop-commander/oracle.json": "3fd5ca8fd9ebb3d86ff0cdc48c1b1a197b17f87be87b14fd9e92b6a174d9a037",
+    "public/evidence/remote-desktop-commander/probe_summary.json": "aee052b92ee29a386d7a11b638a2297efb77761b5021f5301223598ebb27619b",
+    "public/evidence/remote-desktop-commander/runs.csv": "d9e9d546d9a6f696312e74e2f4d9bbd6d6c449b5269d88a431523a53ce8dcb53",
+    "public/evidence/remote-desktop-commander/tool_inventory.json": "45d38c16385e54fff9fe9603e9d37f728f2303aae307d7fb6131471c10317127",
+    "public/evidence/solarstorm/case_summary.json": "f02a2bc217631c0ad2dc0165b53f8a644db33ff63da6e44dae0fa6f9bbc1826b",
+    "public/evidence/solarstorm/checks.jsonl": "beaf89071bda83b2938b4bb455661d50ff2a91dfbb50d47aec0f023a0e5488ff",
+    "public/evidence/solarstorm/index.html": "a8b7e92ce868d6dbca570e68f754ec39f0e214d1a9d4e46779934ceea7f9eb4f",
+    "public/evidence/solarstorm/oracle.jsonl": "d5c8f84787ab5ab9ff839142c3c4677cd6a35df7b536e2d622ffc13fae496afe",
+    "public/evidence/solarstorm/sha256.json": "c75a2e1c5b201babf8b01ac05a74dc86a21a71b9b87f22555484aca7e8b4d332",
+    "public/evidence/solarstorm/tools.jsonl": "57a509eb7cc0763a482572353b0b3309d4fee121f25d85f3df9af045180754a3"
+  },
+  "reason": "Freeze all published ARE case evidence and append-only correction baseline; updates need explicit reviewed migration.",
+  "schema": "are.publication.historical_lock.v1"
+}

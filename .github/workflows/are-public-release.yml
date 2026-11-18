@@ -1,0 +1,23 @@
+name: ARE public release gate
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  public-case-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Guard historic case hashes and block new public cases
+        run: node scripts/are_release_gate.mjs
+      - name: Test gate tampering and new cases
+        run: node --test scripts/test_are_release_gate.mjs
+      - name: Verify split rubric and legacy validation
+        run: python3 -m unittest -q scripts/test_are_publication.py scripts/test_are_remote_dc_case.py
