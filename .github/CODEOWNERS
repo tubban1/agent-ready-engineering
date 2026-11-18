@@ -1,0 +1,13 @@
+# Own-account review rules are advisory until an independent bot identity
+# and require_code_owner_reviews are configured at GitHub.
+/data/are-publication-historical-lock.v1.json @tubban1
+/public/evidence/ @tubban1
+/docs/cases/ @tubban1
+/public/evaluations/ @tubban1
+/public/index.html @tubban1
+/functions/are-reports/ @tubban1
+/functions/are-collector/ @tubban1
+/migrations/ @tubban1
+/scripts/are_release_gate.mjs @tubban1
+/.github/workflows/ @tubban1
+/vercel.json @tubban1

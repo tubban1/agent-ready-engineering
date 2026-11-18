@@ -27,7 +27,7 @@ function withFixture(fn) {
 test('clean pinned historical cases allow build', () => withFixture(root => {
   const result = run(root);
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /38 historical case files pinned/);
+  assert.match(result.stdout, /27 historical case files pinned/);
 }));
 
 test('new case page is blocked even if other evidence is intact', () => withFixture(root => {
@@ -36,7 +36,7 @@ test('new case page is blocked even if other evidence is intact', () => withFixt
   writeFileSync(dest, '<h1>Unreviewed evaluation</h1>');
   const result = run(root);
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /new-case\/index.html/);
+  assert.match(result.stderr, /public route inventory modified/);
 }));
 
 test('new case manifest fails closed', () => withFixture(root => {
@@ -65,10 +65,16 @@ test('case content hidden under a new public route cannot bypass lock', () => wi
   assert.notEqual(run(root).status, 0);
 }));
 
-test('existing public front-end files cannot change ratings unnoticed', () => withFixture(root => {
+test('existing evaluation renderer cannot change ratings unnoticed', () => withFixture(root => {
   const path = join(root, 'public/evaluations/app.js');
   writeFileSync(path, readFileSync(path, 'utf8') + '\\n// unreviewed evaluation content');
   assert.notEqual(run(root).status, 0);
+}));
+
+test('ordinary homepage text can change without modifying lock', () => withFixture(root => {
+  const path = join(root, 'public/index.html');
+  writeFileSync(path, readFileSync(path, 'utf8') + '\n<!-- updated homepage copy -->');
+  assert.equal(run(root).status, 0);
 }));
 
 test('historical lock cannot silently switch baseline commit', () => withFixture(root => {

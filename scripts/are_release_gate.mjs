@@ -25,13 +25,14 @@ function walk(directory) {
 }
 
 function publicationPaths() {
-  const evidence = walk(join(ROOT, 'public'));
+  const evidence = walk(join(ROOT, 'public/evidence'));
+  const evaluationRenderer = ['public/evaluations/app.js', 'public/evaluations/index.html'].map(path => join(ROOT, path));
   const caseDocs = readdirSync(join(ROOT, 'docs/cases'), { withFileTypes: true })
     .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
     .map(entry => join(ROOT, 'docs/cases', entry.name));
   const manifests = walk(join(ROOT, 'docs/cases/data'))
     .filter(path => path.endsWith('.json'));
-  return [...evidence, ...caseDocs, ...manifests]
+  return [...evidence, ...evaluationRenderer, ...caseDocs, ...manifests]
     .map(path => relative(ROOT, path).split(sep).join('/')).sort();
 }
 
@@ -45,6 +46,10 @@ export function validatePublicationCorpus() {
       lock.baseline_commit !== BASELINE_COMMIT ||
       !lock.files || typeof lock.files !== 'object' || Array.isArray(lock.files)) {
     throw new Error('Missing or unsupported publication baseline lock');
+  }
+  const actualPublicPaths = walk(join(ROOT, 'public')).map(path => relative(ROOT, path).split(sep).join('/')).sort();
+  if (!Array.isArray(lock.known_public_paths) || JSON.stringify(lock.known_public_paths) !== JSON.stringify(actualPublicPaths)) {
+    throw new Error('Publication gate BLOCKED: public route inventory modified; owner-reviewed path change required');
   }
   const existing = publicationPaths();
   const expected = Object.keys(lock.files).sort();
