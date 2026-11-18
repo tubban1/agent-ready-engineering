@@ -1,0 +1,133 @@
+{
+  "schema": "are.public.case.v1",
+  "slug": "remote-desktop-commander",
+  "case_id": "desktop-commander-remote-2026-11-18",
+  "title": "Remote Desktop Commander",
+  "subtitle": "Independent remote MCP engineering assessment",
+  "date": "2026-11-18",
+  "locale": "en",
+  "url": "https://are.world2.co/evidence/remote-desktop-commander/",
+  "endpoint": "https://mcp.desktopcommander.app/mcp",
+  "world2_id": "592ec3d4-d077-5ab6-83cd-09243285fe02",
+  "operator": "Desktop Commander",
+  "assessment_standard": "ARE-A02@0.5",
+  "assessment_type": "LIMITED_OWNER_AUTHORIZED_READ_ONLY",
+  "status": "BASELINE_WITH_LIMITATIONS",
+  "maturity": "NOT_ESTABLISHED",
+  "certification": false,
+  "scope": "Official hosted Remote Desktop Commander, connected through a signed-in ChatGPT MCP app to one user-owned Mac. Only an entirely synthetic CI fixture was examined; no other files or device state changed. Native authenticated MCP wire traffic and privileged write-path operations were not tested.",
+  "positive": [
+    "Authenticated ChatGPT connector reached one online paired device and successfully executed bounded file, metadata and search actions.",
+    "All 30 host-exposed tool declarations were inventoried. Native authenticated tools/list inventory remains unverified.",
+    "A genuine GPT-6 Agent triaged 24 synthetic run records across 8 services via remote read/search tools; the independent deterministic Python oracle exactly matched the answer.",
+    "Versioned public registry manifest and official trust/operation documentation are available, clearly describing the privileged local-user execution model."
+  ],
+  "findings": [
+    {
+      "id": "L2-C2",
+      "headline": "Machine-readable errors",
+      "statement": "A deliberately missing synthetic read_file path produced an ENOENT tool exception. A stable structured {code, retryable, retry_after, hint} contract was not visible on the tested ChatGPT adapter.",
+      "suggestion": "Provide typed, bounded error envelopes and consistent recovery hints across read failures. This is ARE guidance, not an MCP MUST."
+    },
+    {
+      "id": "L2-X1",
+      "headline": "Structured filtering and projection",
+      "statement": "The observed read/search interfaces expose offsets and patterns but not the complete projection + filtering + cursor contract expected by ARE.",
+      "suggestion": "Consider typed filters and pagination metadata for large/search responses."
+    },
+    {
+      "id": "L2-X2",
+      "headline": "Explicit truncation and cursor",
+      "statement": "Text pagination describes remaining lines, but no standardized machine-readable truncated and next_cursor fields were exposed in observed file responses.",
+      "suggestion": "Return structured truncation and continuation metadata alongside text."
+    },
+    {
+      "id": "L2-X3",
+      "headline": "Tool discovery context cost",
+      "statement": "The connected host declares 30 full tool contracts upfront; capability-index-first progressive discovery was not observed in this host surface.",
+      "suggestion": "Add a concise discover/index workflow, with full operation schemas requested only as needed."
+    },
+    {
+      "id": "L3-C1",
+      "headline": "Idempotent writes",
+      "statement": "The exposed write_file/edit_block tool arguments do not provide caller-supplied idempotency keys or a replay result contract. No write was executed.",
+      "suggestion": "Add first-class idempotency receipts for mutating operations or supply evidence of equivalent server-enforced behavior."
+    },
+    {
+      "id": "L3-C2",
+      "headline": "Optimistic concurrency",
+      "statement": "Mutable file tool contracts do not require expected_revision or document current-version/diff conflict semantics; expected_replacements is not a revision guard.",
+      "suggestion": "Expose revision preconditions and structured conflicts for concurrent Agent editing."
+    },
+    {
+      "id": "L3-C3",
+      "headline": "Validate/dry-run for changes",
+      "statement": "The host-exposed write/edit/move contracts have no explicit validate/dry-run mode. Write behavior was not executed during this read-only review.",
+      "suggestion": "Provide read-only plan/validate previews and clear human authorization for final effects."
+    }
+  ],
+  "caveats": [
+    "All seven FAIL outcomes are deviations from ARE's non-official engineering criteria for the observed adapter; none alone establishes an MCP specification violation or an exploitable vulnerability.",
+    "The official remote repository is public, but the hosted service implementation is proprietary; its public source SHA and server.json version 1.1.30 are not a verified deployed build.",
+    "The separate open-source local device agent at a pinned source revision declares 0.3.4; the tested user-owned installed agent reported 0.3.3. These are distinct version observations, not proof of release drift or failure.",
+    "Anonymous direct GET/initialize requests from one automated network path were blocked by Cloudflare 403/1010. The authenticated connector succeeded; the WAF response is not counted as a failed MCP protocol test.",
+    "The one Agent task is successful evidence for a single synthetic scenario; it cannot establish reliability rates, write safety, cross-platform parity, production SLOs, or readiness level.",
+    "High-risk filesystem write, shell, device shutdown, configuration and process-control actions were not exercised. Missing operator-approved risk profile prevents applying N/A shortcuts under ARE-A02@0.5."
+  ],
+  "agent_task": {
+    "description": "From runs.csv choose the latest UTC event per service; count latest PASS/FAIL and flag services with FAIL or a latest duration > 900 ms.",
+    "records": 24,
+    "services": 8,
+    "latest_pass": 4,
+    "latest_fail": 4,
+    "latest_slow": 2,
+    "action_required": 5,
+    "attention_services": [
+      "alpha-api",
+      "charlie-queue",
+      "delta-index",
+      "foxtrot-gateway",
+      "golf-bridge"
+    ],
+    "oracle_result": "MATCH",
+    "repetitions": 1,
+    "independent_source": "Synthetic runs.csv + deterministic Python parser"
+  },
+  "source": {
+    "hosted_docs_repo": "https://github.com/desktop-commander/remote-desktop-commander",
+    "hosted_docs_sha": "c0564c8105018fa76689268f19219e986e9002d4",
+    "hosted_registry_declared_version": "1.1.30",
+    "live_server_build": "NOT_VERIFIED",
+    "local_open_source_repo": "https://github.com/wonderwhy-er/DesktopCommanderMCP",
+    "local_source_sha": "9a101b17e44577f0baefa4c7120f087881c5cc56",
+    "local_source_package_version": "0.3.4",
+    "paired_device_agent_version": "0.3.3",
+    "source_deployed_binding": "NOT_VERIFIED"
+  },
+  "evidence_refs": [
+    "host_tool_contracts.json",
+    "tool_runs.json",
+    "live_probe_sanitized.json",
+    "assessment.json",
+    "independent_oracle.json",
+    "agent_run.json",
+    "fixture/TASK.md",
+    "fixture/runs.csv"
+  ],
+  "review_history": [
+    {
+      "date": "2026-11-18",
+      "description": "Initial bounded, owner-authorized read-only evaluation, no prior/future fix inferred."
+    }
+  ],
+  "maintainer_feedback": {
+    "contact": "support@desktopcommander.app",
+    "sent": "SENT_GMAIL_CONFIRMED",
+    "sent_date": "2026-11-18",
+    "receipt_message_id": "1a1f020be453cc9b",
+    "delivery": "UNKNOWN",
+    "reply": "NOT_VERIFIED",
+    "fix": "NOT_VERIFIED"
+  },
+  "public_prompt": "Only with your own authorized paired computer: connect https://mcp.desktopcommander.app/mcp through your trusted MCP host. In a NEW dedicated synthetic test folder that you created, inspect TASK.md and runs.csv using Remote Desktop Commander read/list/search only. Determine the latest ISO UTC record per service, count latest PASS and FAIL, list services whose latest status FAIL or duration_ms > 900 and cross-check with a separate local script. Do not inspect real user files, run shell commands, write/edit/move, change configuration, stop processes, browse unrelated folders or disclose secrets. Record the actual tool names, host and device-agent versions, errors and evidence. Do not declare that a one-run success proves write safety or full protocol compliance; mark all untested actions NOT_VERIFIED. Do not send emails or publish third-party issues as part of the test."
+}

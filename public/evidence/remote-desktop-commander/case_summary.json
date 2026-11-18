@@ -1,0 +1,24 @@
+{
+  "schema": "are.public.case_summary.v1",
+  "case": "Remote Desktop Commander 2026-11-18",
+  "endpoint": "https://mcp.desktopcommander.app/mcp",
+  "world2_service_id": "592ec3d4-d077-5ab6-83cd-09243285fe02",
+  "evaluation": "ARE-A02@0.5 LIMITED read-only owner-device scenario",
+  "maturity": "NOT_ESTABLISHED",
+  "counts": {
+    "PASS": 2,
+    "FAIL": 7,
+    "NOT_APPLICABLE": 0,
+    "NOT_VERIFIED": 30
+  },
+  "tool_contracts_host": 30,
+  "tool_called_host_combined": 11,
+  "official_native_tools_list": null,
+  "source_to_live_binding": false,
+  "real_agent_tasks": 1,
+  "independent_oracle": "MATCH",
+  "external_writes_tested": 0,
+  "first_party_evidence_only": true,
+  "official_certification": false,
+  "provider_approval": "NOT_VERIFIED"
+}

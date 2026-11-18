@@ -1,0 +1,35 @@
+{
+  "schema": "are.tool_execution_summary.v1",
+  "assessed_at": "2026-11-18",
+  "inventory": "host_tool_contracts.json",
+  "observed_tools": 30,
+  "called_tools": [
+    "list_devices",
+    "who_am_i",
+    "get_config",
+    "read_file",
+    "read_multiple_files",
+    "list_directory",
+    "get_file_info",
+    "start_search",
+    "get_more_search_results",
+    "get_usage_stats",
+    "start_process"
+  ],
+  "called_count": 11,
+  "not_executed": 19,
+  "executed_scope": "read-only or strictly nonmutating local commands against a synthetic fixture; no writes, no process kills, no configuration changes",
+  "negative_test": {
+    "tool": "read_file",
+    "path_kind": "nonexistent path inside authorized synthetic fixture",
+    "result": "ERROR",
+    "observed_error": "ENOENT exposed as tool exception, without code/retryable/retry_after/hint fields",
+    "scope": "ChatGPT connected adapter, not proof of native MCP protocol fault"
+  },
+  "constraints": [
+    "not raw authenticated MCP tools/list",
+    "no execution of state-changing operations",
+    "no private user data read for benchmark",
+    "no multi-run reliability claim"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "are.report.qa.v1",
+  "date": "2026-11-18",
+  "result": "PASS_LIMITED_SCOPE",
+  "checks": {
+    "catalog_provenance": true,
+    "real_connector": true,
+    "host_inventory_30": true,
+    "tool_execution_11_distinct": true,
+    "fixture_is_synthetic": true,
+    "independent_oracle_sha_matches": true,
+    "full_39_check_states": true,
+    "correct_source_deployment_distinction": true,
+    "no_private_logs_in_public_report": true,
+    "no_unauthorized_write": true,
+    "no_claimed_protocol_certification": true,
+    "no_unverified_maturity": true
+  },
+  "limitations": [
+    "No direct raw authenticated MCP tools/list packet captured",
+    "Hosted service backend proprietary",
+    "19/30 tools not executed",
+    "No multi-run reliability test",
+    "No external email/publication receipts at this checkpoint"
+  ],
+  "publication_safety": "Public version must remove local home path, device/account identifiers, and raw private tool-call logs; maintainer security issues not alleged."
+}

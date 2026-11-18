@@ -1,0 +1,319 @@
+{
+  "schema": "are.mcp.one-service-assessment.v1",
+  "service": {
+    "world2_id": "592ec3d4-d077-5ab6-83cd-09243285fe02",
+    "name": "Remote Desktop Commander",
+    "endpoint": "https://mcp.desktopcommander.app/mcp",
+    "source_repo": "desktop-commander/remote-desktop-commander",
+    "source_sha": "c0564c8105018fa76689268f19219e986e9002d4",
+    "source_to_deployment_binding": "UNVERIFIED_PUBLIC_DOCS_ONLY",
+    "maintainer_contact": "support@desktopcommander.app",
+    "connected_device_agent_version": "0.3.3"
+  },
+  "evaluated_scenario": "Read-only synthetic CI latest-run triage using the ChatGPT-connected Remote Desktop Commander on the owner's test fixture, no other files or writes",
+  "assessment_at": "2026-11-18",
+  "status": "LIMITED_ASSESSMENT_EVIDENCE_READY",
+  "maturity_level": "NOT_ESTABLISHED",
+  "maturity_reason": "39/39 statuses accounted for but production backend is proprietary, raw authenticated MCP SDK protocol profile not tested, system-wide governance evidence incomplete, and dangerous tools intentionally unexecuted.",
+  "official_protocol": {
+    "version": "NOT_VERIFIED",
+    "not_official_certification": true
+  },
+  "all_tools_discovered": 30,
+  "tool_inventory_scope": "host-exposed ChatGPT connector tool declarations only; native authenticated MCP tools/list not independently compared",
+  "tools_successfully_invoked": 11,
+  "tool_execution_scope": "Read or nonmutating command only; 19/30 not exercised and no risky actions authorized",
+  "source_test_results": {
+    "public_docs_pinned": true,
+    "production_binding_proven": false,
+    "source_tests_executed": 0
+  },
+  "agent_task": {
+    "host": "ChatGPT GPT-6 via connected Remote Desktop Commander",
+    "mcp_calls_for_task": 2,
+    "repetitions": 1,
+    "completed": true,
+    "independent_oracle": "Independent Python CSV reduction over synthetic fixture with matching pinned SHA-256"
+  },
+  "check_counts": {
+    "PASS": 2,
+    "FAIL": 7,
+    "NOT_APPLICABLE": 0,
+    "NOT_VERIFIED": 30
+  },
+  "checks": [
+    {
+      "check_id": "L1-V1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L1-V2",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L1-V3",
+      "status": "PASS",
+      "reason": "One model-driven representative read-only task completed against a purpose-built synthetic fixture with independently recomputed CSV oracle.",
+      "evidence": "fixture/TASK.md; fixture/runs.csv; independent_oracle.json; agent_run.json",
+      "evidence_type": "observed_agent"
+    },
+    {
+      "check_id": "L1-V4",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L1-A1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L1-C1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L2-C1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L2-C2",
+      "status": "FAIL",
+      "reason": "Observed ENOENT read_file negative test returns unstructured host exception; no stable code, retryable, retry_after, and hint contract.",
+      "evidence": "host_tool_contracts.json; tool_runs.json; provider readback",
+      "evidence_type": "observed_host_contract_or_execution"
+    },
+    {
+      "check_id": "L2-X1",
+      "status": "FAIL",
+      "reason": "Observed host read/search contracts provide offsets and search conditions but do not jointly expose field projection, server-side filtering and cursor pagination.",
+      "evidence": "host_tool_contracts.json; tool_runs.json; provider readback",
+      "evidence_type": "observed_host_contract_or_execution"
+    },
+    {
+      "check_id": "L2-X2",
+      "status": "FAIL",
+      "reason": "Observed paged read_file text says lines remaining but has no machine-readable truncated field and next-page cursor in response.",
+      "evidence": "host_tool_contracts.json; tool_runs.json; provider readback",
+      "evidence_type": "observed_host_contract_or_execution"
+    },
+    {
+      "check_id": "L2-X3",
+      "status": "FAIL",
+      "reason": "The connected ChatGPT tool surface exposes 30 full tool definitions instead of a progressive capability-index-first discovery interface.",
+      "evidence": "host_tool_contracts.json; tool_runs.json; provider readback",
+      "evidence_type": "observed_host_contract_or_execution"
+    },
+    {
+      "check_id": "L2-X4",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L2-A1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L2-A2",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L2-I1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L2-O1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L2-O2",
+      "status": "PASS",
+      "reason": "ChatGPT GPT-6 used the connected Remote Desktop Commander adapter to read the synthetic fixture and triage the latest CI runs; oracle confirmed 4 PASS, 4 FAIL, 2 slow, 5 requiring action.",
+      "evidence": "fixture/TASK.md; fixture/runs.csv; independent_oracle.json; agent_run.json",
+      "evidence_type": "observed_agent"
+    },
+    {
+      "check_id": "L3-C1",
+      "status": "FAIL",
+      "reason": "Host-exposed write_file/edit_block operations do not accept an idempotency key. No stateful write was executed.",
+      "evidence": "host_tool_contracts.json; tool_runs.json; provider readback",
+      "evidence_type": "observed_host_contract_or_execution"
+    },
+    {
+      "check_id": "L3-C2",
+      "status": "FAIL",
+      "reason": "Host-exposed mutable file operations do not require expected_revision or expose version-conflict diff contracts. No write was executed.",
+      "evidence": "host_tool_contracts.json; tool_runs.json; provider readback",
+      "evidence_type": "observed_host_contract_or_execution"
+    },
+    {
+      "check_id": "L3-C3",
+      "status": "FAIL",
+      "reason": "Host-exposed write_file/edit_block/move_file inputs do not offer validate or dry-run modes. No write was executed.",
+      "evidence": "host_tool_contracts.json; tool_runs.json; provider readback",
+      "evidence_type": "observed_host_contract_or_execution"
+    },
+    {
+      "check_id": "L3-C4",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L3-S1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L3-S2",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L3-S3",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L3-S4",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L3-A1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L3-A2",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L3-A3",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L3-A4",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L3-O1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L3-O2",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L4-O1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L4-O2",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L4-I1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L4-I2",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L4-R1",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L4-R2",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L4-R3",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    },
+    {
+      "check_id": "L4-R4",
+      "status": "NOT_VERIFIED",
+      "reason": "Not independently established for this live remote deployment within the authorized read-only fixture and exposed ChatGPT adapter; no inference from public documentation or local-source behavior.",
+      "evidence": "",
+      "evidence_type": "not_verified"
+    }
+  ]
+}

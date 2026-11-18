@@ -1,0 +1,34 @@
+{
+  "schema": "are.agent_task.v1",
+  "date": "2026-11-18",
+  "host": "ChatGPT GPT-6",
+  "target": "Remote Desktop Commander authenticated ChatGPT connector",
+  "task": "Use latest timestamp per service in synthetic runs.csv to count latest PASS/FAIL, find failed or >900ms services, and count slow latest services",
+  "fixture": "fixture/TASK.md; fixture/runs.csv",
+  "fixture_sha256": "d9e9d546d9a6f696312e74e2f4d9bbd6d6c449b5269d88a431523a53ce8dcb53",
+  "tool_steps": [
+    "read_multiple_files TASK.md and runs.csv",
+    "start_process Python independent read-only truth recomputation"
+  ],
+  "observed": {
+    "n_rows": 24,
+    "services": 8,
+    "pass": 4,
+    "fail": 4,
+    "slow_latest": [
+      "charlie-queue",
+      "delta-index"
+    ],
+    "attention": [
+      "alpha-api",
+      "charlie-queue",
+      "delta-index",
+      "foxtrot-gateway",
+      "golf-bridge"
+    ]
+  },
+  "oracle": "independent_oracle.json; independent Python computation",
+  "result": "PASS_ONE_SCENARIO",
+  "repetitions": 1,
+  "statistical_reliability": "NOT_VERIFIED"
+}

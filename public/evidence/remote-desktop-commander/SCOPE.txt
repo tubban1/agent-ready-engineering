@@ -1,0 +1,1 @@
+ARE audit fixture v1. All data synthetic. Source of truth: TASK.md and runs.csv. No secrets. No external network. No modification required.

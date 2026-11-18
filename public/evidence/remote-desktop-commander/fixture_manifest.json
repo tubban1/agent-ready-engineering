@@ -1,0 +1,9 @@
+{
+  "fixture": "ARE_REMOTE_DC_20261118",
+  "files": {
+    "SCOPE.txt": "f10398b6a5e4fb2067e559c8a2621124b19315183021f27f41e8bebbdfddc99f",
+    "TASK.md": "82a696ff81888c62ad0c7854c30fde910d0c974055924e23381a87c793c02420",
+    "runs.csv": "d9e9d546d9a6f696312e74e2f4d9bbd6d6c449b5269d88a431523a53ce8dcb53"
+  },
+  "read_only": true
+}

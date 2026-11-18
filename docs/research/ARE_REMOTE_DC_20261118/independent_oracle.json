@@ -1,0 +1,58 @@
+{
+  "schema": "are.independent_oracle.v1",
+  "source": "synthetic fixture runs.csv",
+  "rows": 24,
+  "services": 8,
+  "pass": 4,
+  "fail": 4,
+  "failed_services": [
+    "alpha-api",
+    "charlie-queue",
+    "foxtrot-gateway",
+    "golf-bridge"
+  ],
+  "slow_latest_services": [
+    "charlie-queue",
+    "delta-index"
+  ],
+  "attention_services": [
+    "alpha-api",
+    "charlie-queue",
+    "delta-index",
+    "foxtrot-gateway",
+    "golf-bridge"
+  ],
+  "attention_reasons": {
+    "alpha-api": {
+      "status": "FAIL",
+      "duration_ms": 870,
+      "failed": true,
+      "slow": false
+    },
+    "charlie-queue": {
+      "status": "FAIL",
+      "duration_ms": 1190,
+      "failed": true,
+      "slow": true
+    },
+    "delta-index": {
+      "status": "PASS",
+      "duration_ms": 1190,
+      "failed": false,
+      "slow": true
+    },
+    "foxtrot-gateway": {
+      "status": "FAIL",
+      "duration_ms": 870,
+      "failed": true,
+      "slow": false
+    },
+    "golf-bridge": {
+      "status": "FAIL",
+      "duration_ms": 210,
+      "failed": true,
+      "slow": false
+    }
+  },
+  "fixture_sha256": "d9e9d546d9a6f696312e74e2f4d9bbd6d6c449b5269d88a431523a53ce8dcb53"
+}
