@@ -143,13 +143,13 @@
       "allocation": "S",
       "product": {
         "id": "MCP-L2-X4",
-        "claim": "独立测量受测只读工具响应字节与 Token"
+        "claim": "只读工具的默认响应必须在可测量的上下文上限内（试点 8192 Token）；显式请求的大响应单独审查"
       },
       "adopter": {
         "id": "ADOPT-L2-X4",
         "claim": "采用方设定上下文成本预算并持续监控"
       },
-      "applicability": "产品数据可由 ARE 实测，不强求开发者自行维护报告"
+      "applicability": "独立 ARE 实测可作为证据；产品侧默认输出上限以事先登记的试点阈值判断，非要求作者自行提供报告"
     },
     {
       "legacy_id": "L2-A1",
@@ -389,7 +389,7 @@
       "allocation": "S",
       "product": {
         "id": "MCP-L4-O2",
-        "claim": "供应商在新版本发布前执行适用 Agent 回归门禁"
+        "claim": "供应商公开或授权提供发布前回归门禁证据；外部缺少证据不构成 FAIL"
       },
       "adopter": {
         "id": "ADOPT-L4-O2",
@@ -422,7 +422,7 @@
       "allocation": "S",
       "product": {
         "id": "MCP-L4-R1",
-        "claim": "供应商侧测试与生产隔离、可灰度回滚"
+        "claim": "对含写操作的供应商产品，可供授权验证的测试或沙箱环境实际可用"
       },
       "adopter": {
         "id": "ADOPT-L4-R1",

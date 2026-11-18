@@ -19,5 +19,8 @@ jobs:
         run: node scripts/are_release_gate.mjs
       - name: Test gate tampering and new cases
         run: node --test scripts/test_are_release_gate.mjs
-      - name: Verify split rubric and legacy validation
-        run: python3 -m unittest -q scripts/test_are_publication.py scripts/test_are_remote_dc_case.py
+      - name: Verify split rubric, pilot applicability and legacy validation
+        run: |
+          python3 scripts/are_assessment_tracks.py
+          python3 scripts/are_criteria_pilot.py
+          python3 -m unittest -q scripts/test_are_assessment_tracks.py scripts/test_are_criteria_pilot.py scripts/test_are_publication.py scripts/test_are_remote_dc_case.py

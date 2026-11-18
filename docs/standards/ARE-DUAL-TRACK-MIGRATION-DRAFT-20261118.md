@@ -29,7 +29,7 @@
 | L2-X1 | A | 可列表化大型数据支持适当投影、过滤和续页 | — | 小型固定返回值可能 N/A |
 | L2-X2 | A | 大结果有确定上限及可恢复续取语义 | — | 仅适用于可能截断或分页的结果 |
 | L2-X3 | A | 工具发现上下文成本在大型工具集下受控 | — | 强制阈值待 10 MCP 校准；非 MCP MUST |
-| L2-X4 | S | 独立测量受测只读工具响应字节与 Token | 采用方设定上下文成本预算并持续监控 | 产品数据可由 ARE 实测，不强求开发者自行维护报告 |
+| L2-X4 | S | 只读工具的默认响应必须在可测量的上下文上限内（试点 8192 Token）；显式请求的大响应单独审查 | 采用方设定上下文成本预算并持续监控 | 独立 ARE 实测可作为证据；产品侧默认输出上限以事先登记的试点阈值判断，非要求作者自行提供报告 |
 | L2-A1 | S | 服务端能限制并撤销授权范围 | 采用方使用独立 Agent 身份及最小权限凭证 | 单一公共匿名只读服务可以 N/A |
 | L2-A2 | S | 受信任边界之外的数据保留出处与可信度线索 | 采用方 Agent/宿主不得将不可信内容当作指令 | 对无外部输入的数据服务按风险判定适用性 |
 | L2-I1 | A | 工具只读注解与真实副作用一致，适配层行为可追踪 | — | 内部逻辑分层只有源码绑定时可证 |
@@ -50,13 +50,14 @@
 | L3-O1 | S | 服务端副作用记录可关联授权收据 | 采用方确认和授权事件可跟调用记录对账 | 无法访问服务端日志时不得认定 FAIL |
 | L3-O2 | S | 产品在适用故障注入下体现安全与恢复能力 | 采用方 Agent 工作流通过适用注入/重试评测 | 只在隔离授权环境注入故障 |
 | L4-O1 | S | 服务端提供跨工具调用与业务事务的关联标识 | 采用方跨 Agent 会话保留可串联的追踪证据 | 两边独立检查；不强求单侧能证全链路 |
-| L4-O2 | S | 供应商在新版本发布前执行适用 Agent 回归门禁 | 采用方在接入新版本时有回归与升级把关 | 任一方不能替另一方提供发布证据 |
+| L4-O2 | S | 供应商公开或授权提供发布前回归门禁证据；外部缺少证据不构成 FAIL | 采用方在接入新版本时有回归与升级把关 | 任一方不能替另一方提供发布证据 |
 | L4-I1 | A | 工具定义可固定版本、检测完整性或发现漂移 | — | 取证必须区分发现能力与正式签名方案 |
 | L4-I2 | A | 产品多个入口的相同操作具有一致可预期语义 | — | 仅对多入口产品适用 |
-| L4-R1 | S | 供应商侧测试与生产隔离、可灰度回滚 | 采用方对生产集成设变更、回滚与负责人 | 不要求外部作者交代客户运营制度 |
+| L4-R1 | S | 对含写操作的供应商产品，可供授权验证的测试或沙箱环境实际可用 | 采用方对生产集成设变更、回滚与负责人 | 不要求外部作者交代客户运营制度 |
 | L4-R2 | B | — | 采用方完成实际价值复盘并回写价值判断 | 不考产品供应商客户 ROI |
 | L4-R3 | B | — | 采用方基于复盘保留、缩减或淘汰低价值能力 | 必须有实际采用数据或可靠决策依据 |
 | L4-R4 | A | 供应商提供 Agent 能理解的能力指南、典型工作流及错误恢复指引 | — | 适用于实际对外提供的工具 |
+
 ## 评分与适用性
 
 1. 互斥状态：`PASS`、`FAIL`、`NOT_APPLICABLE`、`UNKNOWN`、`NOT_TESTED`、`BLOCKED_AUTH`。不将 `DESIGN_GAP` 作为可计分状态。
@@ -79,13 +80,28 @@
 
 `scripts/are_assessment_tracks.py` 只校验拆分映射、展示原子检查数量与结果证据格式；它不授等级，不发邮件、不发布。必须由真正的 Worker 在未来实现受信任的权限/QA/幂等/发布回执绑定。
 
+
+## 10 个 MCP 校准前的可执行条件（2026-11-18 预注册草案）
+
+所有 55 项逐条规则在 `data/are-assessment-criteria-pilot.v1.json`；解析及证据归因检查在 `scripts/are_criteria_pilot.py`。已经预先定义每项的 `obligation`（REQUIRED / CONDITIONAL_REQUIRED / RECOMMENDATION）、`applies_when`（机器可判定的事实谓词）、`pass_if`（具体指标/比较符/预定阈值）、`failure_standard`（可证伪失败行为）与证据责任方。
+
+- **产品卷 32 项**：2 项 REQUIRED、29 项 CONDITIONAL_REQUIRED、1 项 RECOMMENDATION。REQUIRED 和适用条件已证实的 CONDITIONAL_REQUIRED **都有可能产生严格 FAIL**，没有 `DESIGN_GAP` 计分状态。
+- **采用方卷 23 项**：5 项 REQUIRED、18 项 CONDITIONAL_REQUIRED；只有选定组织/场景后才能评估，外部第三方 MCP 没有组织场景时是 NOT_ASSESSED，而非 L0。
+- **试点阈值**：`MCP-L2-X4` 默认只读响应最大 8192 Token（显式指定大型返回值另算）；`MCP-L2-X3` 工具数达到 **25** 才强制要求渐进发现或等效上下文控制。两者是评估前固定的 *校准假设*，非 MCP 规范 MUST，也非已经颁布的 ARE 正式阈值；10 个样本后允许通过有版本记录的修订，不能倒改试点结果。
+- **L4-R1**：产品侧改为供应商是否提供 **可授权测试/沙箱入口**，而非难以从公网核实的供应商内部流水线。
+- **L4-O2**：供应商内部回归门禁列为外部评价的**不计分建议项**，公开证据或经授权审计仍可记录；缺乏公开证据 ≠ FAIL。只有确实需要且被拒绝的测试权限才记 BLOCKED_AUTH，否则 UNKNOWN/NOT_TESTED。
+- **归因门槛**：产品卷以原生 MCP 调用或绑定供应商代码为依据。ChatGPT 适配层单侧观察不能变成供应商 FAIL；无版本、无可查证证据、无适用性来源不能 PASS/FAIL。
+- **部署门禁**：生产安全热修 PR #25、#26 已在 `main`，Vercel buildCommand、GitHub 必需状态检查及分支保护以 38 个公开静态/历史案例文件的哈希锁定未经授权的发布；这不是新的评分标准，也不能被 `39/39` 替代。更新历史案例需正式记录修订并审查/重新固定哈希。
+
+**仍是校准草案**：本规则可以产生内部、附证据的单项试点评价，但不可赋予产品成熟度等级，不可作为对外自动发布的授权。
+
 ## 十 MCP 真实任务校准实验
 
 先做完双卷拆分与权限/发布隔离，再挑 10 个不同形态的 MCP：小型只读、大型查询、本地文件、需认证只读、普通写入、异步长任务、草稿-提交、外部副作用、多入口、源码与部署可绑定案例。每个尽可能 3 个真实 Agent 任务尝试，日志保留模型/宿主/实际工具调用/独立 Oracle/重试/字节及 Token/延迟/成本；副作用只在明确授权的沙箱中进行。统计每条卷 A 条目的可核验率、误判率、复测稳定性、对 Agent 任务成功的解释力，再决定哪些检查强制、条件适用或仅建议。
 
 ## 交接与分支状态
 
-- 此文档及映射在隔离工作树 `are-dual-track-20261118`，以远端 `main@b0b5194` 为基线，不改动已有 `feat/are-six-stage-standing-autonomy-20261117@51786ff` 或用户的未跟踪材料。
+- 此文档及映射在隔离工作树 `are-dual-track-20261118`，最初从 `main@b0b5194` 创建，此后合入公开更正 PR #24 及发布保护 PR #25/#26 的 `main` 最新结果；不改动 `feat/are-six-stage-standing-autonomy-20261117@51786ff` 或其他工作树。
 - `51786ff` 是六阶段自治**设计/只读顾问**的分支提交，不在当时的远端 `main`；尽管允许特定条件下自动对外发布，实际策略函数始终 `may_execute:false`，不是已部署发布 Worker。
 - 本草案需要 Claude 逐项反证分类，特别检查产品/采用方的边界、适用性、真实 FAIL 门槛、S7/S8/W5 放行逻辑，以及历史兼容性。不要为了凑 20/19 或得到漂亮等级放宽事实标准。
 
@@ -93,6 +109,8 @@
 
 ```bash
 python3 scripts/are_assessment_tracks.py --export /tmp/are-two-track-inventory.json
-python3 -m unittest -v scripts/test_are_assessment_tracks.py
-python3 -m unittest -v scripts/test_are_publication.py
+python3 scripts/are_criteria_pilot.py
+node scripts/are_release_gate.mjs
+node --test scripts/test_are_release_gate.mjs
+python3 -m unittest -v scripts/test_are_assessment_tracks.py scripts/test_are_criteria_pilot.py scripts/test_are_publication.py scripts/test_are_remote_dc_case.py
 ```
