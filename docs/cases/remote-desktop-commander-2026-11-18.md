@@ -5,6 +5,10 @@
 **World2 catalog ID:** `592ec3d4-d077-5ab6-83cd-09243285fe02`
 **Result:** limited engineering assessment; **no official protocol certificate; ARE maturity NOT_ESTABLISHED**.
 
+## Dated correction — 2026-11-18
+
+**The seven historical `FAIL` labels are not verified failures of the native Remote Desktop Commander hosted MCP server.** They record differences from custom ARE engineering criteria as seen through a ChatGPT host adapter and unexecuted write-tool schemas. Server-side implementation and deployed-source binding were not proven, and some requirements may not apply to this product or constitute mandatory product conditions. The original 2 PASS / 7 FAIL / 30 NOT_VERIFIED record remains intact for auditability, while its attribution, applicability and assessment methodology are being reviewed under the separate MCP-product and adopter-governance questionnaires. This does **not** retract the positive real Agent result or assert a vulnerability.
+
 ## Identity, source and scope
 
 - Official public repository: https://github.com/desktop-commander/remote-desktop-commander
