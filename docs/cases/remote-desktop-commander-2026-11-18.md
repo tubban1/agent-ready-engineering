@@ -38,7 +38,7 @@
 
 ## Security and permission model — critical distinction
 
-On the examined owner's paired device the live configuration returned `allowedDirectories: []`. The vendor's published guidance explains an empty list allows unrestricted access *at the OS user's privilege level*; `blockedCommands` does not constitute a confinement boundary and can be bypassed by other execution routes. That is a documented trust-model choice and local configuration, **not a proven security breach**. For least-privilege deployments, recommend sandbox/limited OS user, allowlisted folders, revocable OAuth connection, and read/write prompt gates. Do not publish the owner's device identity, account details or filesystem paths.
+The vendor documents that an empty allowed-directory setting allows broad local filesystem access at the OS user's privilege level, and that command blocking is an advisory guardrail rather than a sandbox. **This is a public trust-model description, not an inspection of the owner's private configuration and not a proven breach.** For least-privilege deployments, recommend sandbox/limited OS user, allowlisted folders, revocable OAuth connection, and read/write prompt gates. Do not publish the owner's device identity, account details or filesystem paths.
 
 ## Coverage and certification
 
