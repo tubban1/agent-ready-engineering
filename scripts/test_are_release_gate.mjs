@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process';
 const project = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'are-release-gate-'));
-  for (const dir of ['public/evidence', 'docs/cases', 'data']) {
+  for (const dir of ['public', 'docs/cases', 'data']) {
     cpSync(join(project, dir), join(root, dir), {recursive: true});
   }
   mkdirSync(join(root, 'scripts'), {recursive: true});
@@ -27,7 +27,7 @@ function withFixture(fn) {
 test('clean pinned historical cases allow build', () => withFixture(root => {
   const result = run(root);
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /25 historical case files pinned/);
+  assert.match(result.stdout, /38 historical case files pinned/);
 }));
 
 test('new case page is blocked even if other evidence is intact', () => withFixture(root => {
@@ -55,6 +55,19 @@ test('existing public evidence cannot change silently', () => withFixture(root =
 test('deleting or changing the existing correction is rejected', () => withFixture(root => {
   const path = join(root, 'public/evidence/remote-desktop-commander/index.html');
   writeFileSync(path, readFileSync(path, 'utf8').replace('Correction — 18 November 2026', ''));
+  assert.notEqual(run(root).status, 0);
+}));
+
+test('case content hidden under a new public route cannot bypass lock', () => withFixture(root => {
+  const dest = join(root, 'public/alternative-review/index.html');
+  mkdirSync(dirname(dest), {recursive: true});
+  writeFileSync(dest, '<h1>Unauthorized vendor rating</h1>');
+  assert.notEqual(run(root).status, 0);
+}));
+
+test('existing public front-end files cannot change ratings unnoticed', () => withFixture(root => {
+  const path = join(root, 'public/evaluations/app.js');
+  writeFileSync(path, readFileSync(path, 'utf8') + '\\n// unreviewed evaluation content');
   assert.notEqual(run(root).status, 0);
 }));
 
