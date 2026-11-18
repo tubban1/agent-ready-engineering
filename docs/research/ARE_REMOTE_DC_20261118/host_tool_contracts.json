@@ -1,0 +1,278 @@
+{
+  "schema": "are.host_tool_inventory.v1",
+  "observed_date": "2026-11-18",
+  "scope": "Remote Desktop Commander ChatGPT connected adapter (not raw authenticated MCP tools/list)",
+  "tool_count": 30,
+  "contracts": [
+    {
+      "name": "list_devices",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__list_devices(args: object): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "who_am_i",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__who_am_i(args: object): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "get_tool_result",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__get_tool_result(args: {\ncall_id: string, // format: \"uuid\"\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "list_remote_tool_calls",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__list_remote_tool_calls(args: {\nlimit?: integer, // default: 20, minimum: 1, maximum: 50\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "shutdown",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__shutdown(args: {\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "get_config",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__get_config(args: {\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "set_config_value",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__set_config_value(args: {\nkey: string,\nvalue: string | number | boolean | string[] | null,\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "read_file",
+      "category": "scoped_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__read_file(args: {\npath: string,\nisUrl?: boolean, // default: false\noffset?: number, // default: 0\nlength?: number, // default: 1000\nsheet?: string,\nrange?: string,\noptions?: { [key: string]: any },\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "read_multiple_files",
+      "category": "scoped_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__read_multiple_files(args: {\npaths: string[],\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "write_file",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__write_file(args: {\npath: string,\ncontent: string,\nmode?: \"rewrite\" | \"append\", // default: \"rewrite\"\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "write_pdf",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__write_pdf(args: {\npath: string,\ncontent: string | Array<{ type: \"insert\", pageIndex: number, markdown?: string, sourcePdfPath?: string, pdfOptions?: { [key: string]: any } } | { type: \"delete\", pageIndexes: number[] }>,\noutputPath?: string,\noptions?: { [key: string]: any },\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "create_directory",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__create_directory(args: {\npath: string,\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "list_directory",
+      "category": "scoped_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__list_directory(args: {\npath: string,\ndepth?: number, // default: 2\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "move_file",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__move_file(args: {\nsource: string,\ndestination: string,\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "start_search",
+      "category": "scoped_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__start_search(args: {\npath: string,\npattern: string,\nsearchType?: \"files\" | \"content\", // default: \"files\"\nfilePattern?: string,\nignoreCase?: boolean, // default: true\nmaxResults?: number,\nincludeHidden?: boolean, // default: false\ncontextLines?: number, // default: 5\ntimeout_ms?: number,\nearlyTermination?: boolean,\nliteralSearch?: boolean, // default: false\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "get_more_search_results",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__get_more_search_results(args: {\nsessionId: string,\noffset?: number, // default: 0\nlength?: number, // default: 100\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "stop_search",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__stop_search(args: {\nsessionId: string,\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "list_searches",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__list_searches(args: {\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "get_file_info",
+      "category": "scoped_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__get_file_info(args: {\npath: string,\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "edit_block",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__edit_block(args: {\nfile_path: string,\nold_string?: string,\nnew_string?: string,\nexpected_replacements?: number, // default: 1\nrange?: string,\ncontent?: any,\noptions?: { [key: string]: any },\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "start_process",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__start_process(args: {\ncommand: string,\ntimeout_ms?: number,\nshell?: string,\nverbose_timing?: boolean,\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "read_process_output",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__read_process_output(args: {\npid: number,\ntimeout_ms?: number,\noffset?: number,\nlength?: number,\nverbose_timing?: boolean,\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "interact_with_process",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__interact_with_process(args: {\npid: number,\ninput: string,\ntimeout_ms?: number,\nwait_for_prompt?: boolean,\nverbose_timing?: boolean,\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "force_terminate",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__force_terminate(args: {\npid: number,\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "list_sessions",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__list_sessions(args: {\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "list_processes",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__list_processes(args: {\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "kill_process",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__kill_process(args: {\npid: number,\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    },
+    {
+      "name": "get_usage_stats",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__get_usage_stats(args: {\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "get_recent_tool_calls",
+      "category": "metadata_or_read",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__get_recent_tool_calls(args: {\nmaxResults?: number, // default: 50, minimum: 1.0, maximum: 1000.0\ntoolName?: string,\nsince?: string, // format: \"date-time\"\n// The ID of the device to run this tool on (from list_devices). Required when more than one device is online; may be omitted when only one device is connected.\ndeviceId?: string,\n}): Promise<unknown>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "No elevated action required."
+    },
+    {
+      "name": "review_device_call",
+      "category": "state_changing_or_control",
+      "host_exposed": true,
+      "contract_source": "ChatGPT connected Remote Desktop Commander tool declaration",
+      "input_contract": "mcp__Remote_Desktop_Commander__review_device_call(args: {\n// Name of the Desktop Commander tool, for example start_process.\ntool_name: \"get_config\" | \"set_config_value\" | \"read_file\" | \"read_multiple_files\" | \"write_file\" | \"write_pdf\" | \"create_directory\" | \"list_directory\" | \"move_file\" | \"start_search\" | \"get_more_search_results\" | \"stop_search\" | \"list_searches\" | \"get_file_info\" | \"edit_block\" | \"start_process\" | \"read_process_output\" | \"interact_with_process\" | \"force_terminate\" | \"list_sessions\" | \"list_processes\" | \"kill_process\" | \"get_usage_stats\" | \"get_recent_tool_calls\",\n// The call's exact arguments, unchanged, including deviceId if it had one.\narguments: { [key: string]: any },\n// Shown to the user above the call. One short, plain sentence for a non-technical user: what this call does for them, starting with 'I'm'. For example: 'I'm checking your Tailscale IP and looking for Tailscale files in your app folders.' Do not say that the call was stopped, explain the Run and Cancel buttons, or say whether the call is safe; the panel says those.\nsummary: string, // maxLength: 500\n// Required whenever you pass client_error. One short, plain sentence after the summary with your best guess of why the client stopped the call. For example: 'It was likely stopped because it searches private app data for network addresses.'\nlikely_reason?: string, // maxLength: 300\n// The client's message, if it said it stopped the call before sending it.\nclient_error?: string, // maxLength: 1000\n}): Promise<{ tool_name: string, summary: string, likely_reason: string | null, device_id: string | null, after_client_error: boolean, status: \"awaiting_user\" }>;",
+      "live_tool_execution_status": "NOT_TESTED",
+      "risk_note": "Not executed on user machine without explicit isolated authorization."
+    }
+  ]
+}

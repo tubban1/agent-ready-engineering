@@ -1,0 +1,16 @@
+{
+  "schema": "are.candidate.v1",
+  "date": "2026-11-18",
+  "world2_record_id": "592ec3d4-d077-5ab6-83cd-09243285fe02",
+  "name": "Remote Desktop Commander",
+  "endpoint": "https://mcp.desktopcommander.app/mcp",
+  "source": "world2.catalog",
+  "publisher_verification": "publisher_unverified in World2 index",
+  "official_repository": "https://github.com/desktop-commander/remote-desktop-commander",
+  "repository_commit": "c0564c8105018fa76689268f19219e986e9002d4",
+  "source_to_deployment_binding": "UNVERIFIED",
+  "safe_test_scope": "synthetic fixture read-only",
+  "maintainer_contact": "support@desktopcommander.app",
+  "email_source": "provider emails received from official desktopcommander.app domain; public site help pages",
+  "legitimacy": "user-owned device / authorized connector; tested only owner-created synthetic files"
+}

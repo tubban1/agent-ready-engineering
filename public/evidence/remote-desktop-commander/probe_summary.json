@@ -1,0 +1,150 @@
+{
+  "schema": "are.remote-connector-probe.v1",
+  "captured_at": "2026-11-18",
+  "source_caveats": [
+    "Raw authenticated MCP initialize/tools-list exchange was unavailable: connector mediates authentication; raw anonymous requests were blocked by Cloudflare before an observable normal OAuth challenge.",
+    "Tool count is 30 ChatGPT-advertised connector actions, not proof of the remote server's complete native MCP inventory.",
+    "Hosted service source is proprietary; only public manifest/docs and separate local device-agent code are inspectable."
+  ],
+  "identity": {
+    "world2_id": "592ec3d4-d077-5ab6-83cd-09243285fe02",
+    "registry_name": "app.desktopcommander/remote-desktop-commander",
+    "endpoint": "https://mcp.desktopcommander.app/mcp",
+    "publisher": "desktop-commander",
+    "world2_probe_preexisting": "not_probed",
+    "protocol_advertised": "streamable-http / OAuth2",
+    "registration_manifest_version": "1.1.30",
+    "hosted_actual_running_server_version": "NOT_VERIFIED",
+    "device_agent_version": "0.3.3",
+    "local_source_package_version_at_revision": "0.3.4",
+    "remote_manifest_source_sha": "c0564c8105018fa76689268f19219e986e9002d4",
+    "device_agent_source_sha": "9a101b17e44577f0baefa4c7120f087881c5cc56",
+    "source_deployment_bound": false
+  },
+  "access": {
+    "anonymous_GET": {
+      "status": 403,
+      "provider": "Cloudflare",
+      "error": "Access denied / signature",
+      "interpretation": "Cannot interpret this as an MCP protocol negotiation result"
+    },
+    "anonymous_POST_initialize": {
+      "status": 403,
+      "error": "Cloudflare 1010 browser_signature_banned",
+      "interpretation": "Environment-specific WAF block; no OAuth challenge proven or disallowed"
+    },
+    "authenticated_chatgpt_connector": "SUCCESS",
+    "account_metadata": "read and intentionally omitted from public evidence",
+    "paired_online_devices_observed": 1,
+    "live_agent_calls": "SUCCESS"
+  },
+  "contracts": {
+    "host_exposed_total": 30,
+    "signature_checked": 30,
+    "read_only_and_metadata": 17,
+    "state_changing_or_control": 13,
+    "native_authenticated_tools_list": "NOT_CAPTURED",
+    "output_schemas": "NOT_FULLY_VERIFIED",
+    "progressive_discovery": "NOT_OBSERVED_ON_HOST",
+    "nonmutating_invoked_distinct_tools": 11
+  },
+  "real_calls": [
+    {
+      "name": "list_devices",
+      "test": "Account-owned online device enumeration",
+      "result": "PASS"
+    },
+    {
+      "name": "who_am_i",
+      "test": "Authorized identity and service quota status without publishing PII",
+      "result": "PASS"
+    },
+    {
+      "name": "get_config",
+      "test": "Read device-agent version/config; private values not published",
+      "result": "PASS"
+    },
+    {
+      "name": "list_directory",
+      "test": "List synthetic fixture only",
+      "result": "PASS"
+    },
+    {
+      "name": "read_multiple_files",
+      "test": "Read synthetic business task and 24-row CSV",
+      "result": "PASS"
+    },
+    {
+      "name": "get_file_info",
+      "test": "Synthetic file has 25 lines, including header",
+      "result": "PASS"
+    },
+    {
+      "name": "start_search",
+      "test": "Start bounded filename search in fixture",
+      "result": "PASS"
+    },
+    {
+      "name": "get_more_search_results",
+      "test": "Return exactly one fixture file result from completed search",
+      "result": "PASS"
+    },
+    {
+      "name": "read_file",
+      "test": "Tail-only pagination of synthetic CSV",
+      "result": "PASS"
+    },
+    {
+      "name": "start_process",
+      "test": "Nonmutating Python independent oracle over synthetic runs.csv",
+      "result": "PASS"
+    },
+    {
+      "name": "get_usage_stats",
+      "test": "Read aggregated tool usage diagnostics",
+      "result": "PASS"
+    }
+  ],
+  "not_run_policy": "Risky filesystem write/edit/move, configuration mutation, device shutdown and process controls were NOT executed. A bounded read-only Python CSV-oracle command was executed via start_process on synthetic fixture only; avoid equating this with write/control tool coverage.",
+  "agent": {
+    "host": "ChatGPT GPT-6 with connected Remote Desktop Commander MCP",
+    "real_agent_task": "Inspect a synthetic CI project folder using remote read/search/file-info tools; select the newest row per service, count latest PASS/FAIL, flag FAIL or duration_ms>900, and list slow services.",
+    "single_run": true,
+    "remote_tools_in_task": [
+      "list_directory",
+      "read_multiple_files",
+      "get_file_info",
+      "start_search",
+      "read_file",
+      "get_more_search_results"
+    ],
+    "observed": {
+      "services": 8,
+      "latest_pass": 4,
+      "latest_fail": 4,
+      "attention": [
+        "alpha-api",
+        "charlie-queue",
+        "delta-index",
+        "foxtrot-gateway",
+        "golf-bridge"
+      ],
+      "slow": [
+        "charlie-queue",
+        "delta-index"
+      ]
+    },
+    "independent_oracle": "independent_oracle.json",
+    "independent_result": "MATCH",
+    "task_source": "fixture/TASK.md + fixture/runs.csv",
+    "note": "One genuine model-guided tool use and an independent deterministic Python oracle, not statistically measured multi-run success."
+  },
+  "ethical_constraints": {
+    "only_synthetic_files": true,
+    "remote_machine_writes": false,
+    "remote_shell_commands": "NONMUTATING_SYNTHETIC_ORACLE_ONLY",
+    "external_network_from_device": false,
+    "no_user_private_content_tested": true,
+    "partial_coverage_due_to_high_risk": true
+  }
+}
