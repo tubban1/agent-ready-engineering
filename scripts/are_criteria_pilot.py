@@ -17,6 +17,8 @@ except ImportError:  # invoked as standalone python3 scripts/are_criteria_pilot.
 
 ROOT = Path(__file__).resolve().parents[1]
 RULES = ROOT / "data/are-assessment-criteria-pilot.v1.json"
+PROTOCOLS = ROOT / "data/are-criteria-test-protocols.v1.json"
+PRIVILEGED_CASES = frozenset({"MCP-L2-O2", "MCP-L3-C4", "MCP-L3-O2"})
 DUTIES = {"REQUIRED", "CONDITIONAL_REQUIRED", "RECOMMENDATION"}
 OPS = {"eq", "lte", "gte"}
 SURFACES = {"NATIVE_MCP", "VERIFIED_VENDOR_SOURCE", "HOST_ADAPTER", "ADOPTER_WORKFLOW"}
@@ -71,6 +73,23 @@ def validate_criteria(data: dict) -> list[str]:
             errors.append(f"{key}: no explicit violation standard")
         if r.get("provenance_required") not in {"NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE", "SCOPED_ADOPTER_EVIDENCE"}:
             errors.append(f"{key}: invalid evidence scope")
+    protocols = json.loads(PROTOCOLS.read_text(encoding="utf-8"))
+    recipes = protocols.get("protocols", {})
+    if protocols.get("schema") != "are.criteria.test_protocols.v1" or protocols.get("status") != "NONCERTIFYING_PREDECLARED":
+        errors.append("invalid test protocol catalog")
+    if set(recipes) != set(actual):
+        errors.append("every atomic check needs an exact matching test protocol")
+    for check_id, recipe in recipes.items():
+        if not isinstance(recipe, dict):
+            errors.append(f"{check_id}: invalid protocol")
+            continue
+        for field in ("setup", "procedure", "pass_rule"):
+            if not isinstance(recipe.get(field), str) or len(recipe[field].strip()) < 8:
+                errors.append(f"{check_id}: no specific {field}")
+        if type(recipe.get("minimum_samples")) is not int or recipe["minimum_samples"] < 1:
+            errors.append(f"{check_id}: invalid minimum_samples")
+        if len(recipe.get("required_artifacts", [])) < 5:
+            errors.append(f"{check_id}: insufficient evidence artifact contract")
     return errors
 
 
@@ -89,7 +108,10 @@ def evaluate(rule: dict, facts: dict, observations: dict, *, scenario_id: str | 
 
     facts: {name: {value: any, evidence_id: str}}.
     observations: {metric: {value: any, evidence_id: str, version: str,
-                            surface: NATIVE_MCP|..., method: DIRECT_TEST|...}}.
+                            surface: NATIVE_MCP|..., method: DIRECT_TEST|...,
+                            protocol_id: str, sample_count: int, trace_refs: list, oracle_id: str}}.
+    For privileged operations, authorization={state: BLOCKED_AUTH, evidence_id, reason}
+    causes BLOCKED_AUTH only after applicability has been verified.
     """
     result = {"check_id": rule["id"], "status": "UNKNOWN", "certification": False}
     if rule["side"] == "adopter" and not scenario_id:
@@ -103,6 +125,13 @@ def evaluate(rule: dict, facts: dict, observations: dict, *, scenario_id: str | 
         if not matches(feature["value"], clause["op"], clause["value"]):
             return {**result, "status": "NOT_APPLICABLE",
                     "reason": "verified applicability predicate false: " + clause["fact"]}
+    if rule["id"] in PRIVILEGED_CASES:
+        permission = observations.get("authorization", {})
+        if permission.get("state") == "BLOCKED_AUTH":
+            if permission.get("evidence_id") and permission.get("reason"):
+                return {**result, "status": "BLOCKED_AUTH", "reason": permission["reason"],
+                        "evidence_id": permission["evidence_id"]}
+            return {**result, "reason": "unverified access blocker"}
     check = rule["pass_if"]
     evidence = observations.get(check["metric"])
     if not isinstance(evidence, dict) or "value" not in evidence:
@@ -110,6 +139,13 @@ def evaluate(rule: dict, facts: dict, observations: dict, *, scenario_id: str | 
     if (not evidence.get("evidence_id") or not evidence.get("version") or
             evidence.get("method") not in OBSERVATION_METHODS or evidence.get("surface") not in SURFACES):
         return {**result, "reason": "insufficient independently checkable evidence"}
+    protocol = json.loads(PROTOCOLS.read_text(encoding="utf-8"))["protocols"][rule["id"]]
+    if (evidence.get("protocol_id") != rule["id"] + "@pilot-2026-11-18" or
+            type(evidence.get("sample_count")) is not int or
+            evidence["sample_count"] < protocol["minimum_samples"] or
+            not isinstance(evidence.get("trace_refs"), list) or not evidence["trace_refs"] or
+            not evidence.get("oracle_id")):
+        return {**result, "reason": "pilot test protocol or minimum raw evidence incomplete"}
     if rule["side"] == "product" and evidence["surface"] not in {"NATIVE_MCP", "VERIFIED_VENDOR_SOURCE"}:
         return {**result, "reason": "host adapter finding cannot be attributed to native MCP"}
     if rule["side"] == "adopter" and evidence["surface"] != "ADOPTER_WORKFLOW":

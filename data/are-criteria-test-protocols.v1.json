@@ -1,0 +1,778 @@
+{
+  "schema": "are.criteria.test_protocols.v1",
+  "version": "pilot-2026-11-18",
+  "status": "NONCERTIFYING_PREDECLARED",
+  "source": "data/are-assessment-criteria-pilot.v1.json",
+  "protocols": {
+    "MCP-L1-V4": {
+      "setup": "取得同一原生 MCP 会话内完整分页 tools/list 及 schema，固定版本和哈希",
+      "procedure": "逐页枚举至无 cursor；比对全部工具名、描述、输入定义与可调用路由",
+      "pass_rule": "全部声明工具唯一且 schema 可解析；实际可用操作在目录可发现",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L1-C1": {
+      "setup": "在工具清单中识别任意 shell/run/execute 通用执行器",
+      "procedure": "传入两个代表性子操作的合法与非法参数，在授权沙箱检验分流",
+      "pass_rule": "每个子操作有独立可辨识输入范围和失败边界，无无界模糊执行",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L2-C1": {
+      "setup": "对每个可调用只读工具采集 JSON Schema 和至少一组合法样例",
+      "procedure": "校验 required/type/enum/unit/source/time 字段，进行一次正例及一组非法类型负例",
+      "pass_rule": "必需字段具机器可判断类型；语义单位、来源和时间按业务含义可定位",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L2-C2": {
+      "setup": "选一个安全只读工具的合法与错误输入",
+      "procedure": "实际触发缺字段和无效域值错误，检查原始 MCP 错误和恢复信息",
+      "pass_rule": "错误有稳定标识及 Agent 可遵循的更正动作；不强制特定字段名",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L2-X1": {
+      "setup": "找出具有大规模列表响应的工具和超一页数据",
+      "procedure": "以限定字段及过滤器请求两页，比较完整集与续取集",
+      "pass_rule": "服务端能减量并确定性续取，记录排序及覆盖，不丢不重",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L2-X2": {
+      "setup": "准备超出默认单次返回容量的授权查询",
+      "procedure": "请求首段并按响应续取到完结；与独立全量计数核对",
+      "pass_rule": "明确指示截断与恢复点，续取结果完整有序",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L2-X3": {
+      "setup": "对原生工具集合>=25的服务固定 tools/list 清单",
+      "procedure": "在真实 Agent 任务前记录工具发现上下文量；调用索引/分页/等效缩减，再读需要的契约",
+      "pass_rule": "至少能不预载全部完整 schema 而发现并使用目标工具，或证明等效上下文控制",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L2-X4": {
+      "setup": "固定模型 tokenizer、宿主、只读工具默认参数及样例数据",
+      "procedure": "逐工具测量默认成功响应的 Token 数，记最大值；显式要求大响应排除",
+      "pass_rule": "所有受测默认只读响应<=8192 Token，或原生服务强制切片/缩减至该上限",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L2-A1": {
+      "setup": "有委托权限的 MCP 在授权账户中配置最小权限测试用户",
+      "procedure": "分别验证允许范围、越权访问及撤销后的重复访问",
+      "pass_rule": "越权和撤销后调用拒绝，允许范围仍成功；时效有可检查证据",
+      "minimum_samples": 3,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L2-A2": {
+      "setup": "准备包含可信来源与外部不可信文本的两种输入",
+      "procedure": "检查输出保留来源和信任标识，尝试无害提示注入并记录结果",
+      "pass_rule": "Agent 可区分数据和指令；出处不被服务端抹掉",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L2-I1": {
+      "setup": "比对只读注解/说明与副作用记录",
+      "procedure": "在授权隔离环境执行代表性只读操作，并比较状态快照",
+      "pass_rule": "只读操作无未声明的持久副作用，或契约明确申告",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L2-O1": {
+      "setup": "使用允许审计的合成访问主体和记录",
+      "procedure": "发出两笔带不同 request_id 的读取，按可授权方式核对审计",
+      "pass_rule": "每次读访问可关联主体、时刻和操作，且不泄露私有数据",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L2-O2": {
+      "setup": "选择一个实际只读业务任务和独立数据真值",
+      "procedure": "真实 Agent 使用原生 MCP 完成任务，独立 Oracle 重新求解；授权缺失单列",
+      "pass_rule": "至少一个代表性任务输出匹配独立 Oracle，保留原始工具轨迹",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-C1": {
+      "setup": "创建有隔离和清理机制的可写测试资源",
+      "procedure": "同一幂等请求安全重放两次，读取最终状态与副作用计数",
+      "pass_rule": "重复调用产生等效单次效果或安全明确拒绝重复提交",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-C2": {
+      "setup": "在授权沙箱创建共享版本化资源",
+      "procedure": "由两个会话基于相同旧版本并发写入，检查冲突与最终资源",
+      "pass_rule": "不能静默覆盖；冲突可被 Agent 识别并恢复",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-C3": {
+      "setup": "选择真实高影响写操作的合成目标",
+      "procedure": "输入无效和有效变更，分别执行提交前验证/预览，再决定是否提交",
+      "pass_rule": "在副作用前能得到可检查的变更与拒绝理由",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-C4": {
+      "setup": "按已发布的每个写工具契约设定合成隔离操作",
+      "procedure": "执行合法写入及一类拒绝路径，重读对象并按契约检验，完成清理",
+      "pass_rule": "结果与契约一致，未授权写不执行且隔离环境无意外副作用",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-S1": {
+      "setup": "以沙箱中真实异步任务 ID 为对象",
+      "procedure": "启动、断连、重连，查询状态并在适用时请求取消",
+      "pass_rule": "任务状态可按稳定 ID 恢复，取消语义和终态一致",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-S2": {
+      "setup": "构造测试草稿，保留正式资源快照",
+      "procedure": "创建和修改草稿，测过期或清理，再核对正式资源",
+      "pass_rule": "草稿不污染正式状态，能按声明过期或清理",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-S3": {
+      "setup": "识别副作用及其可逆性，准备一次合成写入",
+      "procedure": "执行并尝试声明的撤销/补偿，或验证不可逆风险先行披露",
+      "pass_rule": "可回退的副作用可恢复；不可逆项在提交前显式告知",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-S4": {
+      "setup": "使用明确缺少必需字段的安全请求",
+      "procedure": "触发需补全流程，读取结构化返回并按提示补齐重试",
+      "pass_rule": "Agent 能准确得到缺失信息与继续路径；无需特定字面字段",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-A2": {
+      "setup": "以未获得最终授权的沙箱操作者发起终局写入",
+      "procedure": "尝试由 Agent 自造的批准收据；随后用真实批准收据比较",
+      "pass_rule": "服务端不接受 Agent 自报批准，只有受信任授权来源可完成",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-A3": {
+      "setup": "使用无效测试密钥和允许的合成凭证",
+      "procedure": "检查可见工具输出/错误与轨迹的脱敏；绝不收集真实凭证",
+      "pass_rule": "测试凭证及 token 不进入模型可见文本、日志或错误输出",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-A4": {
+      "setup": "在限额极低的沙箱设置测试预算和停用开关",
+      "procedure": "先试额度内调用，再超过限额、撤销后重试",
+      "pass_rule": "服务端拒绝超限/撤销请求，回执可判定原因",
+      "minimum_samples": 3,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-O1": {
+      "setup": "使用合成授权收据 ID 和隔离写入",
+      "procedure": "执行一次获批及一次未批准写入，核对服务端审计",
+      "pass_rule": "每项真实副作用都能关联受信任授权收据与操作 ID",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L3-O2": {
+      "setup": "选择写工具的合法隔离测试环境和恢复计划",
+      "procedure": "对断连、重试或冲突注入至少一种适用可控故障",
+      "pass_rule": "不发生重复不可控副作用，任务可检测失败并安全恢复",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L4-O1": {
+      "setup": "准备包含至少两步工具调用的业务事务",
+      "procedure": "执行并核对每步请求、服务端关联 ID、最终状态",
+      "pass_rule": "服务端标识允许将多次调用与真实结果串联",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L4-O2": {
+      "setup": "只审查供应商公开版本发布信息或授权审计证据",
+      "procedure": "查找版本固定的 Agent 回归/变更门禁记录，不猜测内部流程",
+      "pass_rule": "可提供版本对应的回归证据则记建议采纳；缺失不计 FAIL",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L4-I1": {
+      "setup": "取得供应商原生工具契约、版本声明及公开发行说明",
+      "procedure": "比较两个供应商声明的工具发布版本或签名及其变更记录；客户端自算哈希不算",
+      "pass_rule": "供应商自己提供可追踪的版本标识、签名或契约变更来源",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L4-I2": {
+      "setup": "明确同一服务同一操作的两种原生入口",
+      "procedure": "以等价参数分别执行只读或隔离写操作，比较权限/结果/错误",
+      "pass_rule": "入口间结果和权限语义等价，差异可解释并受版本声明约束",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L4-R1": {
+      "setup": "识别产品是否暴露写操作",
+      "procedure": "查阅供应商文档及实际服务入口，验证测试/沙箱可授权可使用",
+      "pass_rule": "有真正可访问且隔离于正式业务的测试入口；无授权不得模拟失败",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "MCP-L4-R4": {
+      "setup": "查阅服务提供的 Agent 文档和工具目录",
+      "procedure": "按文档完成典型任务与故障恢复步骤，对照工具声明",
+      "pass_rule": "存在可复现的能力索引、参数说明、典型流程和错误处理指南",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L1-V1": {
+      "setup": "固定一项具体采用业务场景及其负责人",
+      "procedure": "查看决策记录，核对选择和日期",
+      "pass_rule": "有可追溯的 Go / read-only-first / not-now 判断",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L1-V2": {
+      "setup": "选至少一个业务价值指标",
+      "procedure": "核对基线来源、测量频率及初始数据或未测量计划",
+      "pass_rule": "有真实基线或可执行的测量来源与计划",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L1-V3": {
+      "setup": "选定首批业务任务",
+      "procedure": "运行或复核一次真实 Agent 使用记录，核查业务真值",
+      "pass_rule": "实际执行证据存在且结果可独立复测",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L1-V4": {
+      "setup": "收集计划接入的所有 MCP 功能",
+      "procedure": "核对首批工具白名单、禁用项与使用范围",
+      "pass_rule": "首批能力、负责人和范围有可审计的明确界限",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L1-A1": {
+      "setup": "确定采用组织的部署责任边界",
+      "procedure": "核对负责人、授权审批人、应急联系人",
+      "pass_rule": "三类角色均可定位且可执行职责",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L1-C1": {
+      "setup": "找出采用方使用的万能执行工具",
+      "procedure": "检查组织允许的子操作及不可用权限",
+      "pass_rule": "通用入口有独立受限范围和升级计划",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L2-X4": {
+      "setup": "在采用方真实只读工作流中测模型上下文",
+      "procedure": "采样任务记录 token 字节成本并核对组织预算告警",
+      "pass_rule": "测量来源可靠，超过预算会告警或阻断",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L2-A1": {
+      "setup": "定义 Agent 身份与最小权限资源",
+      "procedure": "用允许及禁止操作验证授权和撤销",
+      "pass_rule": "Agent 只拥有必要权限且令牌可撤销",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L2-A2": {
+      "setup": "用合成提示注入文本模拟不可信外部内容",
+      "procedure": "检查宿主提示、检索数据与权限执行边界",
+      "pass_rule": "不可信内容不能获得高信任指令执行权",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L2-O1": {
+      "setup": "选有客户数据的采用流程",
+      "procedure": "核对请求、调用者、数据目的及访问审计记录",
+      "pass_rule": "相关读取可归因且满足组织记录政策",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L2-O2": {
+      "setup": "用真实采用方只读任务及独立 Oracle",
+      "procedure": "实际执行并复测结果，再记录成本和错误",
+      "pass_rule": "任务结果与业务 Oracle 一致，失败可复现",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L3-C4": {
+      "setup": "限定首批写工具及验收样例",
+      "procedure": "合成数据写入、负例、状态回读及清理",
+      "pass_rule": "全部首批写流程符合明确业务验收标准",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L3-A1": {
+      "setup": "列出读写工具与组织决策权限",
+      "procedure": "查看授权矩阵是否被指定审批主体确认",
+      "pass_rule": "每个高风险操作明确授权链和当前批准状态",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L3-A2": {
+      "setup": "构造没有外部授权的 Agent 最终提交请求",
+      "procedure": "尝试代理自批准及真实审批回执，核对结果",
+      "pass_rule": "仅真实可信审批能放行最终副作用",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L3-A3": {
+      "setup": "准备合成测试密钥及代理执行轨迹",
+      "procedure": "检查 host secret manager、prompt 和工具输出",
+      "pass_rule": "凭证在执行环境托管且对模型不可见",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L3-A4": {
+      "setup": "给合成写入设定小预算与频率上限",
+      "procedure": "执行超限、重试及停止开关",
+      "pass_rule": "超限或停用后请求不再发生副作用",
+      "minimum_samples": 3,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L3-O1": {
+      "setup": "准备一笔真实批准测试请求",
+      "procedure": "核对审批记录与写调用/结果/主体",
+      "pass_rule": "授权、执行和审计可用唯一关联字段连接",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L3-O2": {
+      "setup": "隔离关键采用方 Agent 写流程",
+      "procedure": "注入一次重试/断连/冲突并核对状态",
+      "pass_rule": "代理安全停止或恢复，不产生重复不受控写入",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L4-O1": {
+      "setup": "选真实生产使用链路的两次操作",
+      "procedure": "跟踪 Agent 会话、工具调用、日志和最终业务结果",
+      "pass_rule": "端到端追踪信息完整且可检索",
+      "minimum_samples": 2,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L4-O2": {
+      "setup": "选最近一次生产配置或服务版本变更",
+      "procedure": "查验回归测试是否阻断失败变更",
+      "pass_rule": "真实回归门禁能阻断被测坏版本/无证据变更",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L4-R1": {
+      "setup": "选生产集成与隔离测试环境",
+      "procedure": "核对回滚演练、上线责任及资源隔离",
+      "pass_rule": "存在可演练的独立测试、回滚方案和责任人",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L4-R2": {
+      "setup": "评估计划规定的复盘周期",
+      "procedure": "检索历史运营数据和价值卡的复盘记录",
+      "pass_rule": "达到复盘周期有结论、数据及可追溯更新",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    },
+    "ADOPT-L4-R3": {
+      "setup": "使用已经完成的价值复盘结果",
+      "procedure": "核查保留、缩减、停止低价值能力的决策与记录",
+      "pass_rule": "低价值能力有可验证处置或书面例外理由",
+      "minimum_samples": 1,
+      "required_artifacts": [
+        "pinned_target_version",
+        "test_inputs",
+        "raw_tool_or_document_evidence",
+        "independent_oracle_or_expected_contract",
+        "operator_attribution",
+        "measured_outcome"
+      ]
+    }
+  }
+}

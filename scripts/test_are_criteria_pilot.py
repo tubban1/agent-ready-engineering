@@ -13,9 +13,11 @@ def fact(value):
     return {"value": value, "evidence_id": "scope/risk-profile-verified"}
 
 
-def obs(value, *, surface="NATIVE_MCP", version="2026-11-18", evidence_id="run/trace-1", method="DIRECT_TEST"):
+def obs(value, *, rule_id=None, surface="NATIVE_MCP", version="2026-11-18", evidence_id="run/trace-1", method="DIRECT_TEST"):
     return {"value": value, "surface": surface, "version": version,
-            "evidence_id": evidence_id, "method": method}
+            "evidence_id": evidence_id, "method": method,
+            "protocol_id": (rule_id or "MCP-L2-X4") + "@pilot-2026-11-18",
+            "sample_count": 3, "trace_refs": ["traces/run-1.json"], "oracle_id": "independent/check-1"}
 
 
 class CriteriaPilotTests(unittest.TestCase):
@@ -55,7 +57,7 @@ class CriteriaPilotTests(unittest.TestCase):
                          m.evaluate(rule, {"tool_count": fact(24)}, {})["status"])
         self.assertEqual("FAIL",
                          m.evaluate(rule, {"tool_count": fact(25)},
-                                    {"progressive_discovery_or_equivalent_context_control": obs(False)})["status"])
+                                    {"progressive_discovery_or_equivalent_context_control": obs(False, rule_id=rule["id"])})["status"])
 
     def test_no_sandbox_absence_assumed_from_uninspected_product(self):
         rule = RULES["MCP-L4-R1"]
@@ -68,12 +70,12 @@ class CriteriaPilotTests(unittest.TestCase):
         self.assertEqual("RECOMMENDATION", rule["obligation"])
         self.assertEqual("ADVISORY_ONLY", m.evaluate(rule, {}, {})["status"])
         self.assertEqual("ADVISORY_ONLY", m.evaluate(rule, {"has_vendor_release_evidence": fact(True)},
-                        {"vendor_release_regression_gate_documented": obs(False)})["status"])
+                        {"vendor_release_regression_gate_documented": obs(False, rule_id=rule["id"])})["status"])
 
     def test_adopter_without_scenario_is_not_l0(self):
         rule = RULES["ADOPT-L1-V1"]
         self.assertEqual("NOT_ASSESSED", m.evaluate(rule, {}, {})["status"])
-        result = m.evaluate(rule, {}, {"value_decision_go_or_read_first": obs(False, surface="ADOPTER_WORKFLOW")},
+        result = m.evaluate(rule, {}, {"value_decision_go_or_read_first": obs(False, rule_id=rule["id"], surface="ADOPTER_WORKFLOW")},
                             scenario_id="pilot-company/use-case")
         self.assertEqual("FAIL", result["status"])
 
@@ -89,10 +91,42 @@ class CriteriaPilotTests(unittest.TestCase):
                           {"tested_errors_actionable": obs(False, version="")})
         self.assertEqual("UNKNOWN", case["status"])
 
+
+    def test_three_authorization_risks_are_applicable_without_permission(self):
+        for name, feature in (("MCP-L2-O2", "has_read_tools"), ("MCP-L3-C4", "has_writes"), ("MCP-L3-O2", "has_writes")):
+            with self.subTest(name=name):
+                rule = RULES[name]
+                self.assertEqual([feature], [x["fact"] for x in rule["applies_when"]])
+                no_authorization = m.evaluate(rule, {feature: fact(True)}, {"authorization": {
+                    "state": "BLOCKED_AUTH", "evidence_id": "owner_scope/denied", "reason": "owner sandbox consent unavailable"}})
+                self.assertEqual("BLOCKED_AUTH", no_authorization["status"])
+                self.assertNotEqual("NOT_APPLICABLE", no_authorization["status"])
+                self.assertEqual("NOT_TESTED", m.evaluate(rule, {feature: fact(True)}, {})["status"])
+
+    def test_vendor_provenance_not_client_hashed_discovery(self):
+        rule = RULES["MCP-L4-I1"]
+        self.assertEqual("vendor_contract_version_or_release_provenance", rule["pass_if"]["metric"])
+        result = m.evaluate(rule, {"has_tools": fact(True)}, {
+            "vendor_contract_version_or_release_provenance": obs(True, rule_id=rule["id"], surface="HOST_ADAPTER")})
+        self.assertEqual("UNKNOWN", result["status"])
+        authoritative = m.evaluate(rule, {"has_tools": fact(True)}, {
+            "vendor_contract_version_or_release_provenance": obs(False, rule_id=rule["id"], surface="VERIFIED_VENDOR_SOURCE")})
+        self.assertEqual("FAIL", authoritative["status"])
+
+    def test_protocol_evidence_is_mandatory_for_any_fail(self):
+        rule = RULES["MCP-L2-X4"]
+        e = obs(12000, rule_id=rule["id"])
+        for missing in ("protocol_id", "sample_count", "trace_refs", "oracle_id"):
+            r = e.copy()
+            r.pop(missing)
+            self.assertEqual("UNKNOWN", m.evaluate(rule,
+                {"has_read_tools": fact(True)},
+                {"max_default_read_output_tokens": r})["status"])
+
     def test_no_fake_score_by_turning_advice_into_fail(self):
         rule = copy.deepcopy(RULES["MCP-L4-O2"])
         rule["obligation"] = "RECOMMENDATION"
-        r = m.evaluate(rule, {}, {"vendor_release_regression_gate_documented": obs(False)})
+        r = m.evaluate(rule, {}, {"vendor_release_regression_gate_documented": obs(False, rule_id=rule["id"])})
         self.assertNotEqual("FAIL", r["status"])
 
 

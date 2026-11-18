@@ -211,7 +211,7 @@
         "id": "ADOPT-L2-O2",
         "claim": "采用方真实业务流程能运行并验收"
       },
-      "applicability": "产品评测者无需访问采用方内部工作流"
+      "applicability": "只要存在可执行只读工具即适用；缺少合法 Agent 测试授权必须单列 BLOCKED_AUTH，不能 N/A"
     },
     {
       "legacy_id": "L3-C1",
@@ -254,7 +254,7 @@
         "id": "ADOPT-L3-C4",
         "claim": "采用方首批写操作完成自己环境中的验收"
       },
-      "applicability": "仅在合法的隔离沙箱内进行副作用测试"
+      "applicability": "只要服务具有写操作即适用；缺乏隔离测试授权记录 BLOCKED_AUTH，不能 N/A"
     },
     {
       "legacy_id": "L3-S1",
@@ -369,7 +369,7 @@
         "id": "ADOPT-L3-O2",
         "claim": "采用方 Agent 工作流通过适用注入/重试评测"
       },
-      "applicability": "只在隔离授权环境注入故障"
+      "applicability": "只要服务具有写操作即适用；缺乏隔离测试授权记录 BLOCKED_AUTH，不能 N/A"
     },
     {
       "legacy_id": "L4-O1",
@@ -402,7 +402,7 @@
       "allocation": "A",
       "product": {
         "id": "MCP-L4-I1",
-        "claim": "工具定义可固定版本、检测完整性或发现漂移"
+        "claim": "供应商提供可追踪的工具契约版本号、变更记录、签名或等效发行来源；客户端自算哈希不算"
       },
       "adopter": null,
       "applicability": "取证必须区分发现能力与正式签名方案"

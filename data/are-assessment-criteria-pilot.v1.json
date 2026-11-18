@@ -257,7 +257,7 @@
       "obligation": "CONDITIONAL_REQUIRED",
       "applies_when": [
         {
-          "fact": "has_authorized_read_agent_task",
+          "fact": "has_read_tools",
           "op": "eq",
           "value": true
         }
@@ -267,7 +267,7 @@
         "op": "eq",
         "value": true
       },
-      "failure_standard": "限定业务任务在固定宿主/版本下无法得到独立真值认可的结果",
+      "failure_standard": "已确认有可运行的只读工具且授权任务的真实 Agent 结果与独立 Oracle 不一致；授权不足应记 BLOCKED_AUTH",
       "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
     },
     {
@@ -337,7 +337,7 @@
       "obligation": "CONDITIONAL_REQUIRED",
       "applies_when": [
         {
-          "fact": "has_authorized_write_sandbox",
+          "fact": "has_writes",
           "op": "eq",
           "value": true
         }
@@ -347,7 +347,7 @@
         "op": "eq",
         "value": true
       },
-      "failure_standard": "已授权受测写入操作未通过其明确契约验收",
+      "failure_standard": "已授权受测写入操作未通过其明确契约验收；缺少测试沙箱授权则记 BLOCKED_AUTH，不视为不适用",
       "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
     },
     {
@@ -517,7 +517,7 @@
       "obligation": "CONDITIONAL_REQUIRED",
       "applies_when": [
         {
-          "fact": "has_authorized_write_sandbox",
+          "fact": "has_writes",
           "op": "eq",
           "value": true
         }
@@ -527,7 +527,7 @@
         "op": "eq",
         "value": true
       },
-      "failure_standard": "已授权隔离环境内约定的重试/冲突/断连等故障注入失败",
+      "failure_standard": "已授权隔离环境内约定的重试/冲突/断连等故障注入失败；缺少测试沙箱授权则记 BLOCKED_AUTH，不视为不适用",
       "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
     },
     {
@@ -583,11 +583,11 @@
         }
       ],
       "pass_if": {
-        "metric": "tool_contract_drift_detectable",
+        "metric": "vendor_contract_version_or_release_provenance",
         "op": "eq",
         "value": true
       },
-      "failure_standard": "工具契约变更不可被客户端检测或固定",
+      "failure_standard": "MCP 服务提供商没有可引用的工具契约版本标识、供应商变更日志或可验证的签名/来源；客户端自己计算的 tools/list 哈希不算通过",
       "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
     },
     {
