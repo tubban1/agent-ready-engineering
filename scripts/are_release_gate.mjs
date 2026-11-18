@@ -25,7 +25,7 @@ function walk(directory) {
 }
 
 function publicationPaths() {
-  const evidence = walk(join(ROOT, 'public/evidence'));
+  const evidence = walk(join(ROOT, 'public'));
   const caseDocs = readdirSync(join(ROOT, 'docs/cases'), { withFileTypes: true })
     .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
     .map(entry => join(ROOT, 'docs/cases', entry.name));
