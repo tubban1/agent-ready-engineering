@@ -47,7 +47,9 @@ For coding Agents auditing their own local **stdio** MCP, use the read-only `are
 
 Public ARE knowledge endpoint (World2-managed canonical): `https://are.world2.co/mcp` (Streamable HTTP, no sign-in). Knowledge tools remain read-only. The separate opt-in `are_score_mcp({endpoint})` accepts **only a live, public HTTPS MCP Endpoint**, obtains its real `tools/list`, and saves a preliminary ARE Benchmark v2 score. There is **no GitHub-only, stdio, uploaded-manifest or offline-score registration**, nor a v1 API compatibility layer. A GitHub URL may still be provided later as source evidence. This is not L0–L4 certification and executes no third-party business tools. Workspace document checks via the separate local ARE stdio server do not register a Benchmark target and remain on the user's machine. See `functions/are-score/README.md`.
 
-### Public evaluations, self-assessment and maintainer feedback (no code changes)
+### Public evaluations, self-assessment and maintainer feedback
+
+The [evaluator-mode pilot](docs/standards/ARE-EVALUATOR-MODES-v1.md) now provides two distinct **private** machine-readable execution paths: project self-assessment and ARE independent assessor review, across the orthogonal product and adopter tracks. Run `python3 scripts/are_evaluator_workflows.py --help`. It calculates only provisional evidence-conditioned findings and comparisons, not official grades or public approval. Existing copy-paste prompts remain available below.
 
 ARE now has a documented, evidence-scoped public case and reusable prompts. **This is a process/documentation publication, not a new automated testing feature or certification.**
 

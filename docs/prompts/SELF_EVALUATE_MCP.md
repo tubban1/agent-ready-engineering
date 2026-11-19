@@ -3,6 +3,8 @@
 
 **Status:** Developer self-assessment; not an ARE independent audit, MCP certification, or security approval. You are responsible for granting a safe scope. See the [Chinese version](SELF_EVALUATE_MCP.zh.md).
 
+For a machine-readable PRIVATE pilot self-assessment record (PROJECT_SELF mode, product or adopter track), see [ARE Evaluator Modes](../standards/ARE-EVALUATOR-MODES-v1.md). The offline CLI does not perform the Agent audit or grant an official grade.
+
 ## Copy this prompt into your real Agent host
 
 <!-- ARE_PROMPT_AUTOGEN_START: run node scripts/sync-are-evaluation-prompts.mjs -->

@@ -3,6 +3,8 @@
 
 **Status:** Public community research, **not** ARE-issued certification or project-owner permission to write. See [Chinese](INDEPENDENT_MCP_EVALUATION.zh.md).
 
+For a machine-readable PRIVATE pilot independent assessor record (ARE_INDEPENDENT mode), compare with project self claims using [ARE Evaluator Modes](../standards/ARE-EVALUATOR-MODES-v1.md). This offline CLI does not attest assessor identity, run real MCP tasks or authorize publishing.
+
 ## Copy this prompt
 
 <!-- ARE_PROMPT_AUTOGEN_START: run node scripts/sync-are-evaluation-prompts.mjs -->

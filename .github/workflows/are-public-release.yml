@@ -23,4 +23,4 @@ jobs:
         run: |
           python3 scripts/are_assessment_tracks.py
           python3 scripts/are_criteria_pilot.py
-          python3 -m unittest -q scripts/test_are_assessment_tracks.py scripts/test_are_criteria_pilot.py scripts/test_are_publication.py scripts/test_are_remote_dc_case.py
+          python3 -m unittest -q scripts/test_are_assessment_tracks.py scripts/test_are_criteria_pilot.py scripts/test_are_evaluator_workflows.py scripts/test_are_publication.py scripts/test_are_remote_dc_case.py
