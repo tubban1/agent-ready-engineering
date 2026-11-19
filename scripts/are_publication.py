@@ -60,6 +60,16 @@ CHANNEL_STATUSES = {
 }
 CHECK_STATUSES = {"PASS", "FAIL", "NOT_APPLICABLE", "NOT_VERIFIED"}
 REPO_ROOT = Path(__file__).resolve().parents[1]
+# Legacy v1 public case preserved for historical replay. This is a fixed
+# identity anchor, not a grant to publish new evaluations or changed evidence.
+# Production release still requires a trusted immutable case/version ledger.
+LEGACY_PUBLICATION_ANCHORS = {
+    "solarstorm-2026-11-16": (
+        "https://mcp.solarstorm.today/mcp",
+        "5388312a-23b9-58f5-89ef-ec184a389907",
+        "2026-11-16",
+    ),
+}
 
 
 def sha256(data: bytes) -> str:
@@ -178,6 +188,21 @@ def validate(doc: dict, assessment_file: Path | None = None) -> list[str]:
         if not (retest.get("new_deployed_version") and retest.get("independent_oracle_passed") is True and retest.get("evidence_uri")):
             errors.append("S13 retest complete requires real new deployment, independent oracle and evidence")
     publication = doc.get("channels", {})
+    # Fail closed for any NEW v1 public case, regardless of user-supplied date.
+    # Only a pinned historical case identity may be replayed; this validation
+    # is not an authorization mechanism for the real production publish worker.
+    any_public = any(
+        isinstance(v, dict) and v.get("status") == "PUBLISHED"
+        for v in publication.values()
+    )
+    case_public = str(steps.get("S10", {}).get("status", "")).startswith("COMPLETE")
+    legacy_identity = (
+        doc.get("endpoint"), doc.get("world2_id"), doc.get("assessed_at")
+    )
+    if (any_public or case_public) and (
+        LEGACY_PUBLICATION_ANCHORS.get(doc.get("case_id")) != legacy_identity
+    ):
+        errors.append("new public evaluation requires dual-track release gate; legacy 39/39 is not publication approval")
     for channel, value in publication.items():
         if channel not in PUBLISH_HOSTS:
             errors.append(f"unrecognized channel {channel}")

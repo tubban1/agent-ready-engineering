@@ -1,0 +1,464 @@
+{
+  "schema": "are.assessment.track_map.v1",
+  "version": "0.1.0-draft",
+  "status": "DRAFT_NOT_SCOREABLE",
+  "source": "data/checks.yaml",
+  "source_standard": "ARE-A02@0.5",
+  "scope": "MCP product at pinned endpoint+version versus adopter at scoped scenario",
+  "rule_counts": {
+    "A": 16,
+    "B": 7,
+    "S": 16
+  },
+  "tracks": {
+    "MCP_PRODUCT": "Independent product-side checks, no adopter governance prerequisites",
+    "ADOPTER_GOVERNANCE": "Adopting organization scoped scenario, maintains L1-L4 business semantics"
+  },
+  "score_policy": {
+    "default_state": "UNSCORED",
+    "legacy_history_immutable": true,
+    "legacy_39_completion_is_not_publication_authorization": true,
+    "non_scored_recommendations_separate": true,
+    "grade_activation": "REQUIRES_EXPLICIT_NEW_STANDARD_AND_CALIBRATION"
+  },
+  "rules": [
+    {
+      "legacy_id": "L1-V1",
+      "allocation": "B",
+      "product": null,
+      "adopter": {
+        "id": "ADOPT-L1-V1",
+        "claim": "采用方明确价值卡及 Go/只读先行决策"
+      },
+      "applicability": "须有具体采用场景"
+    },
+    {
+      "legacy_id": "L1-V2",
+      "allocation": "B",
+      "product": null,
+      "adopter": {
+        "id": "ADOPT-L1-V2",
+        "claim": "采用方价值基线或补测计划"
+      },
+      "applicability": "须定义测量来源"
+    },
+    {
+      "legacy_id": "L1-V3",
+      "allocation": "B",
+      "product": null,
+      "adopter": {
+        "id": "ADOPT-L1-V3",
+        "claim": "采用方最小业务验证记录"
+      },
+      "applicability": "第三方 Agent 实验另在产品卷记录"
+    },
+    {
+      "legacy_id": "L1-V4",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L1-V4",
+        "claim": "可枚举并描述当前 MCP 全部工具能力"
+      },
+      "adopter": {
+        "id": "ADOPT-L1-V4",
+        "claim": "采用方限定首批采用能力、范围和验收口径"
+      },
+      "applicability": "两侧的能力矩阵分别取证"
+    },
+    {
+      "legacy_id": "L1-A1",
+      "allocation": "B",
+      "product": null,
+      "adopter": {
+        "id": "ADOPT-L1-A1",
+        "claim": "采用方明确 Owner、授权人与负责人"
+      },
+      "applicability": "不得要求供应商提供客户组织架构"
+    },
+    {
+      "legacy_id": "L1-C1",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L1-C1",
+        "claim": "通用执行器可辨识，工具选择语义明确"
+      },
+      "adopter": {
+        "id": "ADOPT-L1-C1",
+        "claim": "采用方针对高权限通用执行器给出隔离或拆分方案"
+      },
+      "applicability": "产品侧不得要求供应商具备客户内部拆分计划"
+    },
+    {
+      "legacy_id": "L2-C1",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L2-C1",
+        "claim": "只读工具具备可理解的强类型输入输出与适用元数据"
+      },
+      "adopter": null,
+      "applicability": "单位、来源、更新时间按数据类型适用"
+    },
+    {
+      "legacy_id": "L2-C2",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L2-C2",
+        "claim": "错误结构化到可供 Agent 做正确恢复与决策"
+      },
+      "adopter": null,
+      "applicability": "自定义 ARE 契约；非 MCP 协议 MUST"
+    },
+    {
+      "legacy_id": "L2-X1",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L2-X1",
+        "claim": "可列表化大型数据支持适当投影、过滤和续页"
+      },
+      "adopter": null,
+      "applicability": "小型固定返回值可能 N/A"
+    },
+    {
+      "legacy_id": "L2-X2",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L2-X2",
+        "claim": "大结果有确定上限及可恢复续取语义"
+      },
+      "adopter": null,
+      "applicability": "仅适用于可能截断或分页的结果"
+    },
+    {
+      "legacy_id": "L2-X3",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L2-X3",
+        "claim": "工具发现上下文成本在大型工具集下受控"
+      },
+      "adopter": null,
+      "applicability": "强制阈值待 10 MCP 校准；非 MCP MUST"
+    },
+    {
+      "legacy_id": "L2-X4",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L2-X4",
+        "claim": "只读工具的默认响应必须在可测量的上下文上限内（试点 8192 Token）；显式请求的大响应单独审查"
+      },
+      "adopter": {
+        "id": "ADOPT-L2-X4",
+        "claim": "采用方设定上下文成本预算并持续监控"
+      },
+      "applicability": "独立 ARE 实测可作为证据；产品侧默认输出上限以事先登记的试点阈值判断，非要求作者自行提供报告"
+    },
+    {
+      "legacy_id": "L2-A1",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L2-A1",
+        "claim": "服务端能限制并撤销授权范围"
+      },
+      "adopter": {
+        "id": "ADOPT-L2-A1",
+        "claim": "采用方使用独立 Agent 身份及最小权限凭证"
+      },
+      "applicability": "单一公共匿名只读服务可以 N/A"
+    },
+    {
+      "legacy_id": "L2-A2",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L2-A2",
+        "claim": "受信任边界之外的数据保留出处与可信度线索"
+      },
+      "adopter": {
+        "id": "ADOPT-L2-A2",
+        "claim": "采用方 Agent/宿主不得将不可信内容当作指令"
+      },
+      "applicability": "对无外部输入的数据服务按风险判定适用性"
+    },
+    {
+      "legacy_id": "L2-I1",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L2-I1",
+        "claim": "工具只读注解与真实副作用一致，适配层行为可追踪"
+      },
+      "adopter": null,
+      "applicability": "内部逻辑分层只有源码绑定时可证"
+    },
+    {
+      "legacy_id": "L2-O1",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L2-O1",
+        "claim": "服务端可记录并关联合法调用的审计证据"
+      },
+      "adopter": {
+        "id": "ADOPT-L2-O1",
+        "claim": "采用方记录实际调用者、用途和调用上下文"
+      },
+      "applicability": "公共匿名无审计授权时可部分 UNKNOWN"
+    },
+    {
+      "legacy_id": "L2-O2",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L2-O2",
+        "claim": "固定场景内真实 Agent 只读任务与独立 Oracle 可复验"
+      },
+      "adopter": {
+        "id": "ADOPT-L2-O2",
+        "claim": "采用方真实业务流程能运行并验收"
+      },
+      "applicability": "只要存在可执行只读工具即适用；缺少合法 Agent 测试授权必须单列 BLOCKED_AUTH，不能 N/A"
+    },
+    {
+      "legacy_id": "L3-C1",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L3-C1",
+        "claim": "有外部写入副作用的工具支持可证明的重复执行安全"
+      },
+      "adopter": null,
+      "applicability": "等价幂等机制可接受；无写操作 N/A"
+    },
+    {
+      "legacy_id": "L3-C2",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L3-C2",
+        "claim": "共享可变资源具备并发冲突保护与可恢复反馈"
+      },
+      "adopter": null,
+      "applicability": "追加式或单用户操作可能 N/A"
+    },
+    {
+      "legacy_id": "L3-C3",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L3-C3",
+        "claim": "有风险的写入提供验证、预览或等价的提交前检查"
+      },
+      "adopter": null,
+      "applicability": "无有风险写入时 N/A"
+    },
+    {
+      "legacy_id": "L3-C4",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L3-C4",
+        "claim": "受测写操作有可检查的契约及可复现验收证据"
+      },
+      "adopter": {
+        "id": "ADOPT-L3-C4",
+        "claim": "采用方首批写操作完成自己环境中的验收"
+      },
+      "applicability": "只要服务具有写操作即适用；缺乏隔离测试授权记录 BLOCKED_AUTH，不能 N/A"
+    },
+    {
+      "legacy_id": "L3-S1",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L3-S1",
+        "claim": "异步长任务可查询、取消及断线后恢复"
+      },
+      "adopter": null,
+      "applicability": "纯短同步操作 N/A"
+    },
+    {
+      "legacy_id": "L3-S2",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L3-S2",
+        "claim": "产品草稿与正式数据隔离、可过期并清理"
+      },
+      "adopter": null,
+      "applicability": "无草稿能力 N/A"
+    },
+    {
+      "legacy_id": "L3-S3",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L3-S3",
+        "claim": "实际写入副作用有撤销/补偿或明确不可逆标识"
+      },
+      "adopter": null,
+      "applicability": "无写操作 N/A"
+    },
+    {
+      "legacy_id": "L3-S4",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L3-S4",
+        "claim": "信息不完整时 Agent 可得到明确可操作的补全指引"
+      },
+      "adopter": null,
+      "applicability": "是否必须为 needs_input 字面字段需校准"
+    },
+    {
+      "legacy_id": "L3-A1",
+      "allocation": "B",
+      "product": null,
+      "adopter": {
+        "id": "ADOPT-L3-A1",
+        "claim": "采用方完整授权矩阵获得适当的内部批准"
+      },
+      "applicability": "公司内部审批不由 MCP 作者负责"
+    },
+    {
+      "legacy_id": "L3-A2",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L3-A2",
+        "claim": "服务端防止 Agent 伪造最终授权或确认收据"
+      },
+      "adopter": {
+        "id": "ADOPT-L3-A2",
+        "claim": "采用方决定授权策略并产生可信确认"
+      },
+      "applicability": "只适用具有高影响力最终写入"
+    },
+    {
+      "legacy_id": "L3-A3",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L3-A3",
+        "claim": "服务端不将凭证泄漏到工具结果或模型上下文"
+      },
+      "adopter": {
+        "id": "ADOPT-L3-A3",
+        "claim": "采用方保证宿主凭证托管和执行沙箱隔离"
+      },
+      "applicability": "黑盒不可证的服务端内控需 UNKNOWN"
+    },
+    {
+      "legacy_id": "L3-A4",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L3-A4",
+        "claim": "服务端提供必要的限流、撤销和停止能力"
+      },
+      "adopter": {
+        "id": "ADOPT-L3-A4",
+        "claim": "采用方落实预算、频次限制和停用策略"
+      },
+      "applicability": "额度维度按服务副作用性质适用"
+    },
+    {
+      "legacy_id": "L3-O1",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L3-O1",
+        "claim": "服务端副作用记录可关联授权收据"
+      },
+      "adopter": {
+        "id": "ADOPT-L3-O1",
+        "claim": "采用方确认和授权事件可跟调用记录对账"
+      },
+      "applicability": "无法访问服务端日志时不得认定 FAIL"
+    },
+    {
+      "legacy_id": "L3-O2",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L3-O2",
+        "claim": "产品在适用故障注入下体现安全与恢复能力"
+      },
+      "adopter": {
+        "id": "ADOPT-L3-O2",
+        "claim": "采用方 Agent 工作流通过适用注入/重试评测"
+      },
+      "applicability": "只要服务具有写操作即适用；缺乏隔离测试授权记录 BLOCKED_AUTH，不能 N/A"
+    },
+    {
+      "legacy_id": "L4-O1",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L4-O1",
+        "claim": "服务端提供跨工具调用与业务事务的关联标识"
+      },
+      "adopter": {
+        "id": "ADOPT-L4-O1",
+        "claim": "采用方跨 Agent 会话保留可串联的追踪证据"
+      },
+      "applicability": "两边独立检查；不强求单侧能证全链路"
+    },
+    {
+      "legacy_id": "L4-O2",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L4-O2",
+        "claim": "供应商公开或授权提供发布前回归门禁证据；外部缺少证据不构成 FAIL"
+      },
+      "adopter": {
+        "id": "ADOPT-L4-O2",
+        "claim": "采用方在接入新版本时有回归与升级把关"
+      },
+      "applicability": "任一方不能替另一方提供发布证据"
+    },
+    {
+      "legacy_id": "L4-I1",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L4-I1",
+        "claim": "供应商提供可追踪的工具契约版本号、变更记录、签名或等效发行来源；客户端自算哈希不算"
+      },
+      "adopter": null,
+      "applicability": "取证必须区分发现能力与正式签名方案"
+    },
+    {
+      "legacy_id": "L4-I2",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L4-I2",
+        "claim": "产品多个入口的相同操作具有一致可预期语义"
+      },
+      "adopter": null,
+      "applicability": "仅对多入口产品适用"
+    },
+    {
+      "legacy_id": "L4-R1",
+      "allocation": "S",
+      "product": {
+        "id": "MCP-L4-R1",
+        "claim": "对含写操作的供应商产品，可供授权验证的测试或沙箱环境实际可用"
+      },
+      "adopter": {
+        "id": "ADOPT-L4-R1",
+        "claim": "采用方对生产集成设变更、回滚与负责人"
+      },
+      "applicability": "不要求外部作者交代客户运营制度"
+    },
+    {
+      "legacy_id": "L4-R2",
+      "allocation": "B",
+      "product": null,
+      "adopter": {
+        "id": "ADOPT-L4-R2",
+        "claim": "采用方完成实际价值复盘并回写价值判断"
+      },
+      "applicability": "不考产品供应商客户 ROI"
+    },
+    {
+      "legacy_id": "L4-R3",
+      "allocation": "B",
+      "product": null,
+      "adopter": {
+        "id": "ADOPT-L4-R3",
+        "claim": "采用方基于复盘保留、缩减或淘汰低价值能力"
+      },
+      "applicability": "必须有实际采用数据或可靠决策依据"
+    },
+    {
+      "legacy_id": "L4-R4",
+      "allocation": "A",
+      "product": {
+        "id": "MCP-L4-R4",
+        "claim": "供应商提供 Agent 能理解的能力指南、典型工作流及错误恢复指引"
+      },
+      "adopter": null,
+      "applicability": "适用于实际对外提供的工具"
+    }
+  ]
+}

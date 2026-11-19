@@ -26,6 +26,31 @@ class AREPublicationTests(unittest.TestCase):
         self.assertEqual("UNVERIFIED", self.case["source"]["binding"])
         self.assertEqual("NOT_ESTABLISHED", self.case["assessment"]["maturity_level"])
 
+    def test_new_case_cannot_publish_from_legacy_39_only(self):
+        self.case["assessed_at"] = "2026-11-19"
+        problems = are.validate(self.case)
+        self.assertTrue(any("dual-track release gate" in x for x in problems), problems)
+        self.assertEqual(39, sum(self.case["assessment"]["counts"].values()))
+
+    def test_backdated_new_case_cannot_bypass_release_gate(self):
+        self.case["case_id"] = "arbitrary-new-case"
+        self.case["assessed_at"] = "2026-11-01"
+        self.assertTrue(any("dual-track release gate" in x for x in are.validate(self.case)))
+        self.case["case_id"] = "solarstorm-2026-11-16"
+        self.case["endpoint"] = "https://different.example.test/mcp"
+        self.assertTrue(any("dual-track release gate" in x for x in are.validate(self.case)))
+
+    def test_new_case_can_be_held_as_unpublished_draft(self):
+        self.case["assessed_at"] = "2026-11-19"
+        self.case["stages"]["S10"] = {"status": "NOT_ATTEMPTED", "reason": "pending dual-track QA"}
+        for channel in self.case["channels"].values():
+            if channel["status"] == "PUBLISHED":
+                channel["status"] = "CONTENT_READY"
+                channel.pop("url", None)
+                channel.pop("published_at", None)
+                channel.pop("verification_method", None)
+        self.assertEqual([], are.validate(self.case))
+
     def test_original_39_check_names_and_totals(self):
         self.assertEqual(39, len(are.check_ids()))
         with tempfile.TemporaryDirectory() as d:

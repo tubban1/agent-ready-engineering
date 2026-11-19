@@ -1,0 +1,1078 @@
+{
+  "schema": "are.two_track_criteria.v1",
+  "version": "0.1.0-pilot",
+  "status": "PILOT_NOT_CERTIFIABLE",
+  "original_standard": "ARE-A02@0.5",
+  "mapping": "data/are-assessment-track-map.v1.json",
+  "framework_pins": {
+    "default_read_response_ceiling_tokens": 8192,
+    "large_tool_catalog_threshold": 25
+  },
+  "scoring_semantics": {
+    "mandatory_violation": "FAIL only if applicable, directly evidenced, attributable, pinned version and authorized",
+    "not_applicable": "predicate false with evidence; never treat unknown as N/A",
+    "recommendation": "may produce non-scored improvement only; never FAIL",
+    "unknown": "insufficient scope or observation; no implied PASS",
+    "original_maturity": "unaffected; no new product levels authorized"
+  },
+  "criteria": [
+    {
+      "id": "MCP-L1-V4",
+      "side": "product",
+      "legacy_id": "L1-V4",
+      "obligation": "REQUIRED",
+      "applies_when": [],
+      "pass_if": {
+        "metric": "complete_native_tool_inventory",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "已验证原生 MCP 工具目录缺项或工具描述不能对应实际能力",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L1-C1",
+      "side": "product",
+      "legacy_id": "L1-C1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_catch_all_executor",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "catch_all_operations_scoped",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "存在万能执行器但缺少可识别的子操作范围、参数或边界",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L2-C1",
+      "side": "product",
+      "legacy_id": "L2-C1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_read_tools",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "read_contracts_typed_and_semantic",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "适用只读工具缺少必要的强类型及业务语义",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L2-C2",
+      "side": "product",
+      "legacy_id": "L2-C2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_callable_tools",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "tested_errors_actionable",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "已授权安全负例中错误不具备稳定可操作的机器可读恢复信息",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L2-X1",
+      "side": "product",
+      "legacy_id": "L2-X1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_large_list_results",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "list_projection_filter_and_continuation",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "大列表结果没有足够的服务器端选择/续取能力",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L2-X2",
+      "side": "product",
+      "legacy_id": "L2-X2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "can_truncate_results",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "truncation_status_and_resume_token",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "截断后不能可靠获知是否截断及如何续取",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L2-X3",
+      "side": "product",
+      "legacy_id": "L2-X3",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "tool_count",
+          "op": "gte",
+          "value": 25
+        }
+      ],
+      "pass_if": {
+        "metric": "progressive_discovery_or_equivalent_context_control",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "至少25个工具的原生服务没有紧凑发现或等效上下文控制",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L2-X4",
+      "side": "product",
+      "legacy_id": "L2-X4",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_read_tools",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "max_default_read_output_tokens",
+        "op": "lte",
+        "value": 8192
+      },
+      "failure_standard": "正常默认读取结果在未经客户端要求放大时超过8192 Token 且无法分块/缩减",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L2-A1",
+      "side": "product",
+      "legacy_id": "L2-A1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "supports_delegated_credentials",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "server_scoped_shortlived_revocable_credentials",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "支持委托鉴权但服务端无法约束范围、有效期或撤销",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L2-A2",
+      "side": "product",
+      "legacy_id": "L2-A2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "returns_untrusted_external_content",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "source_and_trust_metadata_preserved",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "来自不可信来源的内容没有足够出处或信任边界标识",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L2-I1",
+      "side": "product",
+      "legacy_id": "L2-I1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_read_tools",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "declared_read_only_semantics_match_effects",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "readOnly 等注解与真实副作用发生可复现冲突",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L2-O1",
+      "side": "product",
+      "legacy_id": "L2-O1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "handles_sensitive_customer_data",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "read_audit_attribution_available",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "涉及敏感访问的服务端无法提供必要的可归因访问证据",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L2-O2",
+      "side": "product",
+      "legacy_id": "L2-O2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_read_tools",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "read_agent_task_independently_reproducible",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "已确认有可运行的只读工具且授权任务的真实 Agent 结果与独立 Oracle 不一致；授权不足应记 BLOCKED_AUTH",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-C1",
+      "side": "product",
+      "legacy_id": "L3-C1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_writes",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "repeated_writes_safe_in_sandbox",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "隔离环境中的允许重复执行导致重复副作用或不一致结果",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-C2",
+      "side": "product",
+      "legacy_id": "L3-C2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_shared_mutable_resources",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "concurrent_update_conflicts_safe",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "并发更新可产生无提示覆盖或无法处理的资源冲突",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-C3",
+      "side": "product",
+      "legacy_id": "L3-C3",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_high_risk_writes",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "precommit_validation_or_preview",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "高风险写入缺乏可验证的提交前校验或预览",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-C4",
+      "side": "product",
+      "legacy_id": "L3-C4",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_writes",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "tested_write_contracts_pass",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "已授权受测写入操作未通过其明确契约验收；缺少测试沙箱授权则记 BLOCKED_AUTH，不视为不适用",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-S1",
+      "side": "product",
+      "legacy_id": "L3-S1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_async_tasks",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "async_status_cancel_and_recovery",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "异步任务断连后不能按稳定 ID 查询或必要时取消",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-S2",
+      "side": "product",
+      "legacy_id": "L3-S2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_drafts",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "draft_expiry_isolation_cleanup",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "草稿与正式状态混淆或无法清理/过期",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-S3",
+      "side": "product",
+      "legacy_id": "L3-S3",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_writes",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "effects_compensable_or_irreversible_declared",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "提交副作用没有恢复/补偿且不可逆性未明确",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-S4",
+      "side": "product",
+      "legacy_id": "L3-S4",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "may_need_additional_input",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "missing_fields_actionable",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "缺少必要输入时不能告知 Agent 需要补充什么",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-A2",
+      "side": "product",
+      "legacy_id": "L3-A2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_final_side_effects",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "server_rejects_agent_self_approved_finalization",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "服务端接受 Agent 自报的确认而执行终局操作",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-A3",
+      "side": "product",
+      "legacy_id": "L3-A3",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "handles_credentials",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "credentials_not_exposed_to_model",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "有可靠证据显示凭证暴露于模型上下文或工具输出",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-A4",
+      "side": "product",
+      "legacy_id": "L3-A4",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_high_risk_writes",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "server_limits_and_revocation_work",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "高风险写入缺少可操作的服务端限制及撤销能力",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-O1",
+      "side": "product",
+      "legacy_id": "L3-O1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_authorized_side_effects",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "server_audit_bound_to_auth_evidence",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "授权写入无法对应可审计授权凭证",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L3-O2",
+      "side": "product",
+      "legacy_id": "L3-O2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_writes",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "authorized_fault_injection_passed",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "已授权隔离环境内约定的重试/冲突/断连等故障注入失败；缺少测试沙箱授权则记 BLOCKED_AUTH，不视为不适用",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L4-O1",
+      "side": "product",
+      "legacy_id": "L4-O1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_multi_step_transactions",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "server_correlation_id_available",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "多步骤事务无法关联业务副作用与工具调用",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L4-O2",
+      "side": "product",
+      "legacy_id": "L4-O2",
+      "obligation": "RECOMMENDATION",
+      "applies_when": [
+        {
+          "fact": "has_vendor_release_evidence",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "vendor_release_regression_gate_documented",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "供应商发布回归门禁可提升可靠性；外部无法证明时不得记 FAIL",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L4-I1",
+      "side": "product",
+      "legacy_id": "L4-I1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_tools",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "vendor_contract_version_or_release_provenance",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "MCP 服务提供商没有可引用的工具契约版本标识、供应商变更日志或可验证的签名/来源；客户端自己计算的 tools/list 哈希不算通过",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L4-I2",
+      "side": "product",
+      "legacy_id": "L4-I2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "ingress_count",
+          "op": "gte",
+          "value": 2
+        }
+      ],
+      "pass_if": {
+        "metric": "same_operation_cross_ingress_equivalent",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "原生多入口同操作授权/副作用语义已实测不一致",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L4-R1",
+      "side": "product",
+      "legacy_id": "L4-R1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "has_writes",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "vendor_test_or_sandbox_access_available",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "具有写能力却不存在可安全验证的测试/沙箱入口",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "MCP-L4-R4",
+      "side": "product",
+      "legacy_id": "L4-R4",
+      "obligation": "REQUIRED",
+      "applies_when": [],
+      "pass_if": {
+        "metric": "agent_guide_covers_tools_flows_errors",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "公开 Agent 工具服务缺乏足够的操作、流程与错误使用说明",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+    },
+    {
+      "id": "ADOPT-L1-V1",
+      "side": "adopter",
+      "legacy_id": "L1-V1",
+      "obligation": "REQUIRED",
+      "applies_when": [],
+      "pass_if": {
+        "metric": "value_decision_go_or_read_first",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "使用方场景缺乏明确 Go/先只读决策",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L1-V2",
+      "side": "adopter",
+      "legacy_id": "L1-V2",
+      "obligation": "REQUIRED",
+      "applies_when": [],
+      "pass_if": {
+        "metric": "value_baseline_or_measurable_plan",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "使用方未建立可追溯基线或补测计划",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L1-V3",
+      "side": "adopter",
+      "legacy_id": "L1-V3",
+      "obligation": "REQUIRED",
+      "applies_when": [],
+      "pass_if": {
+        "metric": "minimum_real_business_validation_record",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "使用方未记录最低限度真实业务验证",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L1-V4",
+      "side": "adopter",
+      "legacy_id": "L1-V4",
+      "obligation": "REQUIRED",
+      "applies_when": [],
+      "pass_if": {
+        "metric": "bounded_first_batch_selected",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "使用方首批功能范围未限定",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L1-A1",
+      "side": "adopter",
+      "legacy_id": "L1-A1",
+      "obligation": "REQUIRED",
+      "applies_when": [],
+      "pass_if": {
+        "metric": "first_batch_owner_approver_responsible",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "使用方缺少明确操作责任人或审批责任",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L1-C1",
+      "side": "adopter",
+      "legacy_id": "L1-C1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_uses_catch_all_tool",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "catch_all_use_scope_risk_plan",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方使用通用执行接口却未明确安全隔离与拆分方案",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L2-X4",
+      "side": "adopter",
+      "legacy_id": "L2-X4",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_uses_read_tools",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_measured_read_context_budget",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方无法测量或限制只读上下文消耗",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L2-A1",
+      "side": "adopter",
+      "legacy_id": "L2-A1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_delegates_agent_identity",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_least_privilege_credentials",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方委托身份未设最小权限/撤销",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L2-A2",
+      "side": "adopter",
+      "legacy_id": "L2-A2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_consumes_untrusted_content",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_untrusted_content_boundary",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方把外部不可信内容作为高信任指令",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L2-O1",
+      "side": "adopter",
+      "legacy_id": "L2-O1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_accesses_customer_data",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_read_audit_usable",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方真实数据调用缺少必要日志",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L2-O2",
+      "side": "adopter",
+      "legacy_id": "L2-O2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_uses_read_tools",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_read_agent_oracle_pass",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方真实只读流程无法通过可重复验收",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L3-C4",
+      "side": "adopter",
+      "legacy_id": "L3-C4",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_uses_writes",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_write_acceptance_pass",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方实际首批写入流程未通过约定验收",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L3-A1",
+      "side": "adopter",
+      "legacy_id": "L3-A1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_uses_writes",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_approved_authorization_matrix",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方写入授权规则没有经过其责任主体批准",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L3-A2",
+      "side": "adopter",
+      "legacy_id": "L3-A2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_has_final_effects",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_trusted_final_authorization",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方未通过可信系统授权终局操作",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L3-A3",
+      "side": "adopter",
+      "legacy_id": "L3-A3",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_uses_credentials",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_credentials_isolated_from_agent",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方把凭证带进模型上下文",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L3-A4",
+      "side": "adopter",
+      "legacy_id": "L3-A4",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_uses_writes",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_quotas_and_killswitch",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方写入缺少相称的额度、频率限制和停用机制",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L3-O1",
+      "side": "adopter",
+      "legacy_id": "L3-O1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_has_final_effects",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_auth_audit_joinable",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方无法将授权凭据与执行记录对应",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L3-O2",
+      "side": "adopter",
+      "legacy_id": "L3-O2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_uses_writes",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_fault_injection_pass",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方关键代理工作流未通过约定风险测试",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L4-O1",
+      "side": "adopter",
+      "legacy_id": "L4-O1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_runs_production",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_end_to_end_trace",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方生产链路无法关联会话/执行与结果",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L4-O2",
+      "side": "adopter",
+      "legacy_id": "L4-O2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_runs_production",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_release_regression_blocks",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方生产上线无关键指标退化门禁",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L4-R1",
+      "side": "adopter",
+      "legacy_id": "L4-R1",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_runs_production",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_prod_test_isolation_and_rollback",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "采用方生产操作缺少独立验收/回滚策略",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L4-R2",
+      "side": "adopter",
+      "legacy_id": "L4-R2",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_has_review_window",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_completed_value_review",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "达到复盘周期却未做证据化价值复盘",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    },
+    {
+      "id": "ADOPT-L4-R3",
+      "side": "adopter",
+      "legacy_id": "L4-R3",
+      "obligation": "CONDITIONAL_REQUIRED",
+      "applies_when": [
+        {
+          "fact": "adopter_has_review_window",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "pass_if": {
+        "metric": "adopter_low_value_capability_decision",
+        "op": "eq",
+        "value": true
+      },
+      "failure_standard": "已复盘但没有基于证据的保留或收缩决策",
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+    }
+  ]
+}
