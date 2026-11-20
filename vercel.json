@@ -19,12 +19,12 @@
   "redirects": [
     {
       "source": "/tasks",
-      "destination": "https://br-raspy-hat-b96bluqn-areintake.compute.c-7.eu-central-1.aws.neon.tech/v2/board",
+      "destination": "https://br-raspy-hat-b96bluqn-areintake.compute.c-7.eu-central-1.aws.neon.tech/v3/board",
       "permanent": false
     },
     {
       "source": "/tasks/",
-      "destination": "https://br-raspy-hat-b96bluqn-areintake.compute.c-7.eu-central-1.aws.neon.tech/v2/board",
+      "destination": "https://br-raspy-hat-b96bluqn-areintake.compute.c-7.eu-central-1.aws.neon.tech/v3/board",
       "permanent": false
     },
     {

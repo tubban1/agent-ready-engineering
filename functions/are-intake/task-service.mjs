@@ -16,12 +16,12 @@ const txt=(x,max=160)=>typeof x==="string"&&x.trim().length>0&&x.length<=max;
 export const TASK_READ_SQL=`SELECT COALESCE((SELECT row_to_json(a) FROM (
  SELECT id,cohort_id,repository_key,title,instructions,assignee_id,assessor_organization,
  created_at,expires_at,plan_snapshot FROM are_eval.private_assessment_tasks
- WHERE token_sha256=$1 AND expires_at>now() AND revoked_at IS NULL AND invite_id IS NOT NULL) a),'null'::json)::text`;
+ WHERE token_sha256=$1 AND expires_at>now() AND revoked_at IS NULL AND plan_snapshot->>'version'='are.test-plan.v3') a),'null'::json)::text`;
 
 export const TASK_SUBMIT_SQL=`WITH permitted AS (
  SELECT t.id FROM are_eval.private_assessment_tasks t
  WHERE t.token_sha256=$1 AND t.revoked_at IS NULL AND t.expires_at>now()
-   AND t.cohort_id=$3 AND t.repository_key=$4 AND t.assignee_id=$5 AND t.assessor_organization=$6 AND t.invite_id IS NOT NULL
+   AND t.cohort_id=$3 AND t.repository_key=$4 AND t.assignee_id=$5 AND t.assessor_organization=$6 AND t.plan_snapshot->>'version'='are.test-plan.v3'
  FOR UPDATE OF t
 ),
 created AS (
@@ -58,7 +58,7 @@ export const TASK_RECEIPT_SQL=`SELECT COALESCE((SELECT row_to_json(r) FROM (
  JOIN are_eval.private_task_submissions s ON s.task_id=p.id
  JOIN are_eval.private_evaluation_runs r ON r.id=s.run_id
  WHERE p.token_sha256=$1 AND p.revoked_at IS NULL AND p.expires_at>now()
-   AND p.invite_id IS NOT NULL AND ($2::uuid IS NULL OR s.run_id=$2::uuid)
+   AND p.plan_snapshot->>'version'='are.test-plan.v3' AND ($2::uuid IS NULL OR s.run_id=$2::uuid)
  ORDER BY s.created_at DESC LIMIT 1) r),'null'::json)::text`;
 
 export function tokenHash(token){
@@ -75,7 +75,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
  const task={id:assignment.id,cohort_id:assignment.cohort_id,repository_key:assignment.repository_key,
    title:assignment.title,instructions:assignment.instructions,assignee_id:assignment.assignee_id,
    assessor_organization:assignment.assessor_organization,created_at:assignment.created_at,expires_at:assignment.expires_at,plan:assignment.plan_snapshot};
- if(path==="/v2/task/read"&&req.method==="POST")return {status:200,data:{ok:true,task,criteria_version:"pilot-2026-11-18",
+ if(path==="/v3/task/read"&&req.method==="POST")return {status:200,data:{ok:true,task,criteria_version:"pilot-2026-11-18",
    assessment_mode:"ARE_INDEPENDENT",track:"product",task_token_echoed:false,
    workflow:["are_get_task","are_get_criteria","are_checkpoint","are_submit_assessment","are_get_submission"],
    constraints:["Only authorized non-destructive operations","Record UNKNOWN/NOT_TESTED rather than fabricate results",
@@ -99,7 +99,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
          evidence_class:"ASSESSOR_DECLARED_PROVENANCE_NOT_EXTERNALLY_ATTESTED"}))}
     }
  }};
- if(path==="/v2/task/criteria"&&req.method==="POST"){
+ if(path==="/v3/task/criteria"&&req.method==="POST"){
   const input=await jsonBody(req);const offset=input?.offset??0;
   if(!Number.isInteger(offset)||offset<0||offset>criteria.length||Object.keys(input||{}).some(k=>k!=="offset"))
     error("invalid_criteria_cursor");
@@ -107,13 +107,13 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   return {status:200,data:{ok:true,criteria_version:"pilot-2026-11-18",total:criteria.length,offset,
      criteria:page,next:offset+page.length<criteria.length?offset+page.length:null}};
  }
- if(path==="/v2/task/receipt"&&req.method==="POST"){
+ if(path==="/v3/task/receipt"&&req.method==="POST"){
   const input=await jsonBody(req),id=input?.submission_id??null;
   if(id!==null&&!taskIdPattern.test(id))error("invalid_submission_id");
   const receipt=await sql(TASK_RECEIPT_SQL,[digest,id]);
   return {status:receipt?200:404,data:{ok:!!receipt,receipt,private:true,public_release_authorized:false}};
  }
- if(path==="/v2/task/submit"&&req.method==="POST"){
+ if(path==="/v3/task/submit"&&req.method==="POST"){
   const input=await jsonBody(req);
   const {validateCoverage}=await import("./pipeline-service.mjs");
   if(!input||!input.test_metadata||!Number.isInteger(input.test_metadata.discovered_tool_count)||

@@ -6,9 +6,8 @@ const repo=/^[a-z\d_.-]+\/[a-z\d_.-]+$/i;
 const valid=(s,n)=>typeof s==="string"&&s.trim().length>0&&s.length<=n;
 const fail=code=>{const e=new Error(code);e.code=code;throw e;};
 const token=(prefix)=>prefix+randomBytes(32).toString("base64url");
-function hashToken(value,kind){
- const pattern=kind==="invite"?/^arei_[a-zA-Z0-9_-]{43}$/:/^aret_[a-zA-Z0-9_-]{43}$/;
- if(!pattern.test(value||""))fail("invalid_token");
+function hashToken(value){
+ if(!/^aret_[A-Za-z0-9_-]{43}$/.test(value||""))fail("invalid_task_token");
  return sha(value);
 }
 async function input(req){
@@ -59,8 +58,8 @@ export function validateCoverage(rows,blockers=[],count){
   executed_pass_rate:pass+failed?pass/(pass+failed):null};
 }
 export async function ownerAction(path,req,sql){
- if(path==="/v2/pool"&&req.method==="GET")return {status:200,data:{ok:true,...await sql(Q.POOL)}};
- if(path==="/v2/pool/filter"&&req.method==="POST"){
+ if(path==="/v3/pool"&&req.method==="GET")return {status:200,data:{ok:true,...await sql(Q.POOL)}};
+ if(path==="/v3/pool/filter"&&req.method==="POST"){
   const d=await input(req);
   if(!repo.test(d?.repository_key||"")||d.repository_key.length>160||
     !["ELIGIBLE","HOLD","EXCLUDED"].includes(d.decision)||
@@ -76,29 +75,31 @@ export async function ownerAction(path,req,sql){
     d.tool_count,d.auth_mode,d.risk_level,d.runtime_endpoint,d.priority]);
   return {status:row?200:404,data:{ok:!!row,project:row,plan:estimatePlan(d.tool_count,d.auth_mode,d.risk_level)}};
  }
- if(path==="/v2/invites"&&req.method==="GET")return {status:200,data:{ok:true,...await sql(Q.INVITES)}};
- if(path==="/v2/invites/create"&&req.method==="POST"){
+ if(path==="/v3/tasks/issue"&&req.method==="POST"){
   const d=await input(req);
-  if(!/^[a-z0-9_-]{3,40}$/.test(d?.tester_id||"")||
-    !valid(d.tester_organization,150)||!valid(d.label,120)||
-    !Number.isInteger(d.max_draws)||d.max_draws<1||d.max_draws>3||
-    !Number.isInteger(d.expires_days)||d.expires_days<1||d.expires_days>14)fail("invalid_invitation");
-  const secret=token("arei_"),inv=await sql(Q.INVITE_CREATE,[sha(secret),d.tester_id,
-    d.tester_organization,d.label,d.max_draws,d.expires_days]);
-  return {status:inv?200:409,data:{ok:!!inv,invite:inv,
-    ...(inv?{invite_token:secret,visible_once:true}:{})}};
+  if(!repo.test(d?.repository_key||"")||d.repository_key.length>160||
+    !/^[a-z0-9_-]{3,40}$/.test(d.tester_id||"")||
+    !valid(d.tester_organization,150)||
+    ![90,150,240].includes(d.max_minutes)||typeof d.allow_oauth!=="boolean"||
+    !Number.isInteger(d.expires_days)||d.expires_days<1||d.expires_days>14)
+    fail("invalid_issue_request");
+  const secret=token("aret_");
+  const task=await sql(Q.ISSUE,[d.repository_key,d.tester_id,
+    d.tester_organization,sha(secret),d.expires_days,d.max_minutes,d.allow_oauth]);
+  return {status:task?200:409,data:task?
+    {ok:true,task,task_token:secret,visible_once:true,
+      plan:estimatePlan(Number(task.plan_snapshot?.declared_tool_count??0),
+        task.plan_snapshot?.auth_mode||"UNKNOWN",task.plan_snapshot?.risk_level||"LOW"),
+      private:true,published:false,mcp_url:"https://are.world2.co/mcp"}:
+    {error:"project_not_eligible_already_issued_or_exceeds_test_budget"}};
  }
- if(path==="/v2/invites/revoke"&&req.method==="POST"){
-  const d=await input(req);if(!uuid.test(d?.id||""))fail("invalid_invite_id");
-  const row=await sql(Q.INVITE_REVOKE,[d.id]);return {status:row?200:404,data:{ok:!!row,invite:row}};
- }
- if(path==="/v2/tasks"&&req.method==="GET")return {status:200,data:{ok:true,...await sql(Q.TASK_LIST)}};
- if(path==="/v2/tasks/revoke"&&req.method==="POST"){
+ if(path==="/v3/tasks"&&req.method==="GET")return {status:200,data:{ok:true,...await sql(Q.TASK_LIST)}};
+ if(path==="/v3/tasks/revoke"&&req.method==="POST"){
   const d=await input(req);if(!uuid.test(d?.id||""))fail("invalid_task_id");
   const row=await sql(Q.TASK_REVOKE,[d.id]);return {status:row?200:404,data:{ok:!!row,task:row}};
  }
- if(path==="/v2/review"&&req.method==="GET")return {status:200,data:{ok:true,...await sql(Q.REVIEWS)}};
- if(path==="/v2/review/decision"&&req.method==="POST"){
+ if(path==="/v3/review"&&req.method==="GET")return {status:200,data:{ok:true,...await sql(Q.REVIEWS)}};
+ if(path==="/v3/review/decision"&&req.method==="POST"){
   const d=await input(req);
   if(!uuid.test(d?.id||"")||!["NEEDS_RETEST","VERIFIED","REJECTED"].includes(d.decision)||
     !valid(d.explanation,2000)||d.explanation.length<5)fail("invalid_review");
@@ -115,13 +116,13 @@ export async function ownerAction(path,req,sql){
   const row=await sql(Q.REVIEW_INSERT,[d.id,d.decision,d.explanation]);
   return {status:row?200:404,data:{ok:!!row,review:row,private:true,published:false}};
  }
- if(path==="/v2/release/draft"&&req.method==="POST"){
+ if(path==="/v3/release/draft"&&req.method==="POST"){
   const d=await input(req);
   if(!uuid.test(d?.id||"")||!valid(d.summary,2000))fail("invalid_release_draft");
   const row=await sql(Q.PUBLICATION_DRAFT,[d.id,d.summary]);
   return {status:row?200:409,data:{ok:!!row,draft:row,published:false}};
  }
- if(path==="/v2/release/approve"&&req.method==="POST"){
+ if(path==="/v3/release/approve"&&req.method==="POST"){
   const d=await input(req);
   if(!uuid.test(d?.id||"")||d.confirm!=="I APPROVE MANUAL PUBLICATION")fail("explicit_confirmation_required");
   const row=await sql(Q.PUBLICATION_APPROVE,[d.id]);
@@ -130,28 +131,15 @@ export async function ownerAction(path,req,sql){
  }
  return {status:404,data:{error:"unknown_owner_operation"}};
 }
-export async function drawAction(req,sql){
- const d=await input(req),inviteHash=hashToken(d?.invite_token,"invite");
- const max=d?.max_minutes??240;
- if(![90,150,240].includes(max)||typeof d.allow_oauth!=="boolean")fail("invalid_draw_preferences");
- const taskToken=token("aret_");
- const record=await sql(Q.DRAW,[inviteHash,max,d.allow_oauth,sha(taskToken)]);
- return {status:record?200:409,data:record?
-   {ok:true,task:record,task_token:taskToken,visible_once:true,
-      plan:estimatePlan(record.plan_snapshot.declared_tool_count??0,
-          record.plan_snapshot.auth_mode??"UNKNOWN",record.plan_snapshot.risk_level??"LOW"),
-      private:true,published:false,mcp_url:"https://are.world2.co/mcp"}
-   :{error:"no_available_matching_task_or_invitation_expired"}};
-}
 export async function checkpointAction(req,sql,secret){
  const d=await input(req),metrics=validateCoverage(d.coverage,d.blockers,d.total_tools);
  if(!["DISCOVERY","AUTH","TOOLS","REPRODUCE","REPORT","SUBMITTED"].includes(d.phase)||
    !Number.isInteger(d.minutes_used)||d.minutes_used<0||d.minutes_used>1440)fail("invalid_checkpoint");
- const row=await sql(Q.CHECKPOINT,[hashToken(secret,"task"),JSON.stringify(d.coverage),
+ const row=await sql(Q.CHECKPOINT,[hashToken(secret),JSON.stringify(d.coverage),
    JSON.stringify(d.blockers),d.phase,d.total_tools,d.minutes_used]);
  return {status:row?200:403,data:{ok:!!row,checkpoint:row,coverage:metrics,private:true}};
 }
 export async function checkpointRead(sql,secret){
- const row=await sql(Q.CHECKPOINT_GET,[hashToken(secret,"task")]);
+ const row=await sql(Q.CHECKPOINT_GET,[hashToken(secret)]);
  return {status:200,data:{ok:true,checkpoint:row,private:true}};
 }
