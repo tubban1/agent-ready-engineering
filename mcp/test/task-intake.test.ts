@@ -13,6 +13,7 @@ test("public MCP exposes five scoped task tools with truthful write annotations"
  const {tools}=await client.listTools();
  const map=Object.fromEntries(tools.map(t=>[t.name,t]));
  assert.equal(map.are_get_task?.annotations?.readOnlyHint,true);
+ assert.equal(map.are_validate_assessment?.annotations?.readOnlyHint,true);
  assert.equal(map.are_checkpoint?.annotations?.readOnlyHint,false);
  assert.equal(map.are_get_criteria?.annotations?.readOnlyHint,true);
  assert.equal(map.are_get_submission?.annotations?.readOnlyHint,true);

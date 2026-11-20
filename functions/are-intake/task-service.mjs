@@ -1,4 +1,5 @@
 import {randomBytes,createHash} from "node:crypto";
+import {preflightAssessment,renderStructuredReport} from "./evidence-validation.mjs";
 
 const cohort="ARE100-VALUE-20261115";
 const repository=/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/;
@@ -14,9 +15,12 @@ async function jsonBody(req){
 const txt=(x,max=160)=>typeof x==="string"&&x.trim().length>0&&x.length<=max;
 
 export const TASK_READ_SQL=`SELECT COALESCE((SELECT row_to_json(a) FROM (
- SELECT id,cohort_id,repository_key,title,instructions,assignee_id,assessor_organization,
- created_at,expires_at,plan_snapshot FROM are_eval.private_assessment_tasks
- WHERE token_sha256=$1 AND expires_at>now() AND revoked_at IS NULL AND plan_snapshot->>'version'='are.test-plan.v3') a),'null'::json)::text`;
+ SELECT t.id,t.cohort_id,t.repository_key,t.title,t.instructions,t.assignee_id,t.assessor_organization,
+ t.created_at,t.expires_at,t.plan_snapshot,p.runtime_endpoint AS screened_endpoint,p.auth_mode AS screened_auth_mode,
+ p.decision AS screening_decision,p.updated_at AS screened_at
+ FROM are_eval.private_assessment_tasks t
+ LEFT JOIN are_eval.private_project_pool p ON p.cohort_id=t.cohort_id AND p.repository_key=t.repository_key
+ WHERE t.token_sha256=$1 AND t.expires_at>now() AND t.revoked_at IS NULL AND t.plan_snapshot->>'version'='are.test-plan.v3') a),'null'::json)::text`;
 
 export const TASK_SUBMIT_SQL=`WITH permitted AS (
  SELECT t.id FROM are_eval.private_assessment_tasks t
@@ -33,7 +37,7 @@ created AS (
         $14::jsonb,$15::jsonb,$16,$17::integer,$18::integer
  FROM permitted p JOIN are_eval.benchmark_study_candidates c
    ON c.cohort_id=$3 AND c.repository_key=$4
- WHERE (SELECT COUNT(*) FROM are_eval.private_task_submissions l WHERE l.task_id=p.id)<5
+ WHERE (SELECT COUNT(*) FROM are_eval.private_task_submissions l WHERE l.task_id=p.id)<25
  ON CONFLICT(submission_sha256) DO NOTHING
  RETURNING id,submission_sha256,repository_key,state,created_at
 ),
@@ -53,7 +57,7 @@ SELECT COALESCE(
 
 export const TASK_RECEIPT_SQL=`SELECT COALESCE((SELECT row_to_json(r) FROM (
  SELECT s.run_id AS id,p.repository_key,r.state,r.submission_sha256,r.source_revision,r.created_at,
-   r.decisive_count,r.verified_task_count
+   r.decisive_count,r.verified_task_count,r.report,r.agent_tasks,r.source_binding
  FROM are_eval.private_assessment_tasks p
  JOIN are_eval.private_task_submissions s ON s.task_id=p.id
  JOIN are_eval.private_evaluation_runs r ON r.id=s.run_id
@@ -74,27 +78,32 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
  if(!assignment)return {status:403,data:{error:"task_revoked_expired_or_unknown"}};
  const task={id:assignment.id,cohort_id:assignment.cohort_id,repository_key:assignment.repository_key,
    title:assignment.title,instructions:assignment.instructions,assignee_id:assignment.assignee_id,
-   assessor_organization:assignment.assessor_organization,created_at:assignment.created_at,expires_at:assignment.expires_at,plan:assignment.plan_snapshot};
+   assessor_organization:assignment.assessor_organization,created_at:assignment.created_at,expires_at:assignment.expires_at,plan:assignment.plan_snapshot,
+   endpoint:{url:assignment.plan_snapshot?.runtime_endpoint||assignment.screened_endpoint||"",status:"SCREENED_NOT_INDEPENDENTLY_ATTESTED",screened_at:assignment.screened_at||null},
+   auth_mode:assignment.plan_snapshot?.auth_mode||assignment.screened_auth_mode||"UNKNOWN"};
  if(path==="/v3/task/read"&&req.method==="POST")return {status:200,data:{ok:true,task,criteria_version:"pilot-2026-11-18",
    assessment_mode:"ARE_INDEPENDENT",track:"product",task_token_echoed:false,
-   workflow:["are_get_task","are_get_criteria","are_checkpoint","are_submit_assessment","are_get_submission"],
+   workflow:["are_get_task","are_get_criteria","are_checkpoint","are_validate_assessment","are_submit_assessment","are_get_submission"],
    constraints:["Only authorized non-destructive operations","Record UNKNOWN/NOT_TESTED rather than fabricate results",
       "No public release of a third-party independent report without owner approval"],
    evidence_schema:"are.assessment.result.v1",private:true,
    test_plan:(await import("./pipeline-service.mjs")).estimatePlan(Number(task.plan?.declared_tool_count||0),task.plan?.auth_mode||"UNKNOWN",task.plan?.risk_level||"LOW"),
-   required_additional_fields:["tool_coverage","test_blockers","test_metadata"],
+   required_additional_fields:["tool_coverage","test_blockers","test_metadata","evidence_artifacts","source_binding","agent_tasks"],
+   submission_guidance:"Call are_validate_assessment before submitting; resolve every blocking issue. Use are_get_submission canonical_report for final narrative, not unverified independent counts.",
    evidence_package_template:{
      cohort_id:task.cohort_id,repository_key:task.repository_key,summary:"",
-     recommendations:[],agent_tasks:[],source_binding:{verified:false},
+     recommendations:[],agent_tasks:[],evidence_artifacts:[],tool_coverage:[],test_blockers:[],
+     test_metadata:{discovered_tool_count:0,minutes_used:0,auth_mode:task.auth_mode},
+     source_binding:{verified:false,evidence_ref:"",reason:"Not yet verified by independent source-to-deployment observations"},
      contact_route:{url:"https://github.com/"+task.repository_key},
      report:{schema:"are.assessment.result.v1",mode:"ARE_INDEPENDENT",track:"product",
        criteria_version:"pilot-2026-11-18",maturity_level:null,certification:false,
        public_release_authorized:false,
        target:{id:task.repository_key,source_revision:"REPLACE_WITH_ACTUAL_40_HEX_GIT_SHA",
           observed_version:"REPLACE_WITH_ACTUALLY_OBSERVED_VERSION",
-          owner_organization:"REPLACE_WITH_SOURCE_PROJECT_ORG",endpoint:""},
+          owner_organization:"REPLACE_WITH_SOURCE_PROJECT_ORG",endpoint:task.endpoint.url},
        assessor:{id:task.assignee_id,organization:task.assessor_organization},
-       findings:criteria.map(c=>({check_id:c.id,status:"NOT_TESTED",
+       findings:criteria.map(c=>({check_id:c.id,status:"NOT_TESTED",reason:"Not yet assessed; replace after testing",
          evaluator_mode:"ARE_INDEPENDENT",
          evidence_class:"ASSESSOR_DECLARED_PROVENANCE_NOT_EXTERNALLY_ATTESTED"}))}
     }
@@ -107,23 +116,71 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   return {status:200,data:{ok:true,criteria_version:"pilot-2026-11-18",total:criteria.length,offset,
      criteria:page,next:offset+page.length<criteria.length?offset+page.length:null}};
  }
+ const runPreflight=(payload)=>{
+   const result=preflightAssessment(payload,{
+     assigneeId:task.assignee_id,organization:task.assessor_organization,
+     repositoryKey:task.repository_key,expectedEndpoint:task.endpoint.url,
+     authMode:payload?.test_metadata?.auth_mode==="OAUTH"?"OAUTH":task.auth_mode,
+     baseValidate:validateSubmission
+   });
+   const observed=Math.max(0,Math.round((Date.now()-new Date(task.created_at).getTime())/60000));
+   result.server_elapsed_minutes=Number.isFinite(observed)?observed:null;
+   if(Number.isInteger(payload?.test_metadata?.minutes_used)&&Number.isFinite(observed)&&
+      payload.test_metadata.minutes_used>observed+10)
+     result.warnings.push({path:"test_metadata.minutes_used",code:"elapsed_time_claim_exceeds_server_window",
+      message:"Reported test duration exceeds the task's server-observed lifetime; preserve timeline evidence for reviewer"});
+   return result;
+ };
+ if(path==="/v3/task/validate"&&req.method==="POST"){
+   const payload=await jsonBody(req);
+   const result=runPreflight(payload);
+   // No SQL INSERT/UPDATE, no revision slot consumed. Only the task read above is authorized.
+   return {status:200,data:{ok:true,...result,
+    server_elapsed_minutes:Math.max(0,Math.round((Date.now()-new Date(task.created_at).getTime())/60000)),
+    side_effects:false,revisions_consumed:0}};
+ }
  if(path==="/v3/task/receipt"&&req.method==="POST"){
   const input=await jsonBody(req),id=input?.submission_id??null;
   if(id!==null&&!taskIdPattern.test(id))error("invalid_submission_id");
   const receipt=await sql(TASK_RECEIPT_SQL,[digest,id]);
-  return {status:receipt?200:404,data:{ok:!!receipt,receipt,private:true,public_release_authorized:false}};
+  if(!receipt)return {status:404,data:{ok:false,receipt:null,private:true,public_release_authorized:false}};
+  const stored={repository_key:task.repository_key,report:receipt.report||{},agent_tasks:receipt.agent_tasks||[],
+   tool_coverage:receipt.report?.tool_coverage||[],source_binding:receipt.source_binding||{}};
+  const counts=(rows)=>{const out={PASS:0,FAIL:0,NOT_APPLICABLE:0,NOT_TESTED:0,UNKNOWN:0};
+    for(const x of rows)if(Object.hasOwn(out,x.status))out[x.status]++;return out};
+  const toolRows=stored.tool_coverage;
+  const metrics={criteria:counts(stored.report.findings||[]),tools:counts(toolRows),
+   discovered_tools:toolRows.length,blocked:toolRows.filter(x=>x.status?.startsWith("BLOCKED")).length,
+   agent_tasks:stored.agent_tasks.length,
+   verified_agent_tasks:stored.agent_tasks.filter(x=>x.authorized&&x.oracle_verified===true&&["PASS","FAIL"].includes(x.status)).length};
+  const cleanReceipt={...receipt};
+  delete cleanReceipt.report;delete cleanReceipt.agent_tasks;delete cleanReceipt.source_binding;
+  return {status:200,data:{ok:true,receipt:cleanReceipt,canonical_metrics:metrics,
+    canonical_report:renderStructuredReport(stored,metrics),private:true,public_release_authorized:false}};
+
  }
  if(path==="/v3/task/submit"&&req.method==="POST"){
   const input=await jsonBody(req);
+  const preflight=runPreflight(input);
+  if(!preflight.valid)return {status:422,data:{ok:false,error:"assessment_preflight_failed",
+    issues:preflight.errors,warnings:preflight.warnings,metrics:preflight.metrics,
+    hint:"Call are_validate_assessment; correct evidence without consuming formal submission slots"}};
   const {validateCoverage}=await import("./pipeline-service.mjs");
   if(!input||!input.test_metadata||!Number.isInteger(input.test_metadata.discovered_tool_count)||
      !Number.isInteger(input.test_metadata.minutes_used)||
      input.test_metadata.minutes_used<0||input.test_metadata.minutes_used>1440)
     error("missing_full_test_metadata");
   const coverage=validateCoverage(input.tool_coverage,input.test_blockers,input.test_metadata.discovered_tool_count);
-  if(coverage.total===0&&input.report?.target?.endpoint)error("tool_discovery_missing");
-  const extended={...input,report:{...input.report,tool_coverage:input.tool_coverage,
-    test_blockers:input.test_blockers,test_metadata:input.test_metadata}};
+  if(coverage.total===0&&input.report?.target?.endpoint&&!(
+    (task.auth_mode==="OAUTH"||input.test_metadata?.auth_mode==="OAUTH")&&
+    input.test_blockers?.some(x=>x.cause==="OAUTH")&&
+    input.agent_tasks?.some(x=>x.status==="BLOCKED_AUTH")
+  ))error("tool_discovery_missing");
+  const elapsed=Math.max(0,Math.round((Date.now()-new Date(task.created_at).getTime())/60000));
+  const extended={...input,summary:preflight.normalized_summary,report:{...input.report,
+    evidence_artifacts:input.evidence_artifacts,
+    test_metadata:{...input.test_metadata,server_observed_minutes:elapsed},tool_coverage:input.tool_coverage,
+    test_blockers:input.test_blockers}};
   const assessment=validateSubmission(extended,task.assignee_id);
   if(assessment.repository_key!==task.repository_key||assessment.cohort_id!==task.cohort_id||
       assessment.assessor_organization!==task.assessor_organization)error("task_scope_mismatch");
@@ -138,6 +195,8 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
     JSON.stringify(assessment.source_binding),assessment.summary,assessment.decisive,assessment.verifiedTasks]);
   if(!submitted)return {status:409,data:{error:"submission_capacity_or_task_state_changed"}};
   return {status:200,data:{ok:true,submission_id:submitted.id,task_id:task.id,
+    canonical_metrics:preflight.metrics,canonical_report:preflight.report_preview,
+    server_elapsed_minutes:elapsed,reported_minutes:input.test_metadata.minutes_used,
     repository_key:submitted.repository_key,stage:submitted.state,
     content_sha256:taskScopedDigest,private:true,public_release_authorized:false}};
  }

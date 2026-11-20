@@ -17,7 +17,7 @@ export const FILTER=q(
  "SELECT COALESCE((SELECT row_to_json(x) FROM x),'null'::json)::text"
 );
 export const ISSUE=q(
- "WITH chosen AS (SELECT p.cohort_id,p.repository_key,p.tool_count,p.auth_mode,p.risk_level",
+ "WITH chosen AS (SELECT p.cohort_id,p.repository_key,p.tool_count,p.auth_mode,p.risk_level,p.runtime_endpoint",
  "FROM are_eval.private_project_pool p WHERE p.cohort_id='ARE100-VALUE-20261115'",
  "AND p.repository_key=$1 AND p.decision='ELIGIBLE' AND p.claimed_task_id IS NULL",
  "FOR UPDATE OF p),",
@@ -26,7 +26,7 @@ export const ISSUE=q(
  "SELECT p.cohort_id,p.repository_key,'ARE complete independent MCP evaluation',",
  "'Cover all authorized tools; record OAuth, time budgets and BLOCKED_DESIGN with traces',",
  "$2,$3,$4,now()+($5::integer*interval '1 day'),",
- "jsonb_build_object('version','are.test-plan.v3','declared_tool_count',p.tool_count,",
+ "jsonb_build_object('version','are.test-plan.v3','declared_tool_count',p.tool_count,'runtime_endpoint',p.runtime_endpoint,",
  "'auth_mode',p.auth_mode,'risk_level',p.risk_level,",
  "'estimated_minutes',LEAST(240,GREATEST(60,60+CEIL(p.tool_count::numeric/10)*15+",
  "CASE WHEN p.auth_mode='OAUTH' THEN 20 ELSE 0 END+",
@@ -78,7 +78,8 @@ export const REVIEWS=q(
  "SELECT r.id,r.repository_key,r.assessor_id,r.summary,r.created_at,r.state,",
  "r.decisive_count,r.verified_task_count,r.report->'tool_coverage' AS tool_coverage,",
  "r.report->'test_metadata' AS test_metadata,",
- "r.report->'test_blockers' AS blockers,s.task_id,t.plan_snapshot,",
+ "r.report->'test_blockers' AS blockers, r.report->'evidence_artifacts' AS evidence_artifacts,",
+ "r.report->'findings' AS findings,r.source_binding,r.agent_tasks,s.task_id,t.plan_snapshot,",
  "(SELECT v.decision FROM are_eval.private_review_verdicts v WHERE v.run_id=r.id ORDER BY v.id DESC LIMIT 1) AS review,",
  "(SELECT p.status FROM are_eval.private_publication_drafts p WHERE p.run_id=r.id) AS publication",
  "FROM are_eval.private_evaluation_runs r",

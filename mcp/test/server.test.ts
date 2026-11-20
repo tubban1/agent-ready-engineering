@@ -39,7 +39,8 @@ test("exposes framework tools, local self-audit guidance and explicit opt-in rem
     "are_local_mcp_audit_guide",
     "are_score_mcp",
     "are_search",
-    "are_submit_assessment"
+    "are_submit_assessment",
+    "are_validate_assessment"
   ]);
   for (const t of tools) {
     assert.equal(t.annotations?.readOnlyHint, !["are_checkpoint","are_score_mcp","are_submit_assessment"].includes(t.name), t.name);

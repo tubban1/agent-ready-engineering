@@ -1,6 +1,6 @@
 {
   "name": "are-mcp",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "private": true,
   "description": "MCP server for the Agent-Ready Engineering framework: knowledge, local workspace checks and workflow prompts for consultants, engineers, governance and decision makers (stdio)",
   "type": "module",
