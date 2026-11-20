@@ -112,10 +112,13 @@ export async function ownerAction(path,req,sql){
       tools.length!==meta.discovered_tool_count||(tools.length===0&&!blocks.length))
       fail("assessment_lacks_test_inventory");
    validateCoverage(tools,blocks,meta.discovered_tool_count);
-   if(row.state!=="READY_FOR_OUTREACH"||row.decisive_count<1||row.verified_task_count<1||
+   if(row.state!=="READY_FOR_REVIEW"||row.decisive_count<1||row.verified_task_count<1||
      !Array.isArray(row.findings)||row.findings.length!==32||
      !Array.isArray(row.evidence_artifacts)||row.evidence_artifacts.length===0||
-     row.source_binding?.verified!==true||!Array.isArray(row.agent_tasks)||row.agent_tasks.length===0)
+     row.integrity_readiness!=="READY_FOR_REVIEW"||row.integrity_metrics?.raw_agent_tasks<1||
+     row.integrity_metrics?.raw_tool_traces<1||
+     !(row.source_binding?.verified===true||String(row.source_binding?.reason||"").length>=12)||
+     !Array.isArray(row.agent_tasks)||row.agent_tasks.length===0)
      fail("assessment_evidence_incomplete_for_owner_verification");
   }
   // Verification records a responsible human decision. No public writes.

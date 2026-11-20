@@ -1,5 +1,7 @@
 import {randomBytes,createHash} from "node:crypto";
 import {preflightAssessment,renderStructuredReport} from "./evidence-validation.mjs";
+import {EVIDENCE_PROTOCOL,v5EvidenceGuide} from "./evaluation-contract-v5.mjs";
+import {CAPTURE_READ_SQL,captureReadOnly,validCaptureId} from "./capture-v5.mjs";
 
 const cohort="ARE100-VALUE-20261115";
 const repository=/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/;
@@ -86,17 +88,18 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
    workflow:["are_get_task","are_get_criteria","are_checkpoint","are_validate_assessment","are_submit_assessment","are_get_submission"],
    constraints:["Only authorized non-destructive operations","Record UNKNOWN/NOT_TESTED rather than fabricate results",
       "No public release of a third-party independent report without owner approval"],
-   evidence_schema:"are.assessment.result.v1",private:true,
+   evidence_schema:"are.assessment.result.v2",evidence_protocol:EVIDENCE_PROTOCOL,
+   evidence_contract_tool:"are_get_evidence_contract",capture_tool:"are_capture_readonly",private:true,
    test_plan:(await import("./pipeline-service.mjs")).estimatePlan(Number(task.plan?.declared_tool_count||0),task.plan?.auth_mode||"UNKNOWN",task.plan?.risk_level||"LOW"),
    required_additional_fields:["tool_coverage","test_blockers","test_metadata","evidence_artifacts","source_binding","agent_tasks"],
-   submission_guidance:"Call are_validate_assessment before submitting; resolve every blocking issue. Use are_get_submission canonical_report for final narrative, not unverified independent counts.",
+   submission_guidance:"Read are_get_evidence_contract for exact facts/metrics/traces; use are_capture_readonly on unauthenticated explicitly read-only target calls. Each PASS or N/A must match official applies_when + pass_if, and traces must preserve raw MCP request/response. Do not invent the source binding. Validate, then submit privately; only human reviewer may approve contact or publication.",
    evidence_package_template:{
-     cohort_id:task.cohort_id,repository_key:task.repository_key,summary:"",
+     evidence_protocol:EVIDENCE_PROTOCOL,cohort_id:task.cohort_id,repository_key:task.repository_key,summary:"",
      recommendations:[],agent_tasks:[],evidence_artifacts:[],tool_coverage:[],test_blockers:[],
-     test_metadata:{discovered_tool_count:0,minutes_used:0,auth_mode:task.auth_mode},
+     test_metadata:{discovered_tool_count:0,minutes_used:0,auth_mode:task.auth_mode,applicability_facts:{}},
      source_binding:{verified:false,evidence_ref:"",reason:"Not yet verified by independent source-to-deployment observations"},
      contact_route:{url:"https://github.com/"+task.repository_key},
-     report:{schema:"are.assessment.result.v1",mode:"ARE_INDEPENDENT",track:"product",
+     report:{schema:"are.assessment.result.v2",mode:"ARE_INDEPENDENT",track:"product",
        criteria_version:"pilot-2026-11-18",maturity_level:null,certification:false,
        public_release_authorized:false,
        target:{id:task.repository_key,source_revision:"REPLACE_WITH_ACTUAL_40_HEX_GIT_SHA",
@@ -108,6 +111,16 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
          evidence_class:"ASSESSOR_DECLARED_PROVENANCE_NOT_EXTERNALLY_ATTESTED"}))}
     }
  }};
+ if(path==="/v3/task/contract"&&req.method==="POST")
+   return {status:200,data:{ok:true,contract:v5EvidenceGuide(),
+     criteria_machine_contract:criteria.map(c=>({id:c.id,applies_when:c.applies_when,
+       pass_if:c.pass_if,minimum_samples:c.minimum_samples,obligation:c.obligation})),
+     private:true,public_release_authorized:false}};
+ if(path==="/v3/task/capture"&&req.method==="POST"){
+   const input=await jsonBody(req);
+   const capture=await captureReadOnly(input,{assignment,tokenDigest:digest,sql});
+   return {status:200,data:{...capture,private:true,public_release_authorized:false}};
+ }
  if(path==="/v3/task/criteria"&&req.method==="POST"){
   const input=await jsonBody(req);const offset=input?.offset??0;
   if(!Number.isInteger(offset)||offset<0||offset>criteria.length||Object.keys(input||{}).some(k=>k!=="offset"))
@@ -116,8 +129,12 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   return {status:200,data:{ok:true,criteria_version:"pilot-2026-11-18",total:criteria.length,offset,
      criteria:page,next:offset+page.length<criteria.length?offset+page.length:null}};
  }
- const runPreflight=(payload)=>{
+ const runPreflight=async(payload)=>{
+   const ids=[...new Set((Array.isArray(payload?.evidence_artifacts)?payload.evidence_artifacts:[])
+    .map(a=>a?.capture_id).filter(validCaptureId))].slice(0,100);
+   const captureRows=ids.length?(await sql(CAPTURE_READ_SQL,[digest,task.id,ids]))?.rows||[]:[];
    const result=preflightAssessment(payload,{
+     taskId:task.id,captures:captureRows,
      assigneeId:task.assignee_id,organization:task.assessor_organization,
      repositoryKey:task.repository_key,expectedEndpoint:task.endpoint.url,
      authMode:payload?.test_metadata?.auth_mode==="OAUTH"?"OAUTH":task.auth_mode,
@@ -133,7 +150,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
  };
  if(path==="/v3/task/validate"&&req.method==="POST"){
    const payload=await jsonBody(req);
-   const result=runPreflight(payload);
+   const result=await runPreflight(payload);
    // No SQL INSERT/UPDATE, no revision slot consumed. Only the task read above is authorized.
    return {status:200,data:{ok:true,...result,
     server_elapsed_minutes:Math.max(0,Math.round((Date.now()-new Date(task.created_at).getTime())/60000)),
@@ -161,7 +178,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
  }
  if(path==="/v3/task/submit"&&req.method==="POST"){
   const input=await jsonBody(req);
-  const preflight=runPreflight(input);
+  const preflight=await runPreflight(input);
   if(!preflight.valid)return {status:422,data:{ok:false,error:"assessment_preflight_failed",
     issues:preflight.errors,warnings:preflight.warnings,metrics:preflight.metrics,
     hint:"Call are_validate_assessment; correct evidence without consuming formal submission slots"}};
@@ -178,6 +195,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   ))error("tool_discovery_missing");
   const elapsed=Math.max(0,Math.round((Date.now()-new Date(task.created_at).getTime())/60000));
   const extended={...input,summary:preflight.normalized_summary,report:{...input.report,
+    integrity_readiness:preflight.readiness,integrity_metrics:preflight.metrics.semantic,
     evidence_artifacts:input.evidence_artifacts,
     test_metadata:{...input.test_metadata,server_observed_minutes:elapsed},tool_coverage:input.tool_coverage,
     test_blockers:input.test_blockers}};

@@ -26,11 +26,13 @@ async function call(name: string, args: Record<string, unknown>) {
 test("exposes framework tools, local self-audit guidance and explicit opt-in remote scoring", async () => {
   const { tools } = await client.listTools();
   assert.deepEqual(tools.map((t) => t.name).sort(), [
+    "are_capture_readonly",
     "are_checkpoint",
     "are_evidence_request",
     "are_get_check",
     "are_get_criteria",
     "are_get_document",
+    "are_get_evidence_contract",
     "are_get_submission",
     "are_get_task",
     "are_get_template",
@@ -43,7 +45,7 @@ test("exposes framework tools, local self-audit guidance and explicit opt-in rem
     "are_validate_assessment"
   ]);
   for (const t of tools) {
-    assert.equal(t.annotations?.readOnlyHint, !["are_checkpoint","are_score_mcp","are_submit_assessment"].includes(t.name), t.name);
+    assert.equal(t.annotations?.readOnlyHint, !["are_capture_readonly","are_checkpoint","are_score_mcp","are_submit_assessment"].includes(t.name), t.name);
     assert.equal(t.annotations?.destructiveHint, false, t.name);
     if (t.name === "are_score_mcp") assert.equal(t.annotations?.openWorldHint, true);
     assert.ok((t.description ?? "").length > 40, `${t.name} has a description`);

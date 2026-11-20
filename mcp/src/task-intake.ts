@@ -10,7 +10,7 @@ const token=z.string().regex(TOKEN_PATTERN).describe("Task-specific scoped token
 function ok(data:TaskData){return {content:[{type:"text" as const,text:JSON.stringify(data,null,2)}],structuredContent:data};}
 function fail(code:string){return {isError:true,content:[{type:"text" as const,text:JSON.stringify({error:code})}]};}
 export async function callTaskApi(
-  path:"/v3/task/read"|"/v3/task/criteria"|"/v3/task/submit"|"/v3/task/receipt"|"/v3/task/validate"|"/v3/task/checkpoint"|"/v3/task/progress",
+  path:"/v3/task/read"|"/v3/task/criteria"|"/v3/task/contract"|"/v3/task/capture"|"/v3/task/submit"|"/v3/task/receipt"|"/v3/task/validate"|"/v3/task/checkpoint"|"/v3/task/progress",
   taskToken:string, payload:TaskData={},requestFetch:typeof fetch=fetch
 ):Promise<{ok:boolean;data:TaskData}>{
  if(!TOKEN_PATTERN.test(taskToken))return {ok:false,data:{error:"invalid_task_token"}};
@@ -63,16 +63,31 @@ export function registerTaskTools(server:McpServer):void{
   annotations:TASK_SUBMISSION
  },async ({task_token,...fields})=>request("/v3/task/checkpoint",task_token,fields));
 
+ server.registerTool("are_get_evidence_contract",{
+  title:"Get complete cross-agent ARE V5 assessment JSON contract",
+  description:"Read EXACT machine-readable requirements for all 32 ARE criteria (applicability conditions, evidence metrics, minimum samples), stable raw MCP observation grammar, independent oracle proof, agent goals and deployment binding; use this instead of trial/error or cloning the source repo. This tool does not submit or alter anything.",
+  inputSchema:z.object({task_token:token}),annotations:TASK_READONLY
+ },async ({task_token})=>request("/v3/task/contract",task_token));
+
+ server.registerTool("are_capture_readonly",{
+  title:"Capture an independently observed read-only MCP response from a screened target",
+  description:"ARE's server calls the task's already-screened PUBLIC HTTPS MCP (NO auth tokens or arbitrary URLs). tools/list is always allowed; tools/call requires human-approved safe testing, verified readOnlyHint=true, destructiveHint=false and openWorldHint=false, and excludes write-like names. Returns one scoped immutable server-origin raw request/response artifact with content SHA-256 and capture_id. This writes only a private observation to Neon; the target call is read-only by screened tool contract, not guaranteed safe if vendor metadata lies. Strict quotas. For OAuth or STDIO, use the Agent host to capture raw frames and clearly label them unverified until manual review.",
+  inputSchema:z.object({task_token:token,method:z.enum(["tools/list","tools/call"]),
+    tool_name:z.string().max(128).optional(),arguments:z.record(z.string(),z.unknown()).optional(),
+    user_authorized:z.boolean().optional()}),
+  annotations:TASK_SUBMISSION
+ },async ({task_token,...fields})=>request("/v3/task/capture",task_token,fields));
+
  server.registerTool("are_validate_assessment",{
   title:"Preflight entire ARE report without storing it",
-  description:"MANDATORY before are_submit_assessment. Validate all 32 criteria, complete tool inventory, endpoint/source binding, real content-addressed primary evidence, independently sourced oracles and authorized Agent tasks. Returns per-path blocking issues, canonical structured result preview and summary. This tool is strictly read-only: it does not create a private run, consume submission capacity, send mail or publish anything. Re-run after repairing each issue until valid=true.",
+  description:"MANDATORY before are_submit_assessment. V5 requires exact published applies_when fact proofs and pass_if metrics (no wrong PASS or invented N/A), real raw MCP request/response traces, reproducible independent oracles, Agent goals and honest deployment binding. Returns per-path blocking issues, canonical structured result preview and summary. This tool is strictly read-only: it does not create a private run, consume submission capacity, send mail or publish anything. Re-run after repairing each issue until valid=true.",
   inputSchema:z.object({task_token:token,evidence_package:z.record(z.string(),z.unknown()).describe("Complete draft of the ARE independent assessment with evidence_artifacts")}),
   annotations:TASK_READONLY
  },async ({task_token,evidence_package})=>request("/v3/task/validate",task_token,evidence_package));
 
  server.registerTool("are_submit_assessment",{
   title:"Submit my complete private independent assessment to ARE Neon",
-  description:"Write an evidence-backed, version-pinned, private ARE_INDEPENDENT product report for exactly the project assigned to this Task Token. Start from the evidence_package_template provided by are_get_task and replace placeholders with real source SHA, actual version and evidence. Package needs cohort_id, repository_key, report (32 pilot findings), tool_coverage for every discovered tool, test_blockers, test_metadata with discovered_tool_count/minutes_used, agent_tasks, summary and recommendations. First call are_validate_assessment repeatedly until valid=true; rejected drafts never enter Neon. Include evidence_artifacts (content, SHA-256, provenance, type and stable references), independently checked agent_tasks, source_binding evidence, and a complete 32-check result. Use the canonical_report returned here and by are_get_submission, not invented prose. A validated final report is saved privately and idempotently. This tool NEVER publishes third-party reviews, emails a maintainer or certifies maturity.",
+  description:"Write an evidence-backed, version-pinned, private ARE_INDEPENDENT product report for exactly the project assigned to this Task Token. Start from the evidence_package_template provided by are_get_task and replace placeholders with real source SHA, actual version and evidence. Package needs cohort_id, repository_key, report (32 pilot findings), tool_coverage for every discovered tool, test_blockers, test_metadata with discovered_tool_count/minutes_used, agent_tasks, summary and recommendations. First call are_get_evidence_contract, use are_capture_readonly for safe unauthenticated tools, then call are_validate_assessment until valid=true; rejected drafts never enter Neon. Include evidence_artifacts (content, SHA-256, provenance, type and stable references), independently checked agent_tasks, source_binding evidence, and a complete 32-check result. Use the canonical_report returned here and by are_get_submission, not invented prose. A validated final report is saved privately and idempotently. This tool NEVER publishes third-party reviews, emails a maintainer or certifies maturity.",
   inputSchema:z.object({task_token:token,evidence_package:z.record(z.string(),z.unknown()).describe("Full independently gathered evidence package; not a PDF, fabricated tests, or a published review")}),
   annotations:TASK_SUBMISSION
  },async ({task_token,evidence_package})=>request("/v3/task/submit",task_token,evidence_package));

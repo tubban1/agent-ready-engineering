@@ -5,7 +5,7 @@ import {Client,InMemoryTransport} from "@modelcontextprotocol/client";
 import {createServer} from "../src/server.js";
 const token="aret_"+("Q".repeat(43));
 
-test("public MCP exposes five scoped task tools with truthful write annotations",async()=>{
+test("public MCP exposes eight scoped task tools with truthful write annotations",async()=>{
  const client=new Client({name:"task-contract-test",version:"1.0"});
  const server=createServer();const [a,b]=InMemoryTransport.createLinkedPair();
  await server.connect(b);await client.connect(a);
@@ -14,6 +14,9 @@ test("public MCP exposes five scoped task tools with truthful write annotations"
  const map=Object.fromEntries(tools.map(t=>[t.name,t]));
  assert.equal(map.are_get_task?.annotations?.readOnlyHint,true);
  assert.equal(map.are_validate_assessment?.annotations?.readOnlyHint,true);
+ assert.equal(map.are_get_evidence_contract?.annotations?.readOnlyHint,true);
+ assert.equal(map.are_capture_readonly?.annotations?.readOnlyHint,false);
+ assert.ok(JSON.stringify(map.are_capture_readonly?.inputSchema).includes("method"));
  assert.equal(map.are_checkpoint?.annotations?.readOnlyHint,false);
  assert.equal(map.are_get_criteria?.annotations?.readOnlyHint,true);
  assert.equal(map.are_get_submission?.annotations?.readOnlyHint,true);
