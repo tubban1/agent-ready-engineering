@@ -19,8 +19,17 @@ jobs:
         run: node scripts/are_release_gate.mjs
       - name: Test gate tampering and new cases
         run: node --test scripts/test_are_release_gate.mjs
-      - name: Verify split rubric, pilot applicability and legacy validation
+      - name: Verify canonical V5.1 source-annotated criteria and no generated-rule drift
+        run: node scripts/sync-are-criteria.mjs --check
+      - name: Verify split rubric, pilot applicability and evidence validation
         run: |
           python3 scripts/are_assessment_tracks.py
           python3 scripts/are_criteria_pilot.py
           python3 -m unittest -q scripts/test_are_assessment_tracks.py scripts/test_are_criteria_pilot.py scripts/test_are_evaluator_workflows.py scripts/test_are_publication.py scripts/test_are_remote_dc_case.py
+      - name: Verify private V5.1 intake, error attribution, equivalence and publication separation
+        run: node --test functions/are-intake/*.test.mjs functions/cors.test.mjs
+      - name: Compile MCP tools and ensure current evidence grammar
+        run: |
+          npm ci --prefix mcp --ignore-scripts --no-audit --no-fund
+          npm run typecheck --prefix mcp
+          npm run build --prefix mcp

@@ -16,7 +16,7 @@ def fact(value):
 def obs(value, *, rule_id=None, surface="NATIVE_MCP", version="2026-11-18", evidence_id="run/trace-1", method="DIRECT_TEST"):
     return {"value": value, "surface": surface, "version": version,
             "evidence_id": evidence_id, "method": method,
-            "protocol_id": (rule_id or "MCP-L2-X4") + "@pilot-2026-11-18",
+            "protocol_id": (rule_id or "MCP-L2-X4") + "@pilot-2026-11-21",
             "sample_count": 3, "trace_refs": ["traces/run-1.json"], "oracle_id": "independent/check-1"}
 
 
@@ -26,20 +26,20 @@ class CriteriaPilotTests(unittest.TestCase):
         self.assertEqual(55, len(RULES))
         self.assertEqual(2, sum(r["obligation"] == "REQUIRED" and r["side"] == "product" for r in RULES.values()))
 
-    def test_product_default_response_can_fail_when_measured_over_ceiling(self):
+    def test_uncalibrated_context_ceiling_is_research_only(self):
         rule = RULES["MCP-L2-X4"]
         sample = m.evaluate(rule, {"has_read_tools": fact(True)},
-                            {"max_default_read_output_tokens": obs(12000)})
-        self.assertEqual("FAIL", sample["status"])
-        self.assertEqual("max_default_read_output_tokens", sample["metric"])
+                            {"measured_default_read_context_cost": obs(12000)})
+        self.assertEqual("ADVISORY_ONLY", sample["status"])
+        self.assertNotIn("metric", sample)
         safe = m.evaluate(rule, {"has_read_tools": fact(True)},
-                          {"max_default_read_output_tokens": obs(8000)})
-        self.assertEqual("PASS", safe["status"])
+                          {"measured_default_read_context_cost": obs(8000)})
+        self.assertEqual("ADVISORY_ONLY", safe["status"])
 
     def test_host_adapter_cannot_be_misclassified_as_native_vendor_fail(self):
-        rule = RULES["MCP-L2-X4"]
-        case = m.evaluate(rule, {"has_read_tools": fact(True)},
-                          {"max_default_read_output_tokens": obs(12000, surface="HOST_ADAPTER")})
+        rule = RULES["MCP-L2-X2"]
+        case = m.evaluate(rule, {"can_truncate_results": fact(True)},
+                          {"truncation_detectable_and_retrievable": obs(False, rule_id=rule["id"], surface="HOST_ADAPTER")})
         self.assertEqual("UNKNOWN", case["status"])
 
     def test_unobserved_or_unknown_applicability_never_fails(self):
@@ -48,16 +48,16 @@ class CriteriaPilotTests(unittest.TestCase):
         self.assertEqual("UNKNOWN", m.evaluate(rule, {"has_read_tools": {"value": False}}, {})["status"])
         self.assertEqual("NOT_APPLICABLE",
                          m.evaluate(rule, {"has_read_tools": fact(False)}, {})["status"])
-        self.assertEqual("NOT_TESTED",
+        self.assertEqual("ADVISORY_ONLY",
                          m.evaluate(rule, {"has_read_tools": fact(True)}, {})["status"])
 
     def test_large_catalog_threshold_predeclared(self):
         rule = RULES["MCP-L2-X3"]
         self.assertEqual("NOT_APPLICABLE",
                          m.evaluate(rule, {"tool_count": fact(24)}, {})["status"])
-        self.assertEqual("FAIL",
+        self.assertEqual("ADVISORY_ONLY",
                          m.evaluate(rule, {"tool_count": fact(25)},
-                                    {"progressive_discovery_or_equivalent_context_control": obs(False, rule_id=rule["id"])})["status"])
+                                    {"context_control_observed_with_large_catalog": obs(False, rule_id=rule["id"])})["status"])
 
     def test_no_sandbox_absence_assumed_from_uninspected_product(self):
         rule = RULES["MCP-L4-R1"]
@@ -82,13 +82,13 @@ class CriteriaPilotTests(unittest.TestCase):
     def test_mutating_history_does_not_give_pass(self):
         rule = RULES["MCP-L3-C1"]
         case = m.evaluate(rule, {"has_writes": fact(True)},
-                          {"repeated_writes_safe_in_sandbox": obs(True, evidence_id="")})
+                          {"duplicate_effect_prevention_across_retries": obs(True, rule_id=rule["id"], evidence_id="")})
         self.assertEqual("UNKNOWN", case["status"])
 
     def test_missing_version_does_not_fail(self):
         rule = RULES["MCP-L2-C2"]
         case = m.evaluate(rule, {"has_callable_tools": fact(True)},
-                          {"tested_errors_actionable": obs(False, version="")})
+                          {"errors_detected_and_correctly_recovered": obs(False, rule_id=rule["id"], version="")})
         self.assertEqual("UNKNOWN", case["status"])
 
 
@@ -114,14 +114,34 @@ class CriteriaPilotTests(unittest.TestCase):
         self.assertEqual("FAIL", authoritative["status"])
 
     def test_protocol_evidence_is_mandatory_for_any_fail(self):
-        rule = RULES["MCP-L2-X4"]
-        e = obs(12000, rule_id=rule["id"])
+        rule = RULES["MCP-L2-X2"]
+        e = obs(False, rule_id=rule["id"])
         for missing in ("protocol_id", "sample_count", "trace_refs", "oracle_id"):
             r = e.copy()
             r.pop(missing)
             self.assertEqual("UNKNOWN", m.evaluate(rule,
-                {"has_read_tools": fact(True)},
-                {"max_default_read_output_tokens": r})["status"])
+                {"can_truncate_results": fact(True)},
+                {"truncation_detectable_and_retrievable": r})["status"])
+
+    def test_all_55_claims_have_scoped_evidence_basis(self):
+        self.assertTrue(all(r["evidence_basis"]["implementation_policy"] ==
+                            "EQUIVALENT_BEHAVIOR_ACCEPTED" for r in RULES.values()))
+        d = copy.deepcopy(DATA)
+        d["criteria"][0]["evidence_basis"]["source_ids"] = ["untrusted-source"]
+        self.assertTrue(any("basis" in x for x in m.validate_criteria(d)))
+        d = copy.deepcopy(DATA)
+        for r in d["criteria"]:
+            if r["id"] == "MCP-L2-X4":
+                r["evidence_basis"]["verdict_policy"] = "SCOPED_PROVISIONAL"
+        self.assertTrue(any("calibration" in x for x in m.validate_criteria(d)))
+
+    def test_all_applicable_retry_scenarios_are_predeclared(self):
+        specs = __import__("json").loads(m.PROTOCOLS.read_text())
+        for check, needed in (("MCP-L2-C2", 2), ("MCP-L3-C1", 3),
+                              ("MCP-L3-S1", 2), ("MCP-L2-X2", 2)):
+            tags = specs["protocols"][check]["required_scenarios"]
+            self.assertEqual(needed, len(tags))
+            self.assertGreaterEqual(specs["protocols"][check]["minimum_samples"], needed)
 
     def test_no_fake_score_by_turning_advice_into_fail(self):
         rule = copy.deepcopy(RULES["MCP-L4-O2"])

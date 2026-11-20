@@ -1,6 +1,6 @@
 {
   "schema": "are.criteria.test_protocols.v1",
-  "version": "pilot-2026-11-18",
+  "version": "pilot-2026-11-21",
   "status": "NONCERTIFYING_PREDECLARED",
   "source": "data/are-assessment-criteria-pilot.v1.json",
   "protocols": {
@@ -47,9 +47,9 @@
       ]
     },
     "MCP-L2-C2": {
-      "setup": "选一个安全只读工具的合法与错误输入",
-      "procedure": "实际触发缺字段和无效域值错误，检查原始 MCP 错误和恢复信息",
-      "pass_rule": "错误有稳定标识及 Agent 可遵循的更正动作；不强制特定字段名",
+      "setup": "For a representative safely callable tool prepare a valid request, invalid request and a correctable follow-up; pin model, host and native response",
+      "procedure": "Trigger invalid input, capture native MCP response and isError (when returned), then ask the same Agent to identify failure and make a corrected authorized retry. Compare outcome to independent oracle; text and structured content are equally eligible.",
+      "pass_rule": "The Agent detects the failure and corrects or safely stops with defensible evidence; error content is actionable regardless of JSON/text. Separately report MCP isError SHOULD where applicable.",
       "minimum_samples": 2,
       "required_artifacts": [
         "pinned_target_version",
@@ -58,12 +58,16 @@
         "independent_oracle_or_expected_contract",
         "operator_attribution",
         "measured_outcome"
+      ],
+      "required_scenarios": [
+        "invalid_request",
+        "corrected_retry"
       ]
     },
     "MCP-L2-X1": {
-      "setup": "找出具有大规模列表响应的工具和超一页数据",
-      "procedure": "以限定字段及过滤器请求两页，比较完整集与续取集",
-      "pass_rule": "服务端能减量并确定性续取，记录排序及覆盖，不丢不重",
+      "setup": "Prepare an authorized list that exceeds one normal bounded response and an independent complete-item oracle",
+      "procedure": "Use any supported projection, filter, page cursor, offset, segment size or equivalent; retrieve all relevant items, verify counts and identity against independent oracle and record output cost.",
+      "pass_rule": "All required items can be retrieved without missing/duplicate items or silent truncation and within declared budget; no specific pagination field is mandatory.",
       "minimum_samples": 2,
       "required_artifacts": [
         "pinned_target_version",
@@ -72,12 +76,16 @@
         "independent_oracle_or_expected_contract",
         "operator_attribution",
         "measured_outcome"
+      ],
+      "required_scenarios": [
+        "initial_segment",
+        "followup_segment"
       ]
     },
     "MCP-L2-X2": {
-      "setup": "准备超出默认单次返回容量的授权查询",
-      "procedure": "请求首段并按响应续取到完结；与独立全量计数核对",
-      "pass_rule": "明确指示截断与恢复点，续取结果完整有序",
+      "setup": "Prepare an authorized result whose complete content exceeds the first bounded response and establish independent size/identity oracle",
+      "procedure": "Read initial bounded result, determine whether there is remaining content, recover by any deterministic cursor/offset/line-range/continuation method and compare complete result with oracle.",
+      "pass_rule": "Truncation or incomplete coverage is detectable and the remaining content is safely retrievable without loss; numeric offsets or line ranges can be equivalent to cursors.",
       "minimum_samples": 2,
       "required_artifacts": [
         "pinned_target_version",
@@ -86,12 +94,16 @@
         "independent_oracle_or_expected_contract",
         "operator_attribution",
         "measured_outcome"
+      ],
+      "required_scenarios": [
+        "bounded_read",
+        "continued_read"
       ]
     },
     "MCP-L2-X3": {
-      "setup": "对原生工具集合>=25的服务固定 tools/list 清单",
-      "procedure": "在真实 Agent 任务前记录工具发现上下文量；调用索引/分页/等效缩减，再读需要的契约",
-      "pass_rule": "至少能不预载全部完整 schema 而发现并使用目标工具，或证明等效上下文控制",
+      "setup": "For a reproducible large tool catalog pin host, model, discovery method, tool counts and token meter",
+      "procedure": "Measure cold discovery context cost and tool selection success using available compact, progressive or eager discovery. Repeat paired tasks if possible.",
+      "pass_rule": "Research-only measure of task success and context cost; 25 tools is a pilot sampling threshold, not an MCP requirement.",
       "minimum_samples": 2,
       "required_artifacts": [
         "pinned_target_version",
@@ -103,9 +115,9 @@
       ]
     },
     "MCP-L2-X4": {
-      "setup": "固定模型 tokenizer、宿主、只读工具默认参数及样例数据",
-      "procedure": "逐工具测量默认成功响应的 Token 数，记最大值；显式要求大响应排除",
-      "pass_rule": "所有受测默认只读响应<=8192 Token，或原生服务强制切片/缩减至该上限",
+      "setup": "Fix tokenizer, host, default parameters and representative data across comparable Agent tasks",
+      "procedure": "Measure default response tokens and task success; compare bounded and explicit-large requests with the same Oracle and report variance.",
+      "pass_rule": "Record real token counts and outcome, without treating 8192 as a universal normative PASS/FAIL boundary.",
       "minimum_samples": 2,
       "required_artifacts": [
         "pinned_target_version",
@@ -187,10 +199,10 @@
       ]
     },
     "MCP-L3-C1": {
-      "setup": "创建有隔离和清理机制的可写测试资源",
-      "procedure": "同一幂等请求安全重放两次，读取最终状态与副作用计数",
-      "pass_rule": "重复调用产生等效单次效果或安全明确拒绝重复提交",
-      "minimum_samples": 2,
+      "setup": "Prepare an isolated reversible write operation, count observable side effects and define three permitted failure modes",
+      "procedure": "Test (1) duplicate delivery of identical call, (2) lost response followed by legitimate retry, (3) reconnect or a fresh client/request ID. Record state readback for each. No general idempotency-key field is mandated.",
+      "pass_rule": "For all authorized applicable replay scenarios the effect is at-most-once or safely detected/rejected/reconciled; unavailable cases are BLOCKED_AUTH or NOT_TESTED, never inferred PASS.",
+      "minimum_samples": 3,
       "required_artifacts": [
         "pinned_target_version",
         "test_inputs",
@@ -198,6 +210,11 @@
         "independent_oracle_or_expected_contract",
         "operator_attribution",
         "measured_outcome"
+      ],
+      "required_scenarios": [
+        "duplicate_delivery",
+        "lost_response_retry",
+        "new_client_retry"
       ]
     },
     "MCP-L3-C2": {
@@ -243,9 +260,9 @@
       ]
     },
     "MCP-L3-S1": {
-      "setup": "以沙箱中真实异步任务 ID 为对象",
-      "procedure": "启动、断连、重连，查询状态并在适用时请求取消",
-      "pass_rule": "任务状态可按稳定 ID 恢复，取消语义和终态一致",
+      "setup": "Start a safe authorized async task with a stable server-issued handle or equivalent operation reference",
+      "procedure": "Capture initiation, disconnect, and reconnect; query result/status using task extension, call_id/get_result or equivalent. Test cancellation when the provider offers it.",
+      "pass_rule": "The same operation can be identified and resolved after disconnect without accidentally resubmitting side effects; no specific task/call_id API is mandatory.",
       "minimum_samples": 2,
       "required_artifacts": [
         "pinned_target_version",
@@ -254,6 +271,10 @@
         "independent_oracle_or_expected_contract",
         "operator_attribution",
         "measured_outcome"
+      ],
+      "required_scenarios": [
+        "task_started",
+        "after_reconnect"
       ]
     },
     "MCP-L3-S2": {

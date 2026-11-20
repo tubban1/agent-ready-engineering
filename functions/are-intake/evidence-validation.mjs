@@ -1,7 +1,7 @@
 // ARE assessment preflight: deterministic, read-only and free of database writes.
 // Evidence here is assessor supplied, NOT externally attested by ARE.
 import {createHash} from "node:crypto";
-import {validateV5,EVIDENCE_PROTOCOL} from "./evaluation-contract-v5.mjs";
+import {validateV5,EVIDENCE_PROTOCOL} from "./evaluation-contract-v51.mjs";
 const HEX=/^[a-f0-9]{64}$/;
 const CHECKS=new Set("MCP-L1-V4 MCP-L1-C1 MCP-L2-C1 MCP-L2-C2 MCP-L2-X1 MCP-L2-X2 MCP-L2-X3 MCP-L2-X4 MCP-L2-A1 MCP-L2-A2 MCP-L2-I1 MCP-L2-O1 MCP-L2-O2 MCP-L3-C1 MCP-L3-C2 MCP-L3-C3 MCP-L3-C4 MCP-L3-S1 MCP-L3-S2 MCP-L3-S3 MCP-L3-S4 MCP-L3-A2 MCP-L3-A3 MCP-L3-A4 MCP-L3-O1 MCP-L3-O2 MCP-L4-O1 MCP-L4-O2 MCP-L4-I1 MCP-L4-I2 MCP-L4-R1 MCP-L4-R4".split(" "));
 const TERMINAL=new Set(["PASS","FAIL","NOT_APPLICABLE","BLOCKED_AUTH","UNKNOWN","NOT_TESTED","NOT_ASSESSED"]);
@@ -125,7 +125,7 @@ export function preflightAssessment(data,{assigneeId,organization,repositoryKey,
  const metrics={criteria:tally(findings),tools:tally(inventory),discovered_tools:count??0,
    blocked:inventory.filter(x=>x?.status?.startsWith("BLOCKED")).length,agent_tasks:(data.agent_tasks||[]).length,verified_agent_tasks:verifiedTasks,
    artifacts:traces.length};
- const report_preview=renderStructuredReport(data,metrics);
+ let report_preview=renderStructuredReport(data,metrics);
  const normalized_summary="ARE independent assessment: "+metrics.criteria.PASS+" criteria PASS, "+metrics.criteria.FAIL+
   " FAIL, "+metrics.criteria.NOT_APPLICABLE+" N/A, "+metrics.criteria.NOT_TESTED+" NOT_TESTED; "+
   metrics.tools.PASS+" tools PASS, "+metrics.tools.FAIL+" FAIL, "+metrics.blocked+" BLOCKED; "+verifiedTasks+" agent tasks independently verified.";
@@ -137,6 +137,13 @@ export function preflightAssessment(data,{assigneeId,organization,repositoryKey,
  const verified=validateV5(data,{expectedEndpoint,taskId,captures});
  errors.push(...verified.errors);warnings.push(...verified.warnings);
  metrics.semantic=verified.metrics;
+ if(verified.metrics.research_metrics?.length){
+  report_preview+="\n\n## Non-scored calibration observations\n\n"+
+   "| Criterion | Measured metric | Value | Primary evidence |\n|---|---|---:|---|\n"+
+   verified.metrics.research_metrics.map(r=>"| "+safeInline(r.check_id)+" | "+
+    safeInline(r.metric)+" | "+String(r.value)+" | "+safeInline(r.evidence_ref)+" |").join("\n")+
+   "\n\nThese measurements are research-only, not MCP protocol violations or product FAIL.";
+ }
  const package_sha256=sha(canonical(data));
  return {valid:errors.length===0,errors,warnings,metrics,readiness:verified.readiness,
    evidence_protocol:EVIDENCE_PROTOCOL,normalized_summary,report_preview,package_sha256,

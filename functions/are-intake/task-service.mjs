@@ -1,6 +1,6 @@
 import {randomBytes,createHash} from "node:crypto";
 import {preflightAssessment,renderStructuredReport} from "./evidence-validation.mjs";
-import {EVIDENCE_PROTOCOL,v5EvidenceGuide} from "./evaluation-contract-v5.mjs";
+import {EVIDENCE_PROTOCOL,v5EvidenceGuide} from "./evaluation-contract-v51.mjs";
 import {CAPTURE_READ_SQL,captureReadOnly,validCaptureId} from "./capture-v5.mjs";
 
 const cohort="ARE100-VALUE-20261115";
@@ -83,12 +83,12 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
    assessor_organization:assignment.assessor_organization,created_at:assignment.created_at,expires_at:assignment.expires_at,plan:assignment.plan_snapshot,
    endpoint:{url:assignment.plan_snapshot?.runtime_endpoint||assignment.screened_endpoint||"",status:"SCREENED_NOT_INDEPENDENTLY_ATTESTED",screened_at:assignment.screened_at||null},
    auth_mode:assignment.plan_snapshot?.auth_mode||assignment.screened_auth_mode||"UNKNOWN"};
- if(path==="/v3/task/read"&&req.method==="POST")return {status:200,data:{ok:true,task,criteria_version:"pilot-2026-11-18",
+ if(path==="/v3/task/read"&&req.method==="POST")return {status:200,data:{ok:true,task,criteria_version:"pilot-2026-11-21",
    assessment_mode:"ARE_INDEPENDENT",track:"product",task_token_echoed:false,
    workflow:["are_get_task","are_get_criteria","are_checkpoint","are_validate_assessment","are_submit_assessment","are_get_submission"],
    constraints:["Only authorized non-destructive operations","Record UNKNOWN/NOT_TESTED rather than fabricate results",
       "No public release of a third-party independent report without owner approval"],
-   evidence_schema:"are.assessment.result.v2",evidence_protocol:EVIDENCE_PROTOCOL,
+   evidence_schema:"are.assessment.result.v3",evidence_protocol:EVIDENCE_PROTOCOL,
    evidence_contract_tool:"are_get_evidence_contract",capture_tool:"are_capture_readonly",private:true,
    test_plan:(await import("./pipeline-service.mjs")).estimatePlan(Number(task.plan?.declared_tool_count||0),task.plan?.auth_mode||"UNKNOWN",task.plan?.risk_level||"LOW"),
    required_additional_fields:["tool_coverage","test_blockers","test_metadata","evidence_artifacts","source_binding","agent_tasks"],
@@ -99,8 +99,8 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
      test_metadata:{discovered_tool_count:0,minutes_used:0,auth_mode:task.auth_mode,applicability_facts:{}},
      source_binding:{verified:false,evidence_ref:"",reason:"Not yet verified by independent source-to-deployment observations"},
      contact_route:{url:"https://github.com/"+task.repository_key},
-     report:{schema:"are.assessment.result.v2",mode:"ARE_INDEPENDENT",track:"product",
-       criteria_version:"pilot-2026-11-18",maturity_level:null,certification:false,
+     report:{schema:"are.assessment.result.v3",mode:"ARE_INDEPENDENT",track:"product",
+       criteria_version:"pilot-2026-11-21",maturity_level:null,certification:false,
        public_release_authorized:false,
        target:{id:task.repository_key,source_revision:"REPLACE_WITH_ACTUAL_40_HEX_GIT_SHA",
           observed_version:"REPLACE_WITH_ACTUALLY_OBSERVED_VERSION",
@@ -126,7 +126,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   if(!Number.isInteger(offset)||offset<0||offset>criteria.length||Object.keys(input||{}).some(k=>k!=="offset"))
     error("invalid_criteria_cursor");
   const page=criteria.slice(offset,offset+8);
-  return {status:200,data:{ok:true,criteria_version:"pilot-2026-11-18",total:criteria.length,offset,
+  return {status:200,data:{ok:true,criteria_version:"pilot-2026-11-21",total:criteria.length,offset,
      criteria:page,next:offset+page.length<criteria.length?offset+page.length:null}};
  }
  const runPreflight=async(payload)=>{
