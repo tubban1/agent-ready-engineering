@@ -3,7 +3,7 @@
 // evidence proves an external service's truth. Only server-issued captures are attested.
 import {TASK_CRITERIA} from "./criteria-compact.mjs";
 
-export const EVIDENCE_PROTOCOL="are.evidence.v5";
+export const EVIDENCE_PROTOCOL="are.evidence.v5.1";
 export const RAW_OBSERVATION_PROTOCOL="mcp.raw-observation.v1";
 export const CRITERIA_BY_ID=new Map(TASK_CRITERIA.map(c=>[c.id,c]));
 export const FACT_NAMES=[...new Set(TASK_CRITERIA.flatMap(c=>c.applies_when.map(w=>w.fact)))].sort();
@@ -247,8 +247,8 @@ export function validateV5(data,{expectedEndpoint="",taskId="",captures=[]}={}){
  const issue=(path,code,message,severity="error")=>(severity==="warning"?warnings:errors).push({path,code,message});
  if(data?.evidence_protocol!==EVIDENCE_PROTOCOL)
   issue("evidence_protocol","evidence_v5_required","Use the V5 evidence package; call are_get_task to obtain the contract");
- if(data?.report?.schema!=="are.assessment.result.v2")
-  issue("report.schema","assessment_v2_required","Use are.assessment.result.v2");
+ if(data?.report?.schema!=="are.assessment.result.v3")
+  issue("report.schema","assessment_v2_required","Use are.assessment.result.v3");
  const refs=indexEvidence(data?.evidence_artifacts);
  const metadata=data?.test_metadata||{},findings=data?.report?.findings||[];
   const endpoint=data?.report?.target?.endpoint||expectedEndpoint;
@@ -287,17 +287,57 @@ export function validateV5(data,{expectedEndpoint="",taskId="",captures=[]}={}){
  }
  for(let i=0;i<(data.tool_coverage||[]).length;i++)checkToolRow(data.tool_coverage[i],i,refs,issue,raw);
  const verdicts={PASS:0,FAIL:0,NOT_APPLICABLE:0,NOT_TESTED:0,UNKNOWN:0,BLOCKED_AUTH:0,NOT_ASSESSED:0};
+ const research_metrics=[];
  for(let i=0;i<findings.length;i++){
   const f=findings[i],rule=CRITERIA_BY_ID.get(f?.check_id),path="report.findings["+i+"]";
   if(!rule||!status.has(f.status))continue;
   verdicts[f.status]++;
   const app=applicability(rule,data,refs,issue);
+  if(rule.evidence_basis?.verdict_policy==="MEASURE_ONLY"&&f.research_observation!==undefined){
+   const observation=f.research_observation,samples=f.research_samples,researchPath=path+".research_observation";
+   if(!record(observation)||observation.metric!==rule.pass_if.metric||
+      !checkEvidence(refs,observation.evidence_ref,"trace")||
+      !Array.isArray(samples)||samples.length<rule.minimum_samples){
+    issue(researchPath,"calibration_measurement_incomplete",
+     "Research-only measurements need their own exact metric, original trace and minimum raw samples");
+   }else{
+    const traceRefs=new Set();
+    for(const [n,sample] of samples.entries()){
+     if(!isRawCapture(refs.get(sample.trace_ref))||traceRefs.has(sample.trace_ref))
+      issue(path+".research_samples["+n+"]","calibration_duplicate_or_missing_trace",
+       "Each calibration measurement must use its own actual original tool call trace");
+     traceRefs.add(sample.trace_ref);
+    }
+    const measured=measuredCriterion(rule,observation,samples,refs,null,issue,path+".research_samples");
+    if(measured&&observation.value!==measured.value)
+     issue(researchPath+".value","calibration_not_derived_from_raw",
+       "Research metric must be recalculated from raw response fields");
+    if(measured&&measured.value===observation.value)
+     research_metrics.push({check_id:rule.id,metric:rule.pass_if.metric,value:measured.value,
+      evidence_ref:observation.evidence_ref,scored:false});
+   }
+  }
   if(f.status==="NOT_APPLICABLE"){
    if(!rule.applies_when.length)issue(path+".status","required_criterion_na","Unconditional REQUIRED criterion cannot be N/A");
    else if(!app.known)issue(path+".status","na_applicability_unproven","Must prove the exact applies_when facts before N/A; missing evidence means UNKNOWN");
    else if(app.applies)issue(path+".status","na_when_applicable","Recorded facts show criterion applies; must test or mark NOT_TESTED/UNKNOWN");
   }
   if(["PASS","FAIL"].includes(f.status)){
+   if(rule.evidence_basis?.verdict_policy==="MEASURE_ONLY")
+    issue(path+".status","uncalibrated_threshold_not_scoreable",
+      "A numerical pilot hypothesis cannot produce a product PASS/FAIL before calibrated real Agent outcome experiments");
+   if(f.protocol_violation===true && rule.evidence_basis?.claim_class!=="MCP_CONFORMANCE")
+    issue(path+".protocol_violation","are_quality_not_mcp_violation",
+      "An ARE engineering outcome is not itself an MCP MUST violation; normative conformance needs an independently pinned clause");
+   if(f.status==="FAIL"){
+    const a=f.attribution;
+    if(!record(a)||!["NATIVE_MCP","VERIFIED_VENDOR_SOURCE"].includes(a.surface)||
+        !nonblank(a.failure_mode,8,240)||!nonblank(a.evidence_ref,2,240)||
+        !isRawCapture(refs.get(a.evidence_ref))){
+     issue(path+".attribution","failed_vendor_attribution_unproven",
+      "Vendor FAIL requires an original native/source-backed trace plus a reproducible attributable failure mode; host-adapter-only observations cannot become vendor FAIL");
+    }
+   }
    if(!app.known)issue(path+".status","decisive_applicability_unproven","Cannot declare PASS/FAIL before applicable context is verified");
    if(app.known&&!app.applies)issue(path+".status","decisive_when_not_applicable","Finding is N/A under recorded target facts");
    const metric=rule.pass_if.metric,op=rule.pass_if.op,expected=rule.pass_if.value,observed=f.observation;
@@ -314,6 +354,20 @@ export function validateV5(data,{expectedEndpoint="",taskId="",captures=[]}={}){
    if(!Array.isArray(samples)||samples.length<needed)
     issue(path+".samples","criterion_minimum_samples_missing","Need at least "+needed+" independent test samples, per ARE criterion procedure");
    else{
+    const requiredScenarios=rule.required_scenarios||[];
+    const declared=new Set(samples.map(sample=>sample?.scenario));
+    if(f.status==="PASS"){
+     const missing=requiredScenarios.filter(x=>!declared.has(x));
+     if(missing.length)issue(path+".samples","required_failure_modes_untested",
+       "A decisive PASS needs every predeclared recovery/failure scenario; missing: "+missing.join(", "));
+    }
+    if(requiredScenarios.length){
+     for(const [n,s] of samples.entries()){
+      if(!requiredScenarios.includes(s?.scenario))
+       issue(path+".samples["+n+"].scenario","unregistered_failure_mode",
+        "Each observed failure-mode sample must use a predeclared universal scenario tag");
+     }
+    }
     const unique=new Set();
     for(const [n,s] of samples.entries()){
      const ref=s?.trace_ref;
@@ -365,6 +419,7 @@ export function validateV5(data,{expectedEndpoint="",taskId="",captures=[]}={}){
   issue("test_metadata.minutes_used","invalid_measured_duration","Record measured duration");
  const metrics={criteria:verdicts,raw_tool_traces:(data.tool_coverage||[]).filter(t=>isRawCapture(refs.get(t.trace_ref))).length,
   server_attested_traces:attested.length,self_reported_raw_traces:selfReported.length,
+  research_metrics,
   raw_agent_tasks:rawTaskCount,known_facts:FACT_NAMES.filter(x=>factValue(x,data,refs,()=>{}).known).length,
   unknown_facts:FACT_NAMES.filter(x=>!factValue(x,data,refs,()=>{}).known)};
  // Ready for HUMAN REVIEW does not mean independently certified, contact-approved or
@@ -384,11 +439,15 @@ export function v5EvidenceGuide(){
  const traceContent=JSON.stringify({protocol:RAW_OBSERVATION_PROTOCOL,observed_at:"2026-11-20T18:30:00Z",
    endpoint:"https://EXAMPLE.COM/mcp",transport:"http",request,response,
    wire_request:JSON.stringify(request),wire_response:JSON.stringify(response)});
- return {protocol:EVIDENCE_PROTOCOL,report_schema:"are.assessment.result.v2",
+ return {protocol:EVIDENCE_PROTOCOL,report_schema:"are.assessment.result.v3",
    statuses:[...status],tool_statuses:[...toolStatus],applicability_facts:FACT_NAMES,
    default_finding_status:"NOT_TESTED",
    task_scope:"Task Token is supplied only to the ARE MCP, never to the evaluated project.",
    facts:"test_metadata.applicability_facts: {fact:{value:boolean|integer,evidence_ref:attached_raw_trace_id}}. Unknown applicability MUST use UNKNOWN/NOT_TESTED, never automatic N/A.",
+   evidence_basis:"Every criterion includes claim_class, source_ids, provenance scope and verdict_policy. MCP protocol MUST claims are separate from ARE quality. CALIBRATION_HYPOTHESIS items are MEASURE_ONLY and cannot produce PASS/FAIL. Equivalent mechanisms that satisfy the measured outcome are allowed.",
+   failure_attribution:"For each FAIL supply attribution:{surface:'NATIVE_MCP'|'VERIFIED_VENDOR_SOURCE',failure_mode:'reproducible cause',evidence_ref:'original trace id'}; host adapter-only evidence cannot become a vendor FAIL.",
+   research_measurement:"MEASURE_ONLY criteria may carry research_observation:{metric,value,evidence_ref} plus research_samples, with original traces and machine-recomputed values; they stay UNKNOWN/NOT_TESTED or NOT_APPLICABLE and cannot score PASS/FAIL.",
+   required_scenarios:"When rule.required_scenarios is present, every PASS sample must declare one matching scenario tag and all required tags must be covered; partial failure-mode coverage must not be called PASS.",
    findings:"For PASS/FAIL, supply exact pass_if.metric and observation.value plus raw trace samples. MCP-L1-V4 is recomputed from complete, unique, schema-valid tools/list pages (including nextCursor). Other boolean metrics require samples [{trace_ref,criterion_id,case_label,expected_source,assertions:[{pointer,operator,expected}]}] where pointer extracts an actual response field and computed all-assertion truth equals observation.value. Numeric metrics use samples [{trace_ref,criterion_id,case_label,expected_source,numeric_pointer,tokenizer_id}] with observed.value equal to maximum raw extracted number; output-token count must point to an actual token_count/output_tokens/tokens field, never a generic total. For N/A supply reason + known false applies_when fact with trace. Each sample must be distinct; expected_source must be separately defensible in review.",
    trace:{id:"raw-t1",kind:"trace",sha256:"SHA256_OF_EXACT_UTF8_CONTENT",
      provenance:"Agent host captured native MCP frames; verification pending",

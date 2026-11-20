@@ -4,7 +4,7 @@ import {createHash} from "node:crypto";
 import {preflightAssessment} from "./evidence-validation.mjs";
 import {PRODUCT_CHECKS,validateSubmission} from "./index.mjs";
 import {TASK_CRITERIA} from "./criteria-compact.mjs";
-import {FACT_NAMES,RAW_OBSERVATION_PROTOCOL} from "./evaluation-contract-v5.mjs";
+import {FACT_NAMES,RAW_OBSERVATION_PROTOCOL} from "./evaluation-contract-v51.mjs";
 import {taskAgentAction,TASK_READ_SQL,TASK_SUBMIT_SQL} from "./task-service.mjs";
 import {CAPTURE_READ_SQL} from "./capture-v5.mjs";
 const sha=x=>createHash("sha256").update(x).digest("hex");
@@ -53,7 +53,7 @@ export function samplePackage(){
   if(!applicable)return {...base,status:"NOT_APPLICABLE",reason:"Observed project contract does not meet the required applies_when fact conditions."};
   return {...base,status:"NOT_TESTED",reason:"Fixture does not execute this applicable criterion; reviewer must not infer PASS."};
  });
- return {evidence_protocol:"are.evidence.v5",cohort_id:cohort,repository_key:repo,
+ return {evidence_protocol:"are.evidence.v5.1",cohort_id:cohort,repository_key:repo,
   summary:"Fixture-only assessment, not an external vendor verdict",
   source_binding:{verified:false,reason:"Vendor documentation associates endpoint with repo, but live binary source commit is not proven"},
   contact_route:{url:"https://github.com/"+repo},recommendations:[],
@@ -63,8 +63,8 @@ export function samplePackage(){
   test_metadata:{discovered_tool_count:1,minutes_used:12,auth_mode:"NONE",applicability_facts:facts},
   agent_tasks:[{goal:"Compare returned models against independent test fixture",
    trace_ref:task.id,oracle_ref:oracle.id,authorized:true,status:"PASS",oracle_verified:true,agent:"test-agent"}],
-  report:{schema:"are.assessment.result.v2",mode:"ARE_INDEPENDENT",track:"product",
-   criteria_version:"pilot-2026-11-18",certification:false,maturity_level:null,public_release_authorized:false,
+  report:{schema:"are.assessment.result.v3",mode:"ARE_INDEPENDENT",track:"product",
+   criteria_version:"pilot-2026-11-21",certification:false,maturity_level:null,public_release_authorized:false,
    target:{id:repo,source_revision:rev,observed_version:"1.0.2",owner_organization:"Etuki Gate Org",endpoint},
    assessor:{id:"colleague-01",organization:"ARE Research"},findings}};
 }
@@ -210,7 +210,7 @@ test("V5 refuses PASS for a semantic check without criterion-attributed raw asse
  assert.equal(r.valid,false);
  assert.ok(r.errors.some(e=>e.code==="unattributed_criterion_test"),JSON.stringify(r.errors));
 });
-test("V5 recalculates numeric criterion measurement from real sample values",()=>{
+test("V5.1 rejects normative PASS on uncalibrated token threshold even with instrumented raw data",()=>{
  const x=samplePackage();
  const f=x.report.findings.find(r=>r.check_id==="MCP-L2-X4");
  const first=x.evidence_artifacts.find(a=>a.id==="raw-tool"),frame=JSON.parse(first.content);
@@ -220,13 +220,13 @@ test("V5 recalculates numeric criterion measurement from real sample values",()=
    {content:[{type:"text",text:JSON.stringify({total:2,output_tokens:2})}],isError:false}));
  x.evidence_artifacts.push(tool2);
  Object.assign(f,{status:"PASS",evidence_ref:"raw-tool",
-   observation:{metric:"max_default_read_output_tokens",value:500,evidence_ref:"raw-tool"},
+   observation:{metric:"measured_default_read_context_cost",value:500,evidence_ref:"raw-tool"},
    samples:["raw-tool","raw-tool-2"].map(trace_ref=>({trace_ref,criterion_id:f.check_id,
      case_label:"Instrumented default read output",expected_source:"Independent test tokenizer counts",
      tokenizer_id:"tiktoken-cl100k-base",numeric_pointer:"/result/content/0/text#/output_tokens"}))});
  const r=preflightAssessment(x,config);
  assert.equal(r.valid,false);
- assert.ok(r.errors.some(e=>e.code==="measurement_not_derived_from_raw"),JSON.stringify(r.errors));
+ assert.ok(r.errors.some(e=>e.code==="uncalibrated_threshold_not_scoreable"),JSON.stringify(r.errors));
 });
 test("V5 does not accept first-page-only discovery as complete native inventory",()=>{
  const x=samplePackage(),a=x.evidence_artifacts.find(a=>a.id==="raw-discovery");
@@ -331,4 +331,140 @@ test("full token-scoped receipt-only validation then submission persists origina
  assert.equal(persisted.sha256,receipt.sha256);
  assert.equal(persisted.capture_id,receipt.id);
  assert.deepEqual(calls.map(x=>x.q).filter(q=>q===TASK_SUBMIT_SQL),[TASK_SUBMIT_SQL]);
+});
+
+
+test("V5.1 criteria carry explicit scoped sources and implementation-neutral behavior policy",()=>{
+ assert.equal(TASK_CRITERIA.length,32);
+ for(const rule of TASK_CRITERIA){
+  assert.equal(rule.evidence_basis.implementation_policy,"EQUIVALENT_BEHAVIOR_ACCEPTED");
+  assert.equal(rule.evidence_basis.evaluated_outcome,rule.pass_if.metric);
+  assert.ok(Array.isArray(rule.evidence_basis.source_ids));
+ }
+ for(const id of ["MCP-L2-X3","MCP-L2-X4"])
+  assert.equal(TASK_CRITERIA.find(c=>c.id===id).evidence_basis.verdict_policy,"MEASURE_ONLY");
+});
+
+test("V5.1 accepts no vendor FAIL without attributable source-side raw evidence",()=>{
+ const x=samplePackage();
+ const f=x.report.findings.find(c=>c.check_id==="MCP-L2-C2");
+ f.status="FAIL";
+ f.evidence_ref="raw-tool";
+ f.observation={metric:TASK_CRITERIA.find(c=>c.id===f.check_id).pass_if.metric,value:false,evidence_ref:"raw-tool"};
+ f.samples=[{trace_ref:"raw-tool",criterion_id:f.check_id,scenario:"invalid_request",
+    case_label:"A reproducible invalid argument",expected_source:"Independent contract and observed outcome",
+    assertions:[{pointer:"/result/isError",operator:"eq",expected:true}]}];
+ let r=preflightAssessment(x,config);
+ assert.equal(r.valid,false);
+ assert.ok(r.errors.some(e=>e.code==="failed_vendor_attribution_unproven"),JSON.stringify(r.errors));
+ f.attribution={surface:"HOST_ADAPTER",failure_mode:"Unrecoverable host response",evidence_ref:"raw-tool"};
+ r=preflightAssessment(x,config);
+ assert.ok(r.errors.some(e=>e.code==="failed_vendor_attribution_unproven"),JSON.stringify(r.errors));
+ f.protocol_violation=true;
+ r=preflightAssessment(x,config);
+ assert.ok(r.errors.some(e=>e.code==="are_quality_not_mcp_violation"),JSON.stringify(r.errors));
+});
+
+test("V5.1 full PASS requires all generic failure-mode scenarios, not a convenient subset",()=>{
+ const x=samplePackage();
+ const rule=TASK_CRITERIA.find(c=>c.id==="MCP-L2-C2");
+ const f=x.report.findings.find(c=>c.check_id===rule.id);
+ const second=x.evidence_artifacts.find(c=>c.id==="raw-tool");
+ const raw=JSON.parse(second.content);raw.request.id=15;raw.response.id=15;
+ raw.wire_request=JSON.stringify(raw.request);raw.wire_response=JSON.stringify(raw.response);
+ x.evidence_artifacts.push(artifact("raw-tool-again","trace",raw));
+ f.status="PASS";f.evidence_ref="raw-tool";
+ f.observation={metric:rule.pass_if.metric,value:true,evidence_ref:"raw-tool"};
+ f.samples=["raw-tool","raw-tool-again"].map(trace_ref=>({
+  trace_ref,criterion_id:rule.id,scenario:"invalid_request",
+  case_label:"A reproducible negative and recovery test",
+  expected_source:"Independent fixture expected response assertion",
+  assertions:[{pointer:"/result/isError",operator:"eq",expected:false}]
+ }));
+ const r=preflightAssessment(x,config);
+ assert.equal(r.valid,false);
+ assert.ok(r.errors.some(e=>e.code==="required_failure_modes_untested"),JSON.stringify(r.errors));
+});
+
+test("V5.1 old evidence protocol and result schema are rejected without compatibility fallback",()=>{
+ const x=samplePackage();x.evidence_protocol="are.evidence.v5";
+ let r=preflightAssessment(x,config);
+ assert.equal(r.valid,false);
+ x.evidence_protocol="are.evidence.v5.1";x.report.schema="are.assessment.result.v2";
+ r=preflightAssessment(x,config);
+ assert.equal(r.valid,false);
+});
+
+test("V5.1 accepts actionable plain-text tool errors after a real corrected retry; JSON envelope is optional",()=>{
+ const x=samplePackage();
+ const rule=TASK_CRITERIA.find(c=>c.id==="MCP-L2-C2"),f=x.report.findings.find(c=>c.check_id===rule.id);
+ const bad=artifact("raw-invalid-text","trace",traceData(70,"tools/call",
+  {name:"list_supported_models",arguments:{provider:"invalid"}},
+  {content:[{type:"text",text:"Invalid provider: choose 'all'. Do not retry with an unknown value."}],isError:true}));
+ const good=artifact("raw-corrected","trace",traceData(71,"tools/call",
+  {name:"list_supported_models",arguments:{provider:"all"}},
+  {content:[{type:"text",text:"List returned 2 supported models"}],isError:false}));
+ x.evidence_artifacts.push(bad,good);
+ Object.assign(f,{status:"PASS",evidence_ref:bad.id,
+   observation:{metric:rule.pass_if.metric,value:true,evidence_ref:bad.id},
+   samples:[
+    {trace_ref:bad.id,criterion_id:rule.id,scenario:"invalid_request",case_label:"Negative tool argument rejected",
+      expected_source:"Independent allowed provider enum contract",
+      assertions:[{pointer:"/result/isError",operator:"eq",expected:true}]},
+    {trace_ref:good.id,criterion_id:rule.id,scenario:"corrected_retry",case_label:"Corrected tool argument accepted",
+      expected_source:"Independent allowed provider enum contract",
+      assertions:[{pointer:"/result/isError",operator:"eq",expected:false}]}
+   ]});
+ const result=preflightAssessment(x,config);
+ assert.equal(result.valid,true,JSON.stringify(result.errors).slice(0,1800));
+ assert.ok(!JSON.stringify(bad).includes("structuredContent"));
+});
+
+test("V5.1 accepts deterministic offset/line-range continuation without nextCursor fields",()=>{
+ const x=samplePackage();
+ const rule=TASK_CRITERIA.find(c=>c.id==="MCP-L2-X2"),f=x.report.findings.find(c=>c.check_id===rule.id);
+ const a=artifact("raw-first-lines","trace",traceData(82,"tools/call",
+   {name:"list_supported_models",arguments:{offset:0,limit:2}},
+   {content:[{type:"text",text:"items A,B; more lines remain; range 0-2"}],isError:false}));
+ const b=artifact("raw-next-lines","trace",traceData(83,"tools/call",
+   {name:"list_supported_models",arguments:{offset:2,limit:2}},
+   {content:[{type:"text",text:"items C,D; complete range 2-4"}],isError:false}));
+ x.evidence_artifacts.push(a,b);
+ x.test_metadata.applicability_facts.can_truncate_results={value:true,evidence_ref:a.id};
+ Object.assign(f,{status:"PASS",evidence_ref:a.id,
+   observation:{metric:rule.pass_if.metric,value:true,evidence_ref:a.id},
+   samples:[
+    {trace_ref:a.id,criterion_id:rule.id,scenario:"bounded_read",case_label:"Initial bounded offset read",
+     expected_source:"Four-item independent known fixture; offsets 0 and 2",
+     assertions:[{pointer:"/result/content/0/text",operator:"contains",expected:"A,B"}]},
+    {trace_ref:b.id,criterion_id:rule.id,scenario:"continued_read",case_label:"Continuation at next offset",
+     expected_source:"Four-item independent known fixture; offsets 0 and 2",
+     assertions:[{pointer:"/result/content/0/text",operator:"contains",expected:"C,D"}]}
+   ]});
+ const result=preflightAssessment(x,config);
+ assert.equal(result.valid,true,JSON.stringify(result.errors).slice(0,2400));
+ assert.ok(!JSON.stringify(a).includes("nextCursor"));
+});
+
+test("V5.1 preserves measurable experimental data without scoring calibration hypotheses",()=>{
+ const x=samplePackage(),rule=TASK_CRITERIA.find(c=>c.id==="MCP-L2-X4");
+ const finding=x.report.findings.find(c=>c.check_id===rule.id);
+ const a=artifact("token-sample-a","trace",traceData(82,"tools/call",
+  {name:"list_supported_models",arguments:{}},
+  {content:[{type:"text",text:JSON.stringify({output_tokens:300})}],isError:false}));
+ const b=artifact("token-sample-b","trace",traceData(83,"tools/call",
+  {name:"list_supported_models",arguments:{}},
+  {content:[{type:"text",text:JSON.stringify({output_tokens:450})}],isError:false}));
+ x.evidence_artifacts.push(a,b);
+ finding.research_observation={metric:rule.pass_if.metric,value:450,evidence_ref:a.id};
+ finding.research_samples=[a,b].map(trace=>({
+  trace_ref:trace.id,criterion_id:rule.id,case_label:"Measured token output",
+  expected_source:"Independent tokenizer measurement of raw default result",
+  numeric_pointer:"/result/content/0/text#/output_tokens",tokenizer_id:"tiktoken-cl100k-base"
+ }));
+ const result=preflightAssessment(x,config);
+ assert.equal(result.valid,true,JSON.stringify(result.errors).slice(0,2000));
+ assert.deepEqual(result.metrics.semantic.research_metrics.map(r=>r.value),[450]);
+ assert.ok(result.report_preview.includes("Non-scored calibration"));
+ assert.equal(result.metrics.criteria.PASS,1);
 });

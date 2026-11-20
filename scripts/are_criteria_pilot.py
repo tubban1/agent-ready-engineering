@@ -48,6 +48,14 @@ def validate_criteria(data: dict) -> list[str]:
     actual = [r.get("id") for r in rows if isinstance(r, dict)]
     if len(rows) != len(expect) or set(actual) != set(expect) or len(set(actual)) != len(actual):
         errors.append("criteria must contain exactly the 55 split atoms")
+    sources = data.get("evidence_catalog", {}).get("sources", {})
+    if not isinstance(sources, dict) or len(sources) < 4:
+        errors.append("versioned evidence catalog missing")
+    for sid, source in sources.items():
+        if (not isinstance(source, dict) or source.get("type") not in
+                {"NORMATIVE", "OPTIONAL_EXTENSION", "EMPIRICAL_CONTEXT", "ENGINEERING_GUIDANCE"}
+                or not str(source.get("url", "")).startswith("https://") or not str(source.get("scope", "")).strip()):
+            errors.append(f"{sid}: missing scoped external source")
     for r in rows:
         if not isinstance(r, dict):
             errors.append("invalid criteria row")
@@ -55,6 +63,17 @@ def validate_criteria(data: dict) -> list[str]:
         key = r.get("id")
         if key not in expect or r.get("side") != expect.get(key):
             errors.append(f"{key}: side mismatch")
+        basis = r.get("evidence_basis")
+        if (not isinstance(basis, dict) or basis.get("claim_class") not in
+                {"ARE_QUALITY", "ADOPTER_GOVERNANCE", "CALIBRATION_HYPOTHESIS"} or
+                basis.get("verdict_policy") not in {"SCOPED_PROVISIONAL", "MEASURE_ONLY"} or
+                basis.get("implementation_policy") != "EQUIVALENT_BEHAVIOR_ACCEPTED" or
+                not isinstance(basis.get("source_ids"), list) or
+                any(sid not in sources for sid in basis.get("source_ids", [])) or
+                basis.get("evaluated_outcome") != r.get("pass_if", {}).get("metric")):
+            errors.append(f"{key}: incomplete or misleading source/equivalence basis")
+        elif (basis["claim_class"] == "CALIBRATION_HYPOTHESIS") != (basis["verdict_policy"] == "MEASURE_ONLY"):
+            errors.append(f"{key}: calibration items must be unscored")
         duty = r.get("obligation")
         if duty not in DUTIES:
             errors.append(f"{key}: obligation missing/invalid")
@@ -90,6 +109,11 @@ def validate_criteria(data: dict) -> list[str]:
             errors.append(f"{check_id}: invalid minimum_samples")
         if len(recipe.get("required_artifacts", [])) < 5:
             errors.append(f"{check_id}: insufficient evidence artifact contract")
+        scenarios = recipe.get("required_scenarios", [])
+        if (not isinstance(scenarios, list) or len(set(scenarios)) != len(scenarios) or
+                any(not isinstance(x, str) or not x.strip() for x in scenarios) or
+                len(scenarios) > recipe.get("minimum_samples", 0)):
+            errors.append(f"{check_id}: invalid required failure-mode scenarios")
     return errors
 
 
@@ -125,6 +149,9 @@ def evaluate(rule: dict, facts: dict, observations: dict, *, scenario_id: str | 
         if not matches(feature["value"], clause["op"], clause["value"]):
             return {**result, "status": "NOT_APPLICABLE",
                     "reason": "verified applicability predicate false: " + clause["fact"]}
+    if rule.get("evidence_basis", {}).get("verdict_policy") == "MEASURE_ONLY":
+        return {**result, "status": "ADVISORY_ONLY",
+                "reason": "uncalibrated threshold is research-only, not a product failure"}
     if rule["id"] in PRIVILEGED_CASES:
         permission = observations.get("authorization", {})
         if permission.get("state") == "BLOCKED_AUTH":
@@ -140,7 +167,7 @@ def evaluate(rule: dict, facts: dict, observations: dict, *, scenario_id: str | 
             evidence.get("method") not in OBSERVATION_METHODS or evidence.get("surface") not in SURFACES):
         return {**result, "reason": "insufficient independently checkable evidence"}
     protocol = json.loads(PROTOCOLS.read_text(encoding="utf-8"))["protocols"][rule["id"]]
-    if (evidence.get("protocol_id") != rule["id"] + "@pilot-2026-11-18" or
+    if (evidence.get("protocol_id") != rule["id"] + "@pilot-2026-11-21" or
             type(evidence.get("sample_count")) is not int or
             evidence["sample_count"] < protocol["minimum_samples"] or
             not isinstance(evidence.get("trace_refs"), list) or not evidence["trace_refs"] or

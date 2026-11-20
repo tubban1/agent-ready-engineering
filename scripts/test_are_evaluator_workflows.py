@@ -61,7 +61,7 @@ class EvaluatorWorkflowTests(unittest.TestCase):
         metric = rule["pass_if"]["metric"]
         obs = {"value": rule["pass_if"]["value"], "evidence_id": "claim-1",
                "version": "sha256:1234", "method": "DIRECT_TEST",
-               "surface": "NATIVE_MCP", "protocol_id": rule["id"] + "@pilot-2026-11-18",
+               "surface": "NATIVE_MCP", "protocol_id": rule["id"] + "@pilot-2026-11-21",
                "sample_count": 100, "trace_refs": ["trace-1"], "oracle_id": "oracle-1",
                "observed_by": "author-1", "evidence_origin": "SUBJECT_SELF_REPORT"}
         run = self.input("ARE_INDEPENDENT")
@@ -80,7 +80,7 @@ class EvaluatorWorkflowTests(unittest.TestCase):
         run["observations"][metric] = {
             "value": rule["pass_if"]["value"], "evidence_id": "test-1",
             "version": "sha256:1234", "method": "DIRECT_TEST",
-            "surface": "NATIVE_MCP", "protocol_id": rule["id"] + "@pilot-2026-11-18",
+            "surface": "NATIVE_MCP", "protocol_id": rule["id"] + "@pilot-2026-11-21",
             "sample_count": 100, "trace_refs": ["trace-1"], "oracle_id": "oracle-1",
             "observed_by": "reviewer-1", "evidence_origin": "ASSESSOR_DIRECT_TEST",
         }
@@ -106,7 +106,7 @@ class EvaluatorWorkflowTests(unittest.TestCase):
         run["observations"][metric] = {
             "value": rule["pass_if"]["value"], "evidence_id": "wrong-version",
             "version": "different-sha", "method": "DIRECT_TEST",
-            "surface": "NATIVE_MCP", "protocol_id": rule["id"] + "@pilot-2026-11-18",
+            "surface": "NATIVE_MCP", "protocol_id": rule["id"] + "@pilot-2026-11-21",
             "sample_count": 100, "trace_refs": ["trace-1"], "oracle_id": "oracle-1",
             "observed_by": "reviewer-1", "evidence_origin": "ASSESSOR_DIRECT_TEST",
         }

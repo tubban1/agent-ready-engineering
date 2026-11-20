@@ -1,19 +1,21 @@
 {
   "schema": "are.two_track_criteria.v1",
-  "version": "0.1.0-pilot",
+  "version": "0.2.0-pilot-v5.1",
   "status": "PILOT_NOT_CERTIFIABLE",
   "original_standard": "ARE-A02@0.5",
   "mapping": "data/are-assessment-track-map.v1.json",
   "framework_pins": {
-    "default_read_response_ceiling_tokens": 8192,
-    "large_tool_catalog_threshold": 25
+    "default_read_response_ceiling_tokens": "8192_UNCALIBRATED_RESEARCH_ONLY",
+    "large_tool_catalog_threshold": "25_UNCALIBRATED_RESEARCH_ONLY"
   },
   "scoring_semantics": {
     "mandatory_violation": "FAIL only if applicable, directly evidenced, attributable, pinned version and authorized",
     "not_applicable": "predicate false with evidence; never treat unknown as N/A",
     "recommendation": "may produce non-scored improvement only; never FAIL",
     "unknown": "insufficient scope or observation; no implied PASS",
-    "original_maturity": "unaffected; no new product levels authorized"
+    "original_maturity": "unaffected; no new product levels authorized",
+    "hypotheses": "Uncalibrated numeric thresholds and heuristics are research-only; never count as protocol violation or product FAIL",
+    "equivalent_implementations": "Accept any demonstrated mechanism meeting the observable safety/recovery outcome, not one preferred field or serialization"
   },
   "criteria": [
     {
@@ -28,7 +30,18 @@
         "value": true
       },
       "failure_standard": "已验证原生 MCP 工具目录缺项或工具描述不能对应实际能力",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [
+          "MCP_TOOLS_2026"
+        ],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "complete_native_tool_inventory",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L1-C1",
@@ -48,7 +61,16 @@
         "value": true
       },
       "failure_standard": "存在万能执行器但缺少可识别的子操作范围、参数或边界",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "catch_all_operations_scoped",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L2-C1",
@@ -68,7 +90,16 @@
         "value": true
       },
       "failure_standard": "适用只读工具缺少必要的强类型及业务语义",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "read_contracts_typed_and_semantic",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L2-C2",
@@ -83,12 +114,24 @@
         }
       ],
       "pass_if": {
-        "metric": "tested_errors_actionable",
+        "metric": "errors_detected_and_correctly_recovered",
         "op": "eq",
         "value": true
       },
-      "failure_standard": "已授权安全负例中错误不具备稳定可操作的机器可读恢复信息",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "failure_standard": "In authorized negative tests, a tool failure cannot be identified or corrected by an Agent using the supplied information; repeated unrecoverable behavior is reproduced. Text format alone is never FAIL.",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [
+          "MCP_TOOLS_2026",
+          "ERROR_REPAIR_2026"
+        ],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "errors_detected_and_correctly_recovered",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "INDIRECT_CONTEXT"
+      }
     },
     {
       "id": "MCP-L2-X1",
@@ -103,12 +146,24 @@
         }
       ],
       "pass_if": {
-        "metric": "list_projection_filter_and_continuation",
+        "metric": "large_result_complete_bounded_retrieval",
         "op": "eq",
         "value": true
       },
-      "failure_standard": "大列表结果没有足够的服务器端选择/续取能力",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "failure_standard": "For an applicable large listing, no available safe mechanism can retrieve the complete necessary dataset within a declared context/call budget.",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [
+          "MCP_TOOL_SPACE",
+          "MCP_PAGINATION_2026"
+        ],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "large_result_complete_bounded_retrieval",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "INDIRECT_CONTEXT"
+      }
     },
     {
       "id": "MCP-L2-X2",
@@ -123,12 +178,24 @@
         }
       ],
       "pass_if": {
-        "metric": "truncation_status_and_resume_token",
+        "metric": "truncation_detectable_and_retrievable",
         "op": "eq",
         "value": true
       },
-      "failure_standard": "截断后不能可靠获知是否截断及如何续取",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "failure_standard": "A bounded read silently omits required data or an Agent cannot determine and resume missing portions through any supported mechanism.",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [
+          "MCP_TOOL_SPACE",
+          "MCP_PAGINATION_2026"
+        ],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "truncation_detectable_and_retrievable",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "INDIRECT_CONTEXT"
+      }
     },
     {
       "id": "MCP-L2-X3",
@@ -143,12 +210,24 @@
         }
       ],
       "pass_if": {
-        "metric": "progressive_discovery_or_equivalent_context_control",
+        "metric": "context_control_observed_with_large_catalog",
         "op": "eq",
         "value": true
       },
-      "failure_standard": "至少25个工具的原生服务没有紧凑发现或等效上下文控制",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "failure_standard": "Pilot measurement only: no normative FAIL can be inferred from tool-count threshold without calibrated agent outcome evidence.",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "CALIBRATION_HYPOTHESIS",
+        "source_ids": [
+          "MCP_TOOL_SPACE",
+          "MCP_AGENTBENCH"
+        ],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "context_control_observed_with_large_catalog",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "MEASURE_ONLY",
+        "empirical_strength": "INDIRECT_CONTEXT"
+      }
     },
     {
       "id": "MCP-L2-X4",
@@ -163,12 +242,24 @@
         }
       ],
       "pass_if": {
-        "metric": "max_default_read_output_tokens",
+        "metric": "measured_default_read_context_cost",
         "op": "lte",
         "value": 8192
       },
-      "failure_standard": "正常默认读取结果在未经客户端要求放大时超过8192 Token 且无法分块/缩减",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "failure_standard": "Pilot measurement only: 8192 tokens is an uncalibrated research hypothesis, not a protocol failure threshold.",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "CALIBRATION_HYPOTHESIS",
+        "source_ids": [
+          "MCP_TOOL_SPACE",
+          "MCP_AGENTBENCH"
+        ],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "measured_default_read_context_cost",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "MEASURE_ONLY",
+        "empirical_strength": "INDIRECT_CONTEXT"
+      }
     },
     {
       "id": "MCP-L2-A1",
@@ -188,7 +279,16 @@
         "value": true
       },
       "failure_standard": "支持委托鉴权但服务端无法约束范围、有效期或撤销",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "server_scoped_shortlived_revocable_credentials",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L2-A2",
@@ -208,7 +308,16 @@
         "value": true
       },
       "failure_standard": "来自不可信来源的内容没有足够出处或信任边界标识",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "source_and_trust_metadata_preserved",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L2-I1",
@@ -228,7 +337,16 @@
         "value": true
       },
       "failure_standard": "readOnly 等注解与真实副作用发生可复现冲突",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "declared_read_only_semantics_match_effects",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L2-O1",
@@ -248,7 +366,16 @@
         "value": true
       },
       "failure_standard": "涉及敏感访问的服务端无法提供必要的可归因访问证据",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "read_audit_attribution_available",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L2-O2",
@@ -268,7 +395,16 @@
         "value": true
       },
       "failure_standard": "已确认有可运行的只读工具且授权任务的真实 Agent 结果与独立 Oracle 不一致；授权不足应记 BLOCKED_AUTH",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "read_agent_task_independently_reproducible",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-C1",
@@ -283,12 +419,23 @@
         }
       ],
       "pass_if": {
-        "metric": "repeated_writes_safe_in_sandbox",
+        "metric": "duplicate_effect_prevention_across_retries",
         "op": "eq",
         "value": true
       },
-      "failure_standard": "隔离环境中的允许重复执行导致重复副作用或不一致结果",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "failure_standard": "In an explicitly authorized isolated write test, at least one declared replay/lost-response/client-restart scenario produces an unapproved duplicate business side effect or unrecoverable ambiguity.",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [
+          "HTTP_IDEMPOTENCY_DRAFT"
+        ],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "duplicate_effect_prevention_across_retries",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-C2",
@@ -308,7 +455,16 @@
         "value": true
       },
       "failure_standard": "并发更新可产生无提示覆盖或无法处理的资源冲突",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "concurrent_update_conflicts_safe",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-C3",
@@ -328,7 +484,16 @@
         "value": true
       },
       "failure_standard": "高风险写入缺乏可验证的提交前校验或预览",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "precommit_validation_or_preview",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-C4",
@@ -348,7 +513,16 @@
         "value": true
       },
       "failure_standard": "已授权受测写入操作未通过其明确契约验收；缺少测试沙箱授权则记 BLOCKED_AUTH，不视为不适用",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "tested_write_contracts_pass",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-S1",
@@ -363,12 +537,24 @@
         }
       ],
       "pass_if": {
-        "metric": "async_status_cancel_and_recovery",
+        "metric": "async_status_recoverable_after_disconnect",
         "op": "eq",
         "value": true
       },
-      "failure_standard": "异步任务断连后不能按稳定 ID 查询或必要时取消",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "failure_standard": "For an async operation that has actually started, loss of client connection prevents safely locating state/result or resuming, with no equivalent recovery mechanism.",
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [
+          "MCP_TASKS",
+          "HTTP_IDEMPOTENCY_DRAFT"
+        ],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "async_status_recoverable_after_disconnect",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-S2",
@@ -388,7 +574,16 @@
         "value": true
       },
       "failure_standard": "草稿与正式状态混淆或无法清理/过期",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "draft_expiry_isolation_cleanup",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-S3",
@@ -408,7 +603,16 @@
         "value": true
       },
       "failure_standard": "提交副作用没有恢复/补偿且不可逆性未明确",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "effects_compensable_or_irreversible_declared",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-S4",
@@ -428,7 +632,16 @@
         "value": true
       },
       "failure_standard": "缺少必要输入时不能告知 Agent 需要补充什么",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "missing_fields_actionable",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-A2",
@@ -448,7 +661,16 @@
         "value": true
       },
       "failure_standard": "服务端接受 Agent 自报的确认而执行终局操作",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "server_rejects_agent_self_approved_finalization",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-A3",
@@ -468,7 +690,16 @@
         "value": true
       },
       "failure_standard": "有可靠证据显示凭证暴露于模型上下文或工具输出",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "credentials_not_exposed_to_model",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-A4",
@@ -488,7 +719,16 @@
         "value": true
       },
       "failure_standard": "高风险写入缺少可操作的服务端限制及撤销能力",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "server_limits_and_revocation_work",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-O1",
@@ -508,7 +748,16 @@
         "value": true
       },
       "failure_standard": "授权写入无法对应可审计授权凭证",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "server_audit_bound_to_auth_evidence",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L3-O2",
@@ -528,7 +777,16 @@
         "value": true
       },
       "failure_standard": "已授权隔离环境内约定的重试/冲突/断连等故障注入失败；缺少测试沙箱授权则记 BLOCKED_AUTH，不视为不适用",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "authorized_fault_injection_passed",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L4-O1",
@@ -548,7 +806,16 @@
         "value": true
       },
       "failure_standard": "多步骤事务无法关联业务副作用与工具调用",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "server_correlation_id_available",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L4-O2",
@@ -568,7 +835,16 @@
         "value": true
       },
       "failure_standard": "供应商发布回归门禁可提升可靠性；外部无法证明时不得记 FAIL",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "vendor_release_regression_gate_documented",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L4-I1",
@@ -588,7 +864,16 @@
         "value": true
       },
       "failure_standard": "MCP 服务提供商没有可引用的工具契约版本标识、供应商变更日志或可验证的签名/来源；客户端自己计算的 tools/list 哈希不算通过",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "vendor_contract_version_or_release_provenance",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L4-I2",
@@ -608,7 +893,16 @@
         "value": true
       },
       "failure_standard": "原生多入口同操作授权/副作用语义已实测不一致",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "same_operation_cross_ingress_equivalent",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L4-R1",
@@ -628,7 +922,16 @@
         "value": true
       },
       "failure_standard": "具有写能力却不存在可安全验证的测试/沙箱入口",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "vendor_test_or_sandbox_access_available",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "MCP-L4-R4",
@@ -642,7 +945,16 @@
         "value": true
       },
       "failure_standard": "公开 Agent 工具服务缺乏足够的操作、流程与错误使用说明",
-      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE"
+      "provenance_required": "NATIVE_SERVICE_OR_VERIFIED_VENDOR_SOURCE",
+      "evidence_basis": {
+        "claim_class": "ARE_QUALITY",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "agent_guide_covers_tools_flows_errors",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L1-V1",
@@ -656,7 +968,16 @@
         "value": true
       },
       "failure_standard": "使用方场景缺乏明确 Go/先只读决策",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "value_decision_go_or_read_first",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L1-V2",
@@ -670,7 +991,16 @@
         "value": true
       },
       "failure_standard": "使用方未建立可追溯基线或补测计划",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "value_baseline_or_measurable_plan",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L1-V3",
@@ -684,7 +1014,16 @@
         "value": true
       },
       "failure_standard": "使用方未记录最低限度真实业务验证",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "minimum_real_business_validation_record",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L1-V4",
@@ -698,7 +1037,16 @@
         "value": true
       },
       "failure_standard": "使用方首批功能范围未限定",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "bounded_first_batch_selected",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L1-A1",
@@ -712,7 +1060,16 @@
         "value": true
       },
       "failure_standard": "使用方缺少明确操作责任人或审批责任",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "first_batch_owner_approver_responsible",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L1-C1",
@@ -732,7 +1089,16 @@
         "value": true
       },
       "failure_standard": "采用方使用通用执行接口却未明确安全隔离与拆分方案",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "catch_all_use_scope_risk_plan",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L2-X4",
@@ -752,7 +1118,16 @@
         "value": true
       },
       "failure_standard": "采用方无法测量或限制只读上下文消耗",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_measured_read_context_budget",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L2-A1",
@@ -772,7 +1147,16 @@
         "value": true
       },
       "failure_standard": "采用方委托身份未设最小权限/撤销",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_least_privilege_credentials",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L2-A2",
@@ -792,7 +1176,16 @@
         "value": true
       },
       "failure_standard": "采用方把外部不可信内容作为高信任指令",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_untrusted_content_boundary",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L2-O1",
@@ -812,7 +1205,16 @@
         "value": true
       },
       "failure_standard": "采用方真实数据调用缺少必要日志",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_read_audit_usable",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L2-O2",
@@ -832,7 +1234,16 @@
         "value": true
       },
       "failure_standard": "采用方真实只读流程无法通过可重复验收",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_read_agent_oracle_pass",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L3-C4",
@@ -852,7 +1263,16 @@
         "value": true
       },
       "failure_standard": "采用方实际首批写入流程未通过约定验收",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_write_acceptance_pass",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L3-A1",
@@ -872,7 +1292,16 @@
         "value": true
       },
       "failure_standard": "采用方写入授权规则没有经过其责任主体批准",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_approved_authorization_matrix",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L3-A2",
@@ -892,7 +1321,16 @@
         "value": true
       },
       "failure_standard": "采用方未通过可信系统授权终局操作",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_trusted_final_authorization",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L3-A3",
@@ -912,7 +1350,16 @@
         "value": true
       },
       "failure_standard": "采用方把凭证带进模型上下文",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_credentials_isolated_from_agent",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L3-A4",
@@ -932,7 +1379,16 @@
         "value": true
       },
       "failure_standard": "采用方写入缺少相称的额度、频率限制和停用机制",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_quotas_and_killswitch",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L3-O1",
@@ -952,7 +1408,16 @@
         "value": true
       },
       "failure_standard": "采用方无法将授权凭据与执行记录对应",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_auth_audit_joinable",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L3-O2",
@@ -972,7 +1437,16 @@
         "value": true
       },
       "failure_standard": "采用方关键代理工作流未通过约定风险测试",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_fault_injection_pass",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L4-O1",
@@ -992,7 +1466,16 @@
         "value": true
       },
       "failure_standard": "采用方生产链路无法关联会话/执行与结果",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_end_to_end_trace",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L4-O2",
@@ -1012,7 +1495,16 @@
         "value": true
       },
       "failure_standard": "采用方生产上线无关键指标退化门禁",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_release_regression_blocks",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L4-R1",
@@ -1032,7 +1524,16 @@
         "value": true
       },
       "failure_standard": "采用方生产操作缺少独立验收/回滚策略",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_prod_test_isolation_and_rollback",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L4-R2",
@@ -1052,7 +1553,16 @@
         "value": true
       },
       "failure_standard": "达到复盘周期却未做证据化价值复盘",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_completed_value_review",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     },
     {
       "id": "ADOPT-L4-R3",
@@ -1072,7 +1582,57 @@
         "value": true
       },
       "failure_standard": "已复盘但没有基于证据的保留或收缩决策",
-      "provenance_required": "SCOPED_ADOPTER_EVIDENCE"
+      "provenance_required": "SCOPED_ADOPTER_EVIDENCE",
+      "evidence_basis": {
+        "claim_class": "ADOPTER_GOVERNANCE",
+        "source_ids": [],
+        "reference_scope": "Context/requirements in cited source are narrower than the entire ARE outcome; never infer protocol violation solely from this check.",
+        "evaluated_outcome": "adopter_low_value_capability_decision",
+        "implementation_policy": "EQUIVALENT_BEHAVIOR_ACCEPTED",
+        "verdict_policy": "SCOPED_PROVISIONAL",
+        "empirical_strength": "NOT_DIRECTLY_ESTABLISHED"
+      }
     }
-  ]
+  ],
+  "evidence_catalog": {
+    "version": "v5.1",
+    "description": "Normative scope, indirect empirical context and hypotheses are not interchangeable; no source proves an entire ARE quality check",
+    "sources": {
+      "MCP_TOOLS_2026": {
+        "type": "NORMATIVE",
+        "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools",
+        "scope": "Tool listing, result content and isError recommendations; does not mandate JSON error envelopes"
+      },
+      "MCP_PAGINATION_2026": {
+        "type": "NORMATIVE",
+        "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/pagination",
+        "scope": "Protocol list methods when using pagination; does not mandate cursor on every business tool"
+      },
+      "MCP_TASKS": {
+        "type": "OPTIONAL_EXTENSION",
+        "url": "https://modelcontextprotocol.io/extensions/tasks/overview",
+        "scope": "Optional Task extension; not a mandatory interface for every async tool"
+      },
+      "ERROR_REPAIR_2026": {
+        "type": "EMPIRICAL_CONTEXT",
+        "url": "https://arxiv.org/abs/2607.14167",
+        "scope": "Limited-model simulated tool repair; text with actionable information may perform similarly to JSON"
+      },
+      "MCP_TOOL_SPACE": {
+        "type": "EMPIRICAL_CONTEXT",
+        "url": "https://www.microsoft.com/en-us/research/blog/tool-space-interference-in-the-mcp-era-designing-for-agent-compatibility-at-scale/",
+        "scope": "MCP response size and tool feedback observational data; not a causal cursor benefit test"
+      },
+      "MCP_AGENTBENCH": {
+        "type": "EMPIRICAL_CONTEXT",
+        "url": "https://arxiv.org/abs/2509.09734",
+        "scope": "Real MCP task benchmarking motivation; no particular cursor/idempotency design proven"
+      },
+      "HTTP_IDEMPOTENCY_DRAFT": {
+        "type": "ENGINEERING_GUIDANCE",
+        "url": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/",
+        "scope": "HTTP idempotency-key draft; illustrative design, NOT an MCP MUST or adopted RFC"
+      }
+    }
+  }
 }

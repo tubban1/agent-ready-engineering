@@ -65,7 +65,7 @@ def validate_input(run: dict) -> None:
         raise ValueError("facts and observations must be objects")
     if run.get("publish") is not False or run.get("certify") is not False:
         raise ValueError("this pilot cannot authorize publication or certification")
-    if run.get("criteria_version") != "pilot-2026-11-18":
+    if run.get("criteria_version") != "pilot-2026-11-21":
         raise ValueError("unknown criteria version")
 
 
@@ -77,7 +77,7 @@ def make_input(mode: str, track: str, target_id: str, observed_version: str,
         "schema": INPUT_SCHEMA,
         "mode": mode,
         "track": track,
-        "criteria_version": "pilot-2026-11-18",
+        "criteria_version": "pilot-2026-11-21",
         "target": {"id": target_id, "observed_version": observed_version,
                    "owner_organization": owner_organization, "endpoint": endpoint,
                    "source_revision": source_revision},
