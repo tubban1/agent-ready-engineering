@@ -1,12 +1,12 @@
 /**
- * ARE private colleague intake. Independent submissions never enter public portfolio.
- * No third-party evaluation publication, email sending or grade assignment.
+ * ARE V2 — single task page, independent filter/draw/test/verify/release stages.
+ * No V1 compatibility. No direct public third-party review publishing endpoint.
  */
 import {createHash,timingSafeEqual} from "node:crypto";
-import {ownerPage} from "./owner-page.mjs";
-import {taskBoardPage} from "./task-board.mjs";
+import {pipelinePage} from "./pipeline-page.mjs";
 import {TASK_CRITERIA} from "./criteria-compact.mjs";
-import {taskOwnerAction,taskAgentAction} from "./task-service.mjs";
+import {taskAgentAction} from "./task-service.mjs";
+import {ownerAction,drawAction,checkpointAction,checkpointRead} from "./pipeline-service.mjs";
 
 export const PRODUCT_CHECKS = Object.freeze("MCP-L1-V4 MCP-L1-C1 MCP-L2-C1 MCP-L2-C2 MCP-L2-X1 MCP-L2-X2 MCP-L2-X3 MCP-L2-X4 MCP-L2-A1 MCP-L2-A2 MCP-L2-I1 MCP-L2-O1 MCP-L2-O2 MCP-L3-C1 MCP-L3-C2 MCP-L3-C3 MCP-L3-C4 MCP-L3-S1 MCP-L3-S2 MCP-L3-S3 MCP-L3-S4 MCP-L3-A2 MCP-L3-A3 MCP-L3-A4 MCP-L3-O1 MCP-L3-O2 MCP-L4-O1 MCP-L4-O2 MCP-L4-I1 MCP-L4-I2 MCP-L4-R1 MCP-L4-R4".split(" "));
 const STATES=new Set(["PASS","FAIL","UNKNOWN","NOT_TESTED","NOT_APPLICABLE","BLOCKED_AUTH","NOT_ASSESSED","ADVISORY_ONLY"]);
@@ -67,39 +67,9 @@ export function validateSubmission(data, reviewerId) {
  const stage=decisive>0&&verifiedTasks>0&&source_binding.verified===true ? "READY_FOR_OUTREACH":"NEEDS_EVIDENCE";
  const sanitized={cohort_id,repository_key,report,agent_tasks,recommendations,summary,contact_route,source_binding};
  const content=stable(sanitized);
- if(Buffer.byteLength(content)>125000||/\b(?:sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{20,}|-----BEGIN PRIVATE KEY-----)\b/.test(content))fail("sensitive_or_oversize_payload");
+ if(Buffer.byteLength(content)>340000||/\b(?:sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{20,}|-----BEGIN PRIVATE KEY-----)\b/.test(content))fail("sensitive_or_oversize_payload");
  return {submission_sha256:sha(content),repository_key,cohort_id,report,agent_tasks,recommendations,summary,contact_route,source_binding,decisive,verifiedTasks,stage,assessor_id:reviewerId,assessor_organization:assessor.organization,source_revision:target.source_revision,observed_version:target.observed_version,endpoint:target.endpoint||""};
 }
-const SUBMIT_SQL=`WITH i AS (
-INSERT INTO are_eval.private_evaluation_runs(
- submission_sha256,cohort_id,repository_key,assessor_id,assessor_organization,
- source_revision,observed_version,endpoint,state,report,agent_tasks,recommendations,contact_route,source_binding,summary,decisive_count,verified_task_count)
-SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11::jsonb,$12::jsonb,$13::jsonb,$14::jsonb,$15,$16::integer,$17::integer
-FROM are_eval.benchmark_study_candidates c
-WHERE c.cohort_id=$2 AND c.repository_key=$3
- AND (SELECT COUNT(*) FROM are_eval.private_evaluation_runs z WHERE z.assessor_id=$4 AND z.created_at>now()-interval '1 hour')<15
-ON CONFLICT (submission_sha256) DO NOTHING
-RETURNING id,submission_sha256,repository_key,state,created_at
-)
-SELECT COALESCE((SELECT row_to_json(i) FROM i),
- (SELECT row_to_json(e) FROM (SELECT id,submission_sha256,repository_key,state,created_at
-   FROM are_eval.private_evaluation_runs WHERE submission_sha256=$1 AND assessor_id=$4) e))::text`;
-const QUEUE_SQL=`SELECT json_build_object('runs',COALESCE(json_agg(row_to_json(q) ORDER BY q.created_at DESC),'[]'::json))::text FROM (
- SELECT DISTINCT ON (r.repository_key) r.id,r.repository_key,r.assessor_id,r.assessor_organization,
-    r.source_revision,r.observed_version,r.endpoint,r.state,r.decisive_count,r.verified_task_count,
-    r.summary,r.recommendations,r.contact_route,r.source_binding,r.created_at,
-    (SELECT e.event_type FROM are_eval.private_outreach_events e WHERE e.run_id=r.id ORDER BY e.created_at DESC LIMIT 1) as contact_status
- FROM are_eval.private_evaluation_runs r ORDER BY r.repository_key,r.created_at DESC
-) q`;
-const DETAIL_SQL=`SELECT COALESCE((SELECT row_to_json(r) FROM (
- SELECT id,repository_key,cohort_id,assessor_id,assessor_organization,source_revision,
- observed_version,endpoint,state,report,agent_tasks,recommendations,contact_route,source_binding,summary,
- decisive_count,verified_task_count,created_at FROM are_eval.private_evaluation_runs
- WHERE id=$1::uuid) r),'null'::json)::text`;
-const CONTACT_SQL=`WITH e AS (INSERT INTO are_eval.private_outreach_events(run_id,event_type,details,actor)
- SELECT id,$2,$3,'owner' FROM are_eval.private_evaluation_runs WHERE id=$1::uuid
- RETURNING id,run_id,event_type,created_at)
- SELECT COALESCE((SELECT row_to_json(e) FROM e),'null'::json)::text`;
 function authorized(req,hash){const s=req.headers.get("authorization")||"";
  if(!hash||!/^Bearer [A-Za-z0-9_-]{40,110}$/.test(s))return false;
  const got=sha(s.slice(7)),expect=String(hash).toLowerCase();
@@ -135,76 +105,48 @@ async function verifiedGitHubSha(repository_key,shaValue,requestFetch=fetch){
 }
 export function makeHandler({sql=neonSql,githubVerify=verifiedGitHubSha,env=process.env}={}){
  return async function handle(req){
-   const url=new URL(req.url),path=url.pathname;
-   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{
-     "Access-Control-Allow-Origin":req.headers.get("origin")===ALLOW_ORIGIN?ALLOW_ORIGIN:"null",
-     "Access-Control-Allow-Headers":"Authorization, Content-Type, X-ARE-Reviewer",
-     "Access-Control-Allow-Methods":"GET, POST, OPTIONS","Cache-Control":"no-store"}});
-   if(req.method==="GET"&&path==="/v1/health")return response(req,200,{ok:true,service:"are-private-intake",public_reports:0});
-   if(req.method==="GET"&&path==="/v1/owner")return new Response(ownerPage().replace("</h1>","</h1><p><a href=\"/v1/tasks/board\">前往任务分配中心</a></p>"),{status:200,headers:{
-     "Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store","X-Content-Type-Options":"nosniff",
-     "X-Frame-Options":"DENY","Content-Security-Policy":"default-src 'none'; base-uri 'none'; form-action 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"}});
-   if(req.method==="GET"&&path==="/v1/tasks/board")return new Response(taskBoardPage(),{status:200,headers:{
-     "Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store","X-Content-Type-Options":"nosniff",
-     "X-Frame-Options":"DENY","Content-Security-Policy":"default-src 'none'; base-uri 'none'; form-action 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'" }});
-   const owner=authorized(req,env.ARE_INTAKE_OWNER_HASH);
-   let reviewers={};
-   try{reviewers=JSON.parse(env.ARE_INTAKE_REVIEWERS_JSON||"{}")}catch{}
-   const reviewer=req.headers.get("x-are-reviewer")||"";
-   const validReviewer=/^[a-z0-9_-]{3,40}$/.test(reviewer)&&authorized(req,reviewers[reviewer]);
-   if(path==="/v1/submit"&&req.method==="POST"){
-     if(!validReviewer)return response(req,401,{error:"reviewer_token_required"});
-     try{
-       const text=await req.text();if(Buffer.byteLength(text)>125000)fail("payload_too_large");
-       const data=validateSubmission(JSON.parse(text),reviewer);
-       const verified=await githubVerify(data.repository_key,data.source_revision);
-       if(!verified)return response(req,422,{error:"github_source_revision_unverified"});
-       const row=await sql(SUBMIT_SQL,[data.submission_sha256,data.cohort_id,data.repository_key,
-         data.assessor_id,data.assessor_organization,data.source_revision,data.observed_version,
-         data.endpoint,data.stage,JSON.stringify(data.report),JSON.stringify(data.agent_tasks),
-         JSON.stringify(data.recommendations),JSON.stringify(data.contact_route),JSON.stringify(data.source_binding),data.summary,
-         data.decisive,data.verifiedTasks]);
-       if(!row)return response(req,429,{error:"catalog_target_not_found_or_review_budget"});
-       return response(req,200,{ok:true,submission_id:row.id,repository_key:row.repository_key,
-         stage:row.state,idempotency_sha256:data.submission_sha256,private:true,public_release_authorized:false});
-     }catch(e){const code=e.code||"invalid_submission";return response(req,400,{error:code});}
+  const {pathname:path}=new URL(req.url);
+  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{
+    "Cache-Control":"no-store","Access-Control-Allow-Methods":"GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers":"Authorization,Content-Type",
+    "Access-Control-Allow-Origin":req.headers.get("origin")==="https://are.world2.co"?"https://are.world2.co":"null"
+  }});
+  if(path==="/v2/health"&&req.method==="GET")
+    return response(req,200,{ok:true,service:"are-pipeline-v2",public_reports:0});
+  if(path==="/v2/board"&&req.method==="GET")return new Response(pipelinePage(),{
+    status:200,headers:{"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store",
+      "X-Content-Type-Options":"nosniff","X-Frame-Options":"DENY",
+      "Content-Security-Policy":"default-src 'none'; base-uri 'none'; form-action 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"
+    }});
+  try{
+   if(path==="/v2/draw"&&req.method==="POST"){
+     const result=await drawAction(req,sql);
+     return response(req,result.status,result.data);
    }
-   if(path.startsWith("/v1/task/")){
-     try{
-       const result=await taskAgentAction(path,req,sql,{validateSubmission,githubVerify,criteria:TASK_CRITERIA});
+   if(path.startsWith("/v2/task/")&&req.method==="POST"){
+     const token=req.headers.get("authorization")?.replace(/^Bearer /,"")||"";
+     if(path==="/v2/task/checkpoint"){
+       const result=await checkpointAction(req,sql,token);
        return response(req,result.status,result.data);
-     }catch(e){
-       return response(req,e.code?400:503,{error:e.code||"task_service_unavailable"});
      }
+     if(path==="/v2/task/progress"){
+       const result=await checkpointRead(sql,token);
+       return response(req,result.status,result.data);
+     }
+     const result=await taskAgentAction(path,req,sql,{
+       validateSubmission,githubVerify,criteria:TASK_CRITERIA
+     });
+     return response(req,result.status,result.data);
    }
-   if(!owner)return response(req,401,{error:"owner_token_required"});
-   try{
-     if(path.startsWith("/v1/tasks")){
-       const result=await taskOwnerAction(path,req,sql);
-       return response(req,result?200:404,result||{error:"not_found"});
-     }
-     if(req.method==="GET"&&path==="/v1/inbox"){
-       const data=await sql(QUEUE_SQL);return response(req,200,{ok:true,private:true,...data});
-     }
-     if(req.method==="GET"&&path==="/v1/run"){
-       const id=url.searchParams.get("id")||"";
-       if(!/^[0-9a-f-]{36}$/i.test(id))return response(req,400,{error:"invalid_id"});
-       const run=await sql(DETAIL_SQL,[id]);return response(req,run?200:404,{ok:!!run,run});
-     }
-     if(req.method==="POST"&&path==="/v1/contact"){
-       const input=await req.json();
-       if(!/^[0-9a-f-]{36}$/i.test(input.id||"")||
-          !["CONTACTED","REPLY_RECEIVED","NEEDS_RETEST","ARCHIVED"].includes(input.event_type)||
-          typeof input.details!=="string"||input.details.length>500)fail("invalid_contact_event");
-       const item=await sql(CONTACT_SQL,[input.id,input.event_type,input.details]);
-       return response(req,item?200:404,{ok:!!item,event:item});
-     }
-     return response(req,404,{error:"not_found"});
-   }catch(e){
-     if(e.code)return response(req,400,{error:e.code});
-     console.error("ARE private intake",String(e?.message||"unknown").slice(0,90));
-     return response(req,503,{error:"intake_unavailable"});
-   }
+   if(!authorized(req,env.ARE_INTAKE_OWNER_HASH))
+     return response(req,401,{error:"owner_token_required"});
+   const result=await ownerAction(path,req,sql);
+   return response(req,result.status,result.data);
+  }catch(e){
+   if(e.code)return response(req,400,{error:e.code});
+   console.error("ARE pipeline v2",String(e?.message||"unknown").slice(0,100));
+   return response(req,503,{error:"pipeline_unavailable"});
+  }
  };
 }
 export default {fetch:makeHandler()};
