@@ -1,3 +1,5 @@
+import vm from "node:vm";
+import {pipelinePage} from "./pipeline-page.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
@@ -144,4 +146,46 @@ test("one active token per project is enforced by atomic row lock; VERIFIED cons
  assert.match(Q.REVIEW_INSERT,/x.decision='VERIFIED'/);
  assert.doesNotMatch(Q.ISSUE,/invitation|invite_id|draw/i);
  assert.doesNotMatch(Q.TASK_LIST,/invite_id/);
+});
+
+test("generated Agent prompt is genuinely generic across unrelated MCP projects",()=>{
+ const html=pipelinePage();
+ const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+ assert.ok(script,"script must be embedded");
+ const start=script.indexOf("function prompt(task,secret,plan){");
+ const end=script.indexOf("\nasync function load()",start);
+ assert.ok(start>=0&&end>start,"prompt function must exist");
+ const generator=vm.runInNewContext(script.slice(start,end)+"\nprompt");
+ const plans={estimated_minutes:135,tool_count:23,auth_mode:"OAUTH"};
+ for(const repoName of ["alpha/research-api","beta/robotics-mcp"]){
+  const message=generator({repository_key:repoName,id:"11111111-2222-4333-8444-555555555555",
+    assignee_id:"colleague-01"},"aret_"+"Q".repeat(43),plans);
+  assert.ok(message.includes("https://github.com/"+repoName));
+  assert.ok(message.includes("aret_"+"Q".repeat(43)));
+  assert.ok(message.includes("are_submit_assessment"));
+  assert.ok(message.includes("are_checkpoint"));
+  assert.ok(message.includes("OAuth"));
+  assert.ok(message.includes("BLOCKED_AUTH"));
+  assert.ok(message.includes("BLOCKED_ENVIRONMENT"));
+  assert.ok(message.includes("BLOCKED_DESIGN"));
+  assert.ok(message.includes("FAIL"));
+  assert.ok(message.includes("NOT_TESTED"));
+  assert.ok(message.includes("10 分钟"));
+  assert.ok(message.includes("最多重试 2 次"));
+  assert.ok(message.includes("最小可复现步骤"));
+  assert.ok(message.includes("前后状态"));
+  assert.ok(message.includes("继续剩余工具"));
+  assert.doesNotMatch(message,/Planner\s*5D|如果遇到类似|目录后位置失效|拖放坐标漂移/iu);
+  assert.doesNotMatch(message,/成功等同于 HTTP 200/iu);
+ }
+});
+test("backend stop rules do not force every failure into a tool design finding",()=>{
+ const plan=estimatePlan(21,"OAUTH","MEDIUM");
+ assert.ok(plan.stop_rules.some(x=>x.includes("BLOCKED_AUTH")));
+ assert.ok(plan.stop_rules.some(x=>x.includes("BLOCKED_ENVIRONMENT")));
+ assert.ok(plan.stop_rules.some(x=>x.includes("BLOCKED_DESIGN")));
+ assert.ok(plan.stop_rules.some(x=>x.includes("independently confirmed")));
+ assert.ok(plan.stop_rules.some(x=>x.includes("trace")));
+ assert.ok(plan.stop_rules.some(x=>x.includes("Retry only if safe")));
+ assert.ok(plan.stop_rules.every(x=>!x.includes("Planner5D")));
 });

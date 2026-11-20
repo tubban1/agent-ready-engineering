@@ -28,10 +28,11 @@ export function estimatePlan(tools,auth="UNKNOWN",risk="LOW"){
      {phase:"REPORT",minutes:Math.max(10,Math.round(minutes*.08))}],
    retry_limit_per_operation:2,block_after_minutes:10,tool_goal:"every discovered tool accounted for",
    stop_rules:[
-    "After two identical failures or ten minutes on one operation, record BLOCKED_DESIGN and move on",
+    "Classify observed failures: missing authorization as BLOCKED_AUTH, environment/rate limits as BLOCKED_ENVIRONMENT, inconsistent tool contract or unstable/unverifiable state as BLOCKED_DESIGN, independently confirmed incorrect business results as FAIL",
+    "Preserve reproduction steps, parameters, responses, exact errors, before/after state, software versions and trace/log references; label unconfirmed root causes UNKNOWN",
+    "Retry only if safe and reversible, at most twice per operation; after ten blocked minutes report evidence and continue the remaining tools",
     "OAuth requires interactive human sign-in through the provider; never put credentials in a report",
     "Unsafe or irreversible writes require explicit authorization; otherwise BLOCKED_AUTH",
-    "Unstable selectors, catalog placement or layout refresh races are reportable tool-design blockers",
     "Never label an unverified action successful without an external success oracle"]};
 }
 export function validateCoverage(rows,blockers=[],count){
