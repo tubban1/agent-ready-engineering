@@ -6,6 +6,7 @@ import {createHash,timingSafeEqual} from "node:crypto";
 import {pipelinePage} from "./pipeline-page.mjs";
 import {TASK_CRITERIA} from "./criteria-compact.mjs";
 import {taskAgentAction} from "./task-service.mjs";
+import {publicTesterAction} from "./tester-service.mjs";
 import {ownerAction,checkpointAction,checkpointRead} from "./pipeline-service.mjs";
 
 export const PRODUCT_CHECKS = Object.freeze("MCP-L1-V4 MCP-L1-C1 MCP-L2-C1 MCP-L2-C2 MCP-L2-X1 MCP-L2-X2 MCP-L2-X3 MCP-L2-X4 MCP-L2-A1 MCP-L2-A2 MCP-L2-I1 MCP-L2-O1 MCP-L2-O2 MCP-L3-C1 MCP-L3-C2 MCP-L3-C3 MCP-L3-C4 MCP-L3-S1 MCP-L3-S2 MCP-L3-S3 MCP-L3-S4 MCP-L3-A2 MCP-L3-A3 MCP-L3-A4 MCP-L3-O1 MCP-L3-O2 MCP-L4-O1 MCP-L4-O2 MCP-L4-I1 MCP-L4-I2 MCP-L4-R1 MCP-L4-R4".split(" "));
@@ -77,9 +78,10 @@ function authorized(req,hash){const s=req.headers.get("authorization")||"";
  return /^[a-f0-9]{64}$/.test(expect)&&timingSafeEqual(Buffer.from(got),Buffer.from(expect));
 }
 const ALLOW_ORIGIN="https://are.world2.co";
-function response(req,status,obj){const origin=req.headers.get("origin");
+function response(req,status,obj,extraHeaders={}){const origin=req.headers.get("origin");
  return new Response(JSON.stringify(obj),{status,headers:{
  "Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store","X-Content-Type-Options":"nosniff",
+ ...extraHeaders,
  ...(origin===ALLOW_ORIGIN?{"Access-Control-Allow-Origin":ALLOW_ORIGIN,"Vary":"Origin"}:{})}});
 }
 async function neonSql(query,params=[]){
@@ -120,6 +122,10 @@ export function makeHandler({sql=neonSql,githubVerify=verifiedGitHubSha,env=proc
       "Content-Security-Policy":"default-src 'none'; base-uri 'none'; form-action 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"
     }});
   try{
+   if(path.startsWith("/v3/tester/")){
+     const result=await publicTesterAction(path,req,sql);
+     return response(req,result.status,result.data,result.setCookie?{"Set-Cookie":result.setCookie}:{});
+   }
    if(path.startsWith("/v3/task/")&&req.method==="POST"){
      const token=req.headers.get("authorization")?.replace(/^Bearer /,"")||"";
      if(path==="/v3/task/checkpoint"){
@@ -141,7 +147,7 @@ export function makeHandler({sql=neonSql,githubVerify=verifiedGitHubSha,env=proc
    return response(req,result.status,result.data);
   }catch(e){
    if(e.code)return response(req,400,{error:e.code});
-   console.error("ARE pipeline v2",String(e?.message||"unknown").slice(0,100));
+   console.error("ARE pipeline v3",String(e?.message||"unknown").slice(0,100));
    return response(req,503,{error:"pipeline_unavailable"});
   }
  };
