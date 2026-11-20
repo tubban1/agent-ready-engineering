@@ -52,7 +52,8 @@ export function validateSubmission(data, reviewerId) {
     recommendations.some(s=>!validText(s,380))||typeof summary!=="string"||summary.length>2000)fail("invalid_payload_fields");
  let verifiedTasks=0;
  for(const t of agent_tasks){
-   if(!t||!validText(t.goal,240)||!validText(t.trace_ref,240)||!validText(t.oracle_ref,240)||
+   if(!t||!validText(t.goal,240)||!validText(t.trace_ref,240)||
+      (["PASS","FAIL"].includes(t.status)&&!validText(t.oracle_ref,240))||
       !["PASS","FAIL","BLOCKED_AUTH","NOT_TESTED"].includes(t.status)||
       typeof t.authorized!=="boolean"||!validText(t.agent,140))fail("invalid_agent_task");
    if(t.authorized&&["PASS","FAIL"].includes(t.status)&&t.oracle_verified===true)verifiedTasks++;

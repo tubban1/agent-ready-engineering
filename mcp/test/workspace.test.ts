@@ -40,10 +40,10 @@ async function call(c: Client, name: string, args: Record<string, unknown>) {
 test("workspace tools appear only in local mode", async () => {
   const names = (await client.listTools()).tools.map((t) => t.name);
   for (const t of ["are_validate_deliverable", "are_validate_local_mcp_audit", "are_review_operation_risk", "are_assess_scenario", "are_aggregate_portfolio", "are_next_steps"]) assert.ok(names.includes(t), t);
-  assert.equal(names.length, 20); // 15 existing + 5 scoped private task tools
+  assert.equal(names.length, 21); // 15 existing + 6 scoped private task tools
   const knowledgeOnly = await connect();
   const k = (await knowledgeOnly.listTools()).tools.map((t) => t.name);
-  assert.equal(k.length, 14); // 9 public knowledge/scoring + 5 scoped task tools
+  assert.equal(k.length, 15); // 9 public knowledge/scoring + 6 scoped task tools
   const r = await call(knowledgeOnly, "are_evidence_request", { target_level: "L2", scenario_path: "scenarios/x" });
   assert.equal(r.data.error.code, "local_mode_only");
   await knowledgeOnly.close();
