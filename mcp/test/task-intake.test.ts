@@ -16,6 +16,7 @@ test("public MCP exposes eight scoped task tools with truthful write annotations
  assert.equal(map.are_validate_assessment?.annotations?.readOnlyHint,true);
  assert.equal(map.are_get_evidence_contract?.annotations?.readOnlyHint,true);
  assert.equal(map.are_capture_readonly?.annotations?.readOnlyHint,false);
+ assert.equal(map.are_capture_readonly?.annotations?.idempotentHint,false);
  assert.ok(JSON.stringify(map.are_capture_readonly?.inputSchema).includes("method"));
  assert.equal(map.are_checkpoint?.annotations?.readOnlyHint,false);
  assert.equal(map.are_get_criteria?.annotations?.readOnlyHint,true);
@@ -36,7 +37,7 @@ test("invalid or oversized task submission is rejected before network access",as
  const a=await callTaskApi("/v3/task/read","owner_secret",{},f);
  assert.equal(a.ok,false);
  assert.equal(a.data.error,"invalid_task_token");
- const b=await callTaskApi("/v3/task/submit",token,{junk:"x".repeat(360000)},f);
+ const b=await callTaskApi("/v3/task/submit",token,{junk:"x".repeat(1900000)},f);
  assert.equal(b.ok,false);
  assert.equal(b.data.error,"payload_too_large");
  assert.equal(calls,0);

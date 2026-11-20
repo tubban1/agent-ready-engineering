@@ -121,6 +121,8 @@ export async function captureReadOnly(input,{assignment,tokenDigest,sql,fetcher=
   fail("oauth_or_api_key_targets_require_human_host_capture");
  if(input?.method!=="tools/list"&&input?.method!=="tools/call")
   fail("capture_method_not_allowed");
+ if(input.cursor!==undefined&&(input.method!=="tools/list"||typeof input.cursor!=="string"||
+    input.cursor.length<1||input.cursor.length>500))fail("invalid_tools_list_cursor");
  if(input.method==="tools/call"){
   if(!safeName.test(input.tool_name||"")||forbiddenName.test(input.tool_name))
    fail("unapproved_tool_name_for_read_capture");
@@ -141,7 +143,7 @@ export async function captureReadOnly(input,{assignment,tokenDigest,sql,fetcher=
  }
  const name=input.method==="tools/call"?input.tool_name:null;
  const raw=await fetchRaw(endpoint,input.method,
-  input.method==="tools/call"?{name,arguments:input.arguments}:{},fetcher);
+  input.method==="tools/call"?{name,arguments:input.arguments}:input.cursor?{cursor:input.cursor}:{},fetcher);
  const row=await sql(CAPTURE_INSERT_SQL,
   [tokenDigest,assignment.id,endpoint,input.method,name,raw.content,raw.sha256]);
  if(!row||!id.test(row.id))fail("capture_persistence_failed");

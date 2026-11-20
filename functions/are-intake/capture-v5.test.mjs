@@ -76,3 +76,25 @@ test("no DB capacity means never reach target endpoint",async()=>{
   {assignment,tokenDigest,sql:async()=>null,fetcher,dnsCheck:async()=>{}}),/capture_quota_or_task_expired/);
  assert.equal(called,0);
 });
+
+test("screened tools/list capture forwards opaque nextCursor without a second target write",async()=>{
+ let body=null,inserted=null;
+ const fetcher=async(url,init)=>{
+  body=JSON.parse(init.body);
+  return new Response(JSON.stringify({jsonrpc:"2.0",id:body.id,result:{tools:[]}}),
+   {status:200,headers:{"content-type":"application/json"}});
+ };
+ const sql=async(q,args)=>{
+  if(q===CAPTURE_RESERVE_SQL)return {used_count:1};
+  if(q===CAPTURE_INSERT_SQL){inserted=args;return {id:captureId}};
+  throw Error("Unexpected query");
+ };
+ const res=await captureReadOnly({method:"tools/list",cursor:"opaque-2"},{assignment,
+  tokenDigest,sql,fetcher,dnsCheck:async()=>{}});
+ assert.equal(res.ok,true);
+ assert.deepEqual(body.params,{cursor:"opaque-2"});
+ assert.deepEqual(JSON.parse(inserted[5]).request.params,{cursor:"opaque-2"});
+ await assert.rejects(captureReadOnly({method:"tools/call",cursor:"opaque-2",
+  tool_name:"read_inventory",arguments:{},user_authorized:true},{assignment,
+  tokenDigest,sql,fetcher,dnsCheck:async()=>{}}),/invalid_tools_list_cursor/);
+});
