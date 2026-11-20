@@ -25,7 +25,7 @@ import { reviewRiskProfile } from "./risk-profile.js";
 import {registerTaskTools} from "./task-intake.js";
 
 export const SERVER_NAME = "are";
-export const SERVER_VERSION = "0.12.0";
+export const SERVER_VERSION = "0.13.0";
 
 const BASE_INSTRUCTIONS = [
   "ARE (Agent-Ready Engineering): knowledge tools are read-only; are_score_mcp accepts ONLY a publicly reachable HTTPS MCP Endpoint and saves an evidence-scoped preliminary report after a successful live tools/list. It never certifies L0-L4 or executes external business operations.",

@@ -5,7 +5,7 @@ import {makeHandler,PRODUCT_CHECKS} from "./index.mjs";
 import {estimatePlan,validateCoverage} from "./pipeline-service.mjs";
 import * as Q from "./pipeline-queries.mjs";
 const h=x=>createHash("sha256").update(x).digest("hex");
-const owner="ario_"+("Z".repeat(64)),invite="arei_"+("A".repeat(43)),task="aret_"+("B".repeat(43));
+const owner="ario_"+("Z".repeat(64)),task="aret_"+("B".repeat(43));
 const env={ARE_INTAKE_OWNER_HASH:h(owner)};
 const uid="11111111-2222-4333-8444-555555555555";
 const repo="janijegoroff/agent-connectors-mcp";
@@ -21,14 +21,15 @@ const request=(route,token,body)=>new Request("https://neon.example"+route,{
 const unpack=async r=>r.json();
 test("single landing page is unprivileged, has five stages and both roles",async()=>{
  const api=makeHandler({env,sql:async()=>{throw Error("HTML must not read DB");}});
- const r=await api(request("/v2/board"));
+ const r=await api(request("/v3/board"));
  assert.equal(r.status,200);
  assert.equal(r.headers.get("cache-control"),"no-store");
  const html=await r.text();
- for(const section of ["过滤项目","抽取一个适合自己的项目","测试执行进度","独立验证队列","发布信息"])
+ for(const section of ["项目过滤","生成一个测试任务","项目测试进度","独立结果验证","待发布信息"])
    assert.ok(html.includes(section),section);
- assert.ok(html.includes("testerRole"));
- assert.ok(html.includes("ownerRole"));
+ assert.ok(html.includes("issueButton"));
+ assert.ok(html.includes("一个项目"));
+ assert.ok(!html.includes("个人邀请 Token"));
  assert.ok(!html.includes("cfac1539bdc273c5169e44528ac1b11ef4eb3823"));
  assert.equal((await api(request("/v1/tasks/board"))).status,401);
 });
@@ -53,52 +54,48 @@ test("every tool must have unique named result, blockers have trace, success has
  assert.throws(()=>validateCoverage([{name:"test",status:"PASS"}],[],1),/invalid_tool_row/);
  assert.throws(()=>validateCoverage([{name:"test",status:"NOT_TESTED"}],[],1),/invalid_tool_row/);
 });
-test("owner can filter, mint unique invite and revoke; tester cannot call owner APIs",async()=>{
+test("only Owner can generate one project-scoped task Token and complete-prompt metadata",async()=>{
  const calls=[],sql=async(query,args=[])=>{
   calls.push({query,args});
   if(query===Q.FILTER)return {repository_key:repo,decision:"ELIGIBLE"};
-  if(query===Q.INVITE_CREATE)return {id:uid,label:"Pilot",tester_id:"colleague-01"};
-  if(query===Q.INVITE_REVOKE)return {id:uid,revoked_at:"now"};
-  if(query===Q.INVITES)return {invites:[]};
+  if(query===Q.ISSUE)return taskRow;
+  if(query===Q.POOL)return {projects:[]};
   return null;
  };
  const api=makeHandler({env,sql});
  const pool={repository_key:repo,decision:"ELIGIBLE",reason:"read-only public MCP",
    tool_count:3,auth_mode:"NONE",risk_level:"LOW",runtime_endpoint:"https://agentconnectors.dev/mcp",priority:80};
- assert.equal((await api(request("/v2/pool/filter",undefined,pool))).status,401);
- assert.equal((await api(request("/v2/pool/filter",owner,pool))).status,200);
- const result=await unpack(await api(request("/v2/invites/create",owner,{
-  label:"Pilot",tester_id:"colleague-01",tester_organization:"ARE Research",max_draws:1,expires_days:7
- })));
- assert.equal(result.visible_once,true);
- assert.match(result.invite_token,/^arei_[a-zA-Z0-9_-]{43}$/);
- const stored=calls.find(x=>x.query===Q.INVITE_CREATE).args[0];
- assert.equal(stored,h(result.invite_token));
- assert.equal((await api(request("/v2/invites/revoke",owner,{id:uid}))).status,200);
-});
-test("tester invitation filters time and OAuth; token is never echoed after draw",async()=>{
- const calls=[],sql=async(query,args=[])=>{
-  calls.push({query,args});
-  if(query===Q.DRAW)return taskRow;
-  return null;
- };
- const api=makeHandler({env,sql});
- assert.equal((await api(request("/v2/draw",undefined,{invite_token:invite,max_minutes:75,allow_oauth:false}))).status,400);
- const result=await unpack(await api(request("/v2/draw",undefined,{invite_token:invite,max_minutes:90,allow_oauth:false})));
+ assert.equal((await api(request("/v3/pool/filter",undefined,pool))).status,401);
+ assert.equal((await api(request("/v3/pool/filter",owner,pool))).status,200);
+ const issue={repository_key:repo,tester_id:"colleague-01",tester_organization:"ARE Research",
+   max_minutes:90,allow_oauth:false,expires_days:7};
+ assert.equal((await api(request("/v3/tasks/issue",undefined,issue))).status,401);
+ const result=await unpack(await api(request("/v3/tasks/issue",owner,issue)));
  assert.equal(result.task.repository_key,repo);
  assert.match(result.task_token,/^aret_[a-zA-Z0-9_-]{43}$/);
  assert.equal(result.visible_once,true);
  assert.equal(result.plan.estimated_minutes,75);
- assert.equal(calls[0].args[0],h(invite));
- assert.equal(calls[0].args[3],h(result.task_token));
+ const stored=calls.find(x=>x.query===Q.ISSUE).args;
+ assert.equal(stored[0],repo);
+ assert.equal(stored[3],h(result.task_token));
  assert.ok(!JSON.stringify(result.task).includes(result.task_token));
+ assert.equal((await api(request("/v2/draw",owner,{invite_token:"any"}))).status,404);
+ assert.equal((await api(request("/v2/invites/create",owner,{}))).status,404);
 });
-test("task-only credential cannot read owner verification, release or invite lists",async()=>{
+test("an ineligible, claimed or time-exceeding project cannot issue a second Token",async()=>{
+ const api=makeHandler({env,sql:async query=>query===Q.ISSUE?null:null});
+ const obj={repository_key:repo,tester_id:"colleague-01",tester_organization:"ARE Research",
+  max_minutes:90,allow_oauth:true,expires_days:1};
+ const r=await api(request("/v3/tasks/issue",owner,obj));
+ assert.equal(r.status,409);
+ assert.equal((await r.json()).error,"project_not_eligible_already_issued_or_exceeds_test_budget");
+});
+test("task-only credential cannot read owner verification, release or other tasks",async()=>{
  const api=makeHandler({env,sql:async()=>{throw Error("not authorized")}});
- for(const path of ["/v2/review","/v2/pool","/v2/invites","/v2/tasks"]){
+ for(const path of ["/v3/review","/v3/pool","/v3/tasks"]){
   assert.equal((await api(request(path,task))).status,401);
  }
- for(const path of ["/v2/release/draft","/v2/release/approve","/v2/review/decision"]){
+ for(const path of ["/v3/release/draft","/v3/release/approve","/v3/review/decision"]){
   assert.equal((await api(request(path,task,{}))).status,401);
  }
 });
@@ -114,17 +111,17 @@ test("owner verified review requires actual complete tool inventory; draft remai
   return null;
  };
  const api=makeHandler({env,sql});
- const verify=await api(request("/v2/review/decision",owner,{id:uid,decision:"VERIFIED",explanation:"all source and tool evidence inspected"}));
+ const verify=await api(request("/v3/review/decision",owner,{id:uid,decision:"VERIFIED",explanation:"all source and tool evidence inspected"}));
  assert.equal(verify.status,200);
- const draft=await unpack(await api(request("/v2/release/draft",owner,{id:uid,summary:"Private evidence-only draft"})));
+ const draft=await unpack(await api(request("/v3/release/draft",owner,{id:uid,summary:"Private evidence-only draft"})));
  assert.equal(draft.published,false);
- const denied=await api(request("/v2/release/approve",owner,{id:uid,confirm:"YES"}));
+ const denied=await api(request("/v3/release/approve",owner,{id:uid,confirm:"YES"}));
  assert.equal(denied.status,400);
- const approved=await unpack(await api(request("/v2/release/approve",owner,{id:uid,confirm:"I APPROVE MANUAL PUBLICATION"})));
+ const approved=await unpack(await api(request("/v3/release/approve",owner,{id:uid,confirm:"I APPROVE MANUAL PUBLICATION"})));
  assert.equal(approved.published,false);
  assert.equal(approved.approval.status,"APPROVED_FOR_MANUAL_RELEASE");
  report.runs=[{...report.runs[0],tool_coverage:[],test_metadata:{discovered_tool_count:1}}];
- const incomplete=await api(request("/v2/review/decision",owner,{id:uid,decision:"VERIFIED",explanation:"attempt to approve incomplete evidence"}));
+ const incomplete=await api(request("/v3/review/decision",owner,{id:uid,decision:"VERIFIED",explanation:"attempt to approve incomplete evidence"}));
  assert.equal(incomplete.status,400);
 });
 test("no legacy routes, no auto-public third-party publication, private result validator still enforces 32 checks",async()=>{
@@ -132,7 +129,19 @@ test("no legacy routes, no auto-public third-party publication, private result v
  assert.equal((await api(request("/v1/submit",owner,{}))).status,404);
  assert.equal((await api(request("/v1/owner",owner))).status,404);
  assert.equal((await api(request("/v1/tasks/create",owner,{}))).status,404);
+ assert.equal((await api(request("/v2/invites/create",owner,{}))).status,404);
+ assert.equal((await api(request("/v2/draw",undefined,{}))).status,401);
  assert.equal(PRODUCT_CHECKS.length,32);
- const publish=await api(request("/v2/release/publish",owner,{}));
+ const publish=await api(request("/v3/release/publish",owner,{}));
  assert.equal(publish.status,404);
+});
+
+test("one active token per project is enforced by atomic row lock; VERIFIED consumes token",()=>{
+ assert.match(Q.ISSUE,/FOR UPDATE OF p/);
+ assert.match(Q.ISSUE,/claimed_task_id IS NULL/);
+ assert.match(Q.ISSUE,/UPDATE are_eval.private_project_pool/);
+ assert.match(Q.REVIEW_INSERT,/UPDATE are_eval.private_assessment_tasks/);
+ assert.match(Q.REVIEW_INSERT,/x.decision='VERIFIED'/);
+ assert.doesNotMatch(Q.ISSUE,/invitation|invite_id|draw/i);
+ assert.doesNotMatch(Q.TASK_LIST,/invite_id/);
 });

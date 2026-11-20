@@ -16,52 +16,31 @@ export const FILTER=q(
  "RETURNING repository_key,decision,reason,tool_count,auth_mode,risk_level,priority,claimed_task_id)",
  "SELECT COALESCE((SELECT row_to_json(x) FROM x),'null'::json)::text"
 );
-export const INVITE_CREATE=q(
- "WITH x AS (INSERT INTO are_eval.private_draw_invitations",
- "(invite_sha256,tester_id,tester_organization,label,max_draws,expires_at)",
- "VALUES ($1,$2,$3,$4,$5,now()+($6::integer*interval '1 day'))",
- "RETURNING id,tester_id,tester_organization,label,max_draws,expires_at)",
- "SELECT (SELECT row_to_json(x) FROM x)::text"
-);
-export const INVITES=q(
- "SELECT json_build_object('invites',COALESCE(json_agg(row_to_json(x)),'[]'::json))::text FROM",
- "(SELECT id,tester_id,label,max_draws,used_draws,expires_at,revoked_at,created_at",
- "FROM are_eval.private_draw_invitations ORDER BY created_at DESC LIMIT 100) x"
-);
-export const INVITE_REVOKE=q(
- "WITH x AS (UPDATE are_eval.private_draw_invitations SET revoked_at=now()",
- "WHERE id=$1::uuid AND revoked_at IS NULL RETURNING id,revoked_at)",
- "SELECT COALESCE((SELECT row_to_json(x) FROM x),'null'::json)::text"
-);
-export const DRAW=q(
- "WITH invited AS (SELECT id,tester_id,tester_organization FROM are_eval.private_draw_invitations",
- "WHERE invite_sha256=$1 AND expires_at>now() AND revoked_at IS NULL AND used_draws<max_draws FOR UPDATE),",
- "chosen AS (SELECT p.* FROM are_eval.private_project_pool p WHERE EXISTS(SELECT 1 FROM invited)",
- "AND p.decision='ELIGIBLE' AND p.claimed_task_id IS NULL",
- "AND $2::integer >= LEAST(240,GREATEST(60,60+CEIL(p.tool_count::numeric/10)*15+",
- "CASE WHEN p.auth_mode='OAUTH' THEN 20 ELSE 0 END+",
- "CASE p.risk_level WHEN 'HIGH' THEN 30 WHEN 'MEDIUM' THEN 15 ELSE 0 END))",
- "AND ($3::boolean OR p.auth_mode<>'OAUTH') ORDER BY p.priority DESC,random()",
- "LIMIT 1 FOR UPDATE OF p SKIP LOCKED),",
- "used AS (UPDATE are_eval.private_draw_invitations i SET used_draws=i.used_draws+1",
- "FROM invited v WHERE i.id=v.id AND EXISTS(SELECT 1 FROM chosen)",
- "RETURNING v.id,v.tester_id,v.tester_organization),",
+export const ISSUE=q(
+ "WITH chosen AS (SELECT p.cohort_id,p.repository_key,p.tool_count,p.auth_mode,p.risk_level",
+ "FROM are_eval.private_project_pool p WHERE p.cohort_id='ARE100-VALUE-20261115'",
+ "AND p.repository_key=$1 AND p.decision='ELIGIBLE' AND p.claimed_task_id IS NULL",
+ "FOR UPDATE OF p),",
  "created AS (INSERT INTO are_eval.private_assessment_tasks",
- "(cohort_id,repository_key,title,instructions,assignee_id,assessor_organization,token_sha256,expires_at,invite_id,plan_snapshot)",
+ "(cohort_id,repository_key,title,instructions,assignee_id,assessor_organization,token_sha256,expires_at,plan_snapshot)",
  "SELECT p.cohort_id,p.repository_key,'ARE complete independent MCP evaluation',",
- "'Examine all tools safely and record evidence, OAuth and blocked-design issues.',",
- "u.tester_id,u.tester_organization,$4,now()+interval '7 days',u.id,",
- "jsonb_build_object('version','are.test-plan.v2','declared_tool_count',p.tool_count,",
+ "'Cover all authorized tools; record OAuth, time budgets and BLOCKED_DESIGN with traces',",
+ "$2,$3,$4,now()+($5::integer*interval '1 day'),",
+ "jsonb_build_object('version','are.test-plan.v3','declared_tool_count',p.tool_count,",
  "'auth_mode',p.auth_mode,'risk_level',p.risk_level,",
  "'estimated_minutes',LEAST(240,GREATEST(60,60+CEIL(p.tool_count::numeric/10)*15+",
  "CASE WHEN p.auth_mode='OAUTH' THEN 20 ELSE 0 END+",
  "CASE p.risk_level WHEN 'HIGH' THEN 30 WHEN 'MEDIUM' THEN 15 ELSE 0 END)),",
- "'test_limit_minutes',$2::integer,'oauth_allowed',$3::boolean)",
- "FROM chosen p CROSS JOIN used u",
- "RETURNING id,cohort_id,repository_key,title,instructions,assignee_id,assessor_organization,expires_at,plan_snapshot),",
- "mark AS (UPDATE are_eval.private_project_pool p SET claimed_task_id=t.id,updated_at=now()",
- "FROM created t WHERE p.cohort_id=t.cohort_id AND p.repository_key=t.repository_key RETURNING t.id)",
- "SELECT COALESCE((SELECT row_to_json(t) FROM created t JOIN mark m ON m.id=t.id),'null'::json)::text"
+ "'test_limit_minutes',$6::integer,'oauth_allowed',$7::boolean)",
+ "FROM chosen p",
+ "WHERE $6::integer >= LEAST(240,GREATEST(60,60+CEIL(p.tool_count::numeric/10)*15+",
+ "CASE WHEN p.auth_mode='OAUTH' THEN 20 ELSE 0 END+",
+ "CASE p.risk_level WHEN 'HIGH' THEN 30 WHEN 'MEDIUM' THEN 15 ELSE 0 END))",
+ "AND ($7::boolean OR p.auth_mode<>'OAUTH')",
+ "RETURNING id,cohort_id,repository_key,title,instructions,assignee_id,assessor_organization,expires_at,created_at,plan_snapshot),",
+ "claimed AS (UPDATE are_eval.private_project_pool p SET claimed_task_id=c.id,updated_at=now()",
+ "FROM created c WHERE p.cohort_id=c.cohort_id AND p.repository_key=c.repository_key RETURNING c.id)",
+ "SELECT COALESCE((SELECT row_to_json(c) FROM created c JOIN claimed x ON x.id=c.id),'null'::json)::text"
 );
 export const TASK_LIST=q(
  "SELECT json_build_object('tasks',COALESCE(json_agg(row_to_json(x)),'[]'::json))::text FROM (",
@@ -69,18 +48,18 @@ export const TASK_LIST=q(
  "p.phase,p.total_tools,p.minutes_used,",
  "(SELECT count(*)::integer FROM are_eval.private_task_submissions s WHERE s.task_id=t.id) submissions",
  "FROM are_eval.private_assessment_tasks t LEFT JOIN are_eval.private_task_progress p ON p.task_id=t.id",
- "WHERE t.invite_id IS NOT NULL ORDER BY t.created_at DESC LIMIT 150) x"
+ "WHERE t.plan_snapshot->>'version' = 'are.test-plan.v3' ORDER BY t.created_at DESC LIMIT 150) x"
 );
 export const TASK_REVOKE=q(
  "WITH t AS (UPDATE are_eval.private_assessment_tasks SET revoked_at=now() WHERE id=$1::uuid",
- "AND invite_id IS NOT NULL AND revoked_at IS NULL RETURNING id,repository_key,cohort_id,revoked_at),",
+ "AND plan_snapshot->>'version'='are.test-plan.v3' AND revoked_at IS NULL RETURNING id,repository_key,cohort_id,revoked_at),",
  "p AS (UPDATE are_eval.private_project_pool p SET claimed_task_id=NULL,updated_at=now()",
  "FROM t WHERE p.claimed_task_id=t.id RETURNING p.repository_key)",
  "SELECT COALESCE((SELECT row_to_json(t) FROM t),'null'::json)::text"
 );
 export const CHECKPOINT=q(
  "WITH task AS (SELECT id FROM are_eval.private_assessment_tasks WHERE token_sha256=$1",
- "AND expires_at>now() AND revoked_at IS NULL AND invite_id IS NOT NULL FOR UPDATE),",
+ "AND expires_at>now() AND revoked_at IS NULL AND plan_snapshot->>'version'='are.test-plan.v3' FOR UPDATE),",
  "p AS (INSERT INTO are_eval.private_task_progress (task_id,coverage,blockers,phase,total_tools,minutes_used,updated_at)",
  "SELECT id,$2::jsonb,$3::jsonb,$4,$5::integer,$6::integer,now() FROM task",
  "ON CONFLICT (task_id) DO UPDATE SET coverage=EXCLUDED.coverage,blockers=EXCLUDED.blockers,",
@@ -91,7 +70,7 @@ export const CHECKPOINT=q(
 export const CHECKPOINT_GET=q(
  "SELECT COALESCE((SELECT row_to_json(p) FROM (SELECT phase,total_tools,minutes_used,coverage,blockers,updated_at",
  "FROM are_eval.private_task_progress p JOIN are_eval.private_assessment_tasks t ON t.id=p.task_id",
- "WHERE t.token_sha256=$1 AND t.expires_at>now() AND t.revoked_at IS NULL AND t.invite_id IS NOT NULL) p),'null'::json)::text"
+ "WHERE t.token_sha256=$1 AND t.expires_at>now() AND t.revoked_at IS NULL AND t.plan_snapshot->>'version'='are.test-plan.v3') p),'null'::json)::text"
 );
 // QUEUE SQL defined separately below to keep all reports private and avoid dynamic table names.
 export const REVIEWS=q(
@@ -105,14 +84,17 @@ export const REVIEWS=q(
  "FROM are_eval.private_evaluation_runs r",
  "JOIN are_eval.private_task_submissions s ON s.run_id=r.id",
  "JOIN are_eval.private_assessment_tasks t ON t.id=s.task_id",
- "WHERE t.invite_id IS NOT NULL ORDER BY r.created_at DESC LIMIT 100) x"
+ "WHERE t.plan_snapshot->>'version'='are.test-plan.v3' ORDER BY r.created_at DESC LIMIT 100) x"
 );
 export const REVIEW_INSERT=q(
  "WITH x AS (INSERT INTO are_eval.private_review_verdicts (run_id,decision,explanation)",
  "SELECT r.id,$2,$3 FROM are_eval.private_evaluation_runs r",
  "JOIN are_eval.private_task_submissions s ON s.run_id=r.id",
  "JOIN are_eval.private_assessment_tasks t ON t.id=s.task_id",
- "WHERE r.id=$1::uuid AND t.invite_id IS NOT NULL RETURNING id,run_id,decision,created_at)",
+ "WHERE r.id=$1::uuid AND t.plan_snapshot->>'version'='are.test-plan.v3' RETURNING id,run_id,decision,created_at),",
+ "consumed AS (UPDATE are_eval.private_assessment_tasks t SET revoked_at=now()",
+ "FROM are_eval.private_task_submissions l JOIN x ON l.run_id=x.run_id",
+ "WHERE t.id=l.task_id AND x.decision='VERIFIED' AND t.revoked_at IS NULL RETURNING t.id)",
  "SELECT COALESCE((SELECT row_to_json(x) FROM x),'null'::json)::text"
 );
 export const PUBLICATION_DRAFT=q(
