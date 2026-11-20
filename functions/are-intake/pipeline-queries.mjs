@@ -116,3 +116,103 @@ export const PUBLICATION_APPROVE=q(
  "owner_approved_at=now() FROM approved a WHERE p.run_id=a.run_id RETURNING p.run_id,p.status,p.owner_approved_at)",
  "SELECT COALESCE((SELECT row_to_json(u) FROM u),'null'::json)::text"
 );
+
+// Tester-facing read model: only screened public repository metadata, never private evidence or tokens.
+export const PUBLIC_POOL=q(
+ "WITH x AS (SELECT p.repository_key,c.display_name,p.tool_count,p.auth_mode,p.risk_level,p.priority,p.runtime_endpoint,",
+ "CASE WHEN EXISTS (SELECT 1 FROM are_eval.private_task_submissions s",
+ "JOIN are_eval.private_review_verdicts v ON v.run_id=s.run_id",
+ "JOIN are_eval.private_assessment_tasks completed ON completed.id=s.task_id",
+ "WHERE completed.cohort_id=p.cohort_id AND completed.repository_key=p.repository_key AND v.decision='VERIFIED') THEN 'REVIEWED'",
+ "WHEN p.claimed_task_id IS NULL THEN 'AVAILABLE'",
+ "WHEN t.id IS NOT NULL AND t.revoked_at IS NULL AND t.expires_at>now() THEN 'CLAIMED'",
+ "ELSE 'AVAILABLE' END AS availability",
+ "FROM are_eval.private_project_pool p JOIN are_eval.benchmark_study_candidates c",
+ "ON c.cohort_id=p.cohort_id AND c.repository_key=p.repository_key",
+ "LEFT JOIN are_eval.private_assessment_tasks t ON t.id=p.claimed_task_id",
+ "WHERE p.cohort_id='ARE100-VALUE-20261115' AND p.decision='ELIGIBLE'),",
+ "stats AS (SELECT",
+ "(SELECT count(*)::int FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115') AS candidate_total,",
+ "(SELECT count(*)::int FROM are_eval.private_project_pool WHERE cohort_id='ARE100-VALUE-20261115' AND decision='HOLD') AS held,",
+ "(SELECT count(*)::int FROM are_eval.private_project_pool WHERE cohort_id='ARE100-VALUE-20261115' AND decision='EXCLUDED') AS excluded)",
+ "SELECT json_build_object('projects',COALESCE((SELECT json_agg(row_to_json(y)) FROM",
+ "(SELECT * FROM x ORDER BY priority DESC, repository_key LIMIT 150) y),'[]'::json),",
+ "'stats',json_build_object('candidates',(SELECT candidate_total FROM stats),'held',(SELECT held FROM stats),",
+ "'excluded',(SELECT excluded FROM stats),'eligible',(SELECT count(*) FROM x),",
+ "'available',(SELECT count(*) FROM x WHERE availability='AVAILABLE'),",
+ "'claimed',(SELECT count(*) FROM x WHERE availability='CLAIMED')))::text"
+);
+
+// An unprivileged, short-lived browser session is NOT an authenticated identity.
+// Bound to Secure HttpOnly SameSite cookie; keeps a tester's parallel-claim quota.
+export const TESTER_SESSION_CREATE=q(
+ "WITH lockrow AS MATERIALIZED (SELECT pg_advisory_xact_lock(193751,20261120) AS locked),",
+ "s AS (INSERT INTO are_eval.private_tester_sessions",
+ "(session_sha256,tester_id,display_name,organization,expires_at)",
+ "SELECT $1,('tester_'||substring(replace(gen_random_uuid()::text,'-',''),1,20)),$2,$3,now()+interval '14 days'",
+ "FROM lockrow WHERE (SELECT count(*) FROM are_eval.private_tester_sessions",
+ "WHERE created_at>now()-interval '24 hours')<60",
+ "RETURNING id,tester_id,display_name,organization,created_at,expires_at)",
+ "SELECT COALESCE((SELECT row_to_json(s) FROM s),'null'::json)::text"
+);
+export const TESTER_SESSION_READ=q(
+ "SELECT COALESCE((SELECT row_to_json(s) FROM (",
+ "SELECT id,tester_id,display_name,organization,created_at,expires_at",
+ "FROM are_eval.private_tester_sessions",
+ "WHERE session_sha256=$1 AND expires_at>now()) s),'null'::json)::text"
+);
+export const TESTER_MY_TASKS=q(
+ "SELECT json_build_object('tasks',COALESCE(json_agg(row_to_json(x)),'[]'::json))::text FROM (",
+ "SELECT t.id,t.repository_key,t.created_at,t.expires_at,t.revoked_at,",
+ "t.plan_snapshot->>'auth_mode' AS auth_mode,",
+ "t.plan_snapshot->>'runtime_endpoint' AS endpoint,",
+ "p.phase,p.total_tools,p.minutes_used,",
+ "(SELECT count(*)::integer FROM are_eval.private_task_submissions l WHERE l.task_id=t.id) submissions",
+ "FROM are_eval.private_assessment_tasks t",
+ "JOIN are_eval.private_tester_sessions s ON s.id::text=t.plan_snapshot->>'tester_session_id'",
+ "LEFT JOIN are_eval.private_task_progress p ON p.task_id=t.id",
+ "WHERE s.session_sha256=$1 AND s.expires_at>now()",
+ "ORDER BY t.created_at DESC LIMIT 50) x"
+);
+export const PUBLIC_CLAIM=q(
+ "WITH session AS MATERIALIZED (SELECT id,tester_id,organization FROM are_eval.private_tester_sessions",
+ "WHERE session_sha256=$1 AND expires_at>now() FOR UPDATE),",
+ "eligible AS (SELECT p.cohort_id,p.repository_key,p.tool_count,p.auth_mode,p.risk_level,p.runtime_endpoint,p.priority",
+ "FROM are_eval.private_project_pool p LEFT JOIN are_eval.private_assessment_tasks prior ON prior.id=p.claimed_task_id",
+ "WHERE p.cohort_id='ARE100-VALUE-20261115' AND p.decision='ELIGIBLE'",
+ "AND ($2::text='' OR p.repository_key=$2)",
+ "AND (p.claimed_task_id IS NULL OR prior.id IS NULL OR prior.revoked_at IS NOT NULL OR prior.expires_at<=now())",
+ "AND NOT EXISTS (SELECT 1 FROM are_eval.private_task_submissions s",
+ "JOIN are_eval.private_review_verdicts v ON v.run_id=s.run_id",
+ "JOIN are_eval.private_assessment_tasks previous ON previous.id=s.task_id",
+ "WHERE previous.cohort_id=p.cohort_id AND previous.repository_key=p.repository_key AND v.decision='VERIFIED')",
+ "AND $4::integer >= LEAST(240,GREATEST(60,60+CEIL(p.tool_count::numeric/10)*15+",
+ "CASE WHEN p.auth_mode='OAUTH' THEN 20 ELSE 0 END+",
+ "CASE p.risk_level WHEN 'HIGH' THEN 30 WHEN 'MEDIUM' THEN 15 ELSE 0 END))",
+ "AND ($5::boolean OR p.auth_mode<>'OAUTH')",
+ "ORDER BY p.priority DESC,p.repository_key FOR UPDATE OF p SKIP LOCKED LIMIT 1),",
+ "created AS (INSERT INTO are_eval.private_assessment_tasks",
+ "(cohort_id,repository_key,title,instructions,assignee_id,assessor_organization,token_sha256,expires_at,plan_snapshot)",
+ "SELECT p.cohort_id,p.repository_key,'ARE independent self-serve MCP evaluation',",
+ "'Test all safely authorized tools; evidence-first private submission, owner review required',",
+ "s.tester_id,s.organization,$3,now()+interval '48 hours',",
+ "jsonb_build_object('version','are.test-plan.v3','tester_session_id',s.id::text,'self_draw',true,",
+ "'declared_tool_count',p.tool_count,'runtime_endpoint',p.runtime_endpoint,",
+ "'auth_mode',p.auth_mode,'risk_level',p.risk_level,",
+ "'estimated_minutes',LEAST(240,GREATEST(60,60+CEIL(p.tool_count::numeric/10)*15+",
+ "CASE WHEN p.auth_mode='OAUTH' THEN 20 ELSE 0 END+",
+ "CASE p.risk_level WHEN 'HIGH' THEN 30 WHEN 'MEDIUM' THEN 15 ELSE 0 END)),",
+ "'test_limit_minutes',$4::integer,'oauth_allowed',$5::boolean)",
+ "FROM eligible p CROSS JOIN session s",
+ "WHERE (SELECT count(*) FROM are_eval.private_assessment_tasks a",
+ "WHERE a.plan_snapshot->>'tester_session_id'=s.id::text AND a.revoked_at IS NULL AND a.expires_at>now()",
+ "AND NOT EXISTS (SELECT 1 FROM are_eval.private_task_submissions l WHERE l.task_id=a.id)) < 3",
+ "AND (SELECT count(*) FROM are_eval.private_assessment_tasks a",
+ "WHERE a.plan_snapshot->>'tester_session_id'=s.id::text AND a.created_at>now()-interval '24 hours') < 6",
+ "AND (SELECT count(*) FROM are_eval.private_assessment_tasks a",
+ "WHERE a.plan_snapshot->>'self_draw'='true' AND a.created_at>now()-interval '1 hour') < 12",
+ "RETURNING id,cohort_id,repository_key,title,instructions,assignee_id,assessor_organization,expires_at,created_at,plan_snapshot),",
+ "claimed AS (UPDATE are_eval.private_project_pool p SET claimed_task_id=c.id,updated_at=now()",
+ "FROM created c WHERE p.cohort_id=c.cohort_id AND p.repository_key=c.repository_key RETURNING c.id)",
+ "SELECT COALESCE((SELECT row_to_json(c) FROM created c JOIN claimed x ON c.id=x.id),'null'::json)::text"
+);
