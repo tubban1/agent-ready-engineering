@@ -68,7 +68,7 @@ export function preflightAssessment(data,{assigneeId,organization,repositoryKey,
   const a=traces[i],path="evidence_artifacts["+i+"]";
   if(!text(a?.id,3,240)||refs.has(a.id))issue(path+".id","bad_artifact_id","Use unique stable reference IDs");
   if(!["trace","oracle","source_binding","agent_task","authorization"].includes(a?.kind))issue(path+".kind","bad_artifact_kind","Specify evidence type");
-  if(!text(a?.content,20,4000))issue(path+".content","missing_primary_material","Provide redacted reproducible observation, not only a label");
+  if(!text(a?.content,20,a?.kind==="trace"?70000:12000))issue(path+".content","missing_primary_material","Attach exact trace content up to 70 KB or smaller supporting evidence (12 KB); use capture_id-only references for server captures");
   if(!HEX.test(a?.sha256||"")||a.sha256!==sha(a?.content||""))issue(path+".sha256","content_hash_mismatch","Use SHA-256 of actual attached content");
   if(!text(a?.provenance,12,500))issue(path+".provenance","provenance_missing","Identify how observation/oracle was independently gathered");
   if(a?.kind==="oracle"&&!["external_source","known_fixture","state_readback","independent_calculation"].includes(a?.oracle_method))

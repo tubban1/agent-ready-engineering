@@ -6,6 +6,7 @@ import {PRODUCT_CHECKS,validateSubmission} from "./index.mjs";
 import {TASK_CRITERIA} from "./criteria-compact.mjs";
 import {FACT_NAMES,RAW_OBSERVATION_PROTOCOL} from "./evaluation-contract-v5.mjs";
 import {taskAgentAction,TASK_READ_SQL,TASK_SUBMIT_SQL} from "./task-service.mjs";
+import {CAPTURE_READ_SQL} from "./capture-v5.mjs";
 const sha=x=>createHash("sha256").update(x).digest("hex");
 const token="aret_"+"B".repeat(43),cohort="ARE100-VALUE-20261115",repo="cooyun/etuki-gate";
 const rev="eae054b5b99568f85879733d15b7206d5af45d1b",endpoint="https://www.etuki.com/api/v1/mcp",taskId="11111111-2222-4333-8444-555555555555";
@@ -194,4 +195,140 @@ test("OAuth denied is recordable as private NEEDS_EVIDENCE without pretending to
  assert.equal(r.valid,true,JSON.stringify(r.errors));
  assert.equal(r.readiness,"NEEDS_EVIDENCE");
  assert.equal(r.metrics.criteria.PASS,0);
+});
+
+test("V5 refuses PASS for a semantic check without criterion-attributed raw assertions",()=>{
+ const x=samplePackage();
+ const f=x.report.findings.find(r=>r.check_id==="MCP-L4-R4");
+ const tool2=artifact("raw-tool-2","trace",traceData(4,"tools/call",{name:"list_supported_models",arguments:{}},
+   {content:[{type:"text",text:JSON.stringify({total:2})}],isError:false}));
+ x.evidence_artifacts.push(tool2);
+ Object.assign(f,{status:"PASS",evidence_ref:"raw-tool",
+   observation:{metric:"agent_guide_covers_tools_flows_errors",value:true,evidence_ref:"raw-tool"},
+   samples:[{trace_ref:"raw-tool"},{trace_ref:"raw-tool-2"}]});
+ const r=preflightAssessment(x,config);
+ assert.equal(r.valid,false);
+ assert.ok(r.errors.some(e=>e.code==="unattributed_criterion_test"),JSON.stringify(r.errors));
+});
+test("V5 recalculates numeric criterion measurement from real sample values",()=>{
+ const x=samplePackage();
+ const f=x.report.findings.find(r=>r.check_id==="MCP-L2-X4");
+ const first=x.evidence_artifacts.find(a=>a.id==="raw-tool"),frame=JSON.parse(first.content);
+ frame.response.result.content[0].text=JSON.stringify({total:2,output_tokens:2});
+ frame.wire_response=JSON.stringify(frame.response);first.content=JSON.stringify(frame);first.sha256=sha(first.content);
+ const tool2=artifact("raw-tool-2","trace",traceData(4,"tools/call",{name:"list_supported_models",arguments:{}},
+   {content:[{type:"text",text:JSON.stringify({total:2,output_tokens:2})}],isError:false}));
+ x.evidence_artifacts.push(tool2);
+ Object.assign(f,{status:"PASS",evidence_ref:"raw-tool",
+   observation:{metric:"max_default_read_output_tokens",value:500,evidence_ref:"raw-tool"},
+   samples:["raw-tool","raw-tool-2"].map(trace_ref=>({trace_ref,criterion_id:f.check_id,
+     case_label:"Instrumented default read output",expected_source:"Independent test tokenizer counts",
+     tokenizer_id:"tiktoken-cl100k-base",numeric_pointer:"/result/content/0/text#/output_tokens"}))});
+ const r=preflightAssessment(x,config);
+ assert.equal(r.valid,false);
+ assert.ok(r.errors.some(e=>e.code==="measurement_not_derived_from_raw"),JSON.stringify(r.errors));
+});
+test("V5 does not accept first-page-only discovery as complete native inventory",()=>{
+ const x=samplePackage(),a=x.evidence_artifacts.find(a=>a.id==="raw-discovery");
+ const raw=JSON.parse(a.content);raw.response.result.nextCursor="page-2";
+ raw.wire_response=JSON.stringify(raw.response);a.content=JSON.stringify(raw);a.sha256=sha(a.content);
+ const r=preflightAssessment(x,config);
+ assert.equal(r.valid,false);
+ assert.ok(r.errors.some(e=>e.code==="incomplete_native_discovery"));
+});
+test("a real 5 KB MCP response no longer fails an artificial 4 KB artifact limit",()=>{
+ const x=samplePackage();
+ x.evidence_artifacts.push(artifact("large-native-frame","trace",traceData(5,"tools/call",
+  {name:"list_supported_models",arguments:{limit:300}},
+  {content:[{type:"text",text:"x".repeat(5400)}],isError:false})));
+ const r=preflightAssessment(x,config);
+ assert.equal(r.valid,true,JSON.stringify(r.errors));
+});
+test("task-scoped capture-only reference hydrates persisted originals and rejects mismatched hashes",async()=>{
+ const x=samplePackage(),a=x.evidence_artifacts.find(a=>a.id==="raw-tool");
+ const receipt={id:"33333333-3333-4333-8333-333333333333",
+  task_id:taskId,method:"tools/call",tool_name:"list_supported_models",
+  content:a.content,sha256:a.sha256};
+ a.capture_id=receipt.id;
+ delete a.content;delete a.sha256;delete a.provenance;
+ const calls=[],sql=async(q)=>{calls.push(q);
+  if(q===TASK_READ_SQL)return fakeTask;
+  if(q===CAPTURE_READ_SQL)return {rows:[receipt]};
+  throw Error("Unexpected DB operation")};
+ const valid=await taskAgentAction("/v3/task/validate",request("/v3/task/validate",x),sql,
+  {validateSubmission,githubVerify:async()=>true,criteria:TASK_CRITERIA});
+ assert.equal(valid.status,200);
+ assert.equal(valid.data.valid,true,JSON.stringify(valid.data.errors));
+ assert.deepEqual(calls,[TASK_READ_SQL,CAPTURE_READ_SQL]);
+ a.sha256="f".repeat(64);
+ const forged=await taskAgentAction("/v3/task/validate",request("/v3/task/validate",x),sql,
+  {validateSubmission,githubVerify:async()=>true,criteria:TASK_CRITERIA});
+ assert.equal(forged.data.valid,false);
+ assert.ok(forged.data.errors.some(e=>e.code==="unverified_capture_receipt"||e.code==="content_hash_mismatch"));
+});
+
+test("two-page tools/list capture computes one complete native inventory",()=>{
+ const x=samplePackage(),first=x.evidence_artifacts.find(a=>a.id==="raw-discovery");
+ const raw=JSON.parse(first.content);
+ raw.response.result.nextCursor="cursor-next";
+ raw.wire_response=JSON.stringify(raw.response);
+ first.content=JSON.stringify(raw);first.sha256=sha(first.content);
+ const second=artifact("raw-discovery-page2","trace",traceData(11,"tools/list",{cursor:"cursor-next"},
+  {tools:[{name:"read_details",inputSchema:{type:"object"},annotations:attr}]}));
+ x.evidence_artifacts.push(second);
+ x.test_metadata.discovered_tool_count=2;
+ x.tool_coverage.push({name:"read_details",status:"NOT_TESTED",reason:"Independent fixture did not attempt additional tool"});
+ const inventory=x.report.findings.find(f=>f.check_id==="MCP-L1-V4");
+ inventory.samples.push({trace_ref:second.id});
+ const r=preflightAssessment(x,config);
+ assert.equal(r.valid,true,JSON.stringify(r.errors));
+ assert.equal(r.metrics.semantic.criteria.PASS,1);
+});
+
+test("criterion-specific positive raw assertions produce a valid independently reviewable PASS",()=>{
+ const x=samplePackage();
+ const f=x.report.findings.find(r=>r.check_id==="MCP-L4-R4");
+ for(const [i,toolArgs] of [{guide:"tools"},{guide:"errors"}].entries()){
+  x.evidence_artifacts.push(artifact("raw-guide-"+i,"trace",traceData(20+i,"tools/call",
+   {name:"list_supported_models",arguments:toolArgs},
+   {structuredContent:{has_agent_guide:true,includes_error_recovery:true},isError:false})));
+ }
+ Object.assign(f,{status:"PASS",evidence_ref:"raw-guide-0",
+   observation:{metric:"agent_guide_covers_tools_flows_errors",value:true,evidence_ref:"raw-guide-0"},
+   samples:[0,1].map(i=>({trace_ref:"raw-guide-"+i,criterion_id:f.check_id,
+    case_label:i===0?"Read verified tool documentation":"Read documented error recovery workflow",
+    expected_source:"Version-pinned independently reviewed documentation fixture",
+    assertions:[{pointer:"/result/structuredContent/has_agent_guide",operator:"eq",expected:true},
+     {pointer:"/result/structuredContent/includes_error_recovery",operator:"eq",expected:true}]}))});
+ const r=preflightAssessment(x,config);
+ assert.equal(r.valid,true,JSON.stringify(r.errors));
+ assert.equal(r.metrics.criteria.PASS,2);
+ assert.equal(r.readiness,"READY_FOR_REVIEW");
+});
+
+test("full token-scoped receipt-only validation then submission persists original immutable raw bytes",async()=>{
+ const x=samplePackage(),a=x.evidence_artifacts.find(a=>a.id==="raw-tool");
+ const receipt={id:"33333333-3333-4333-8333-333333333333",task_id:taskId,
+  method:"tools/call",tool_name:"list_supported_models",content:a.content,sha256:a.sha256};
+ a.capture_id=receipt.id;delete a.content;delete a.sha256;delete a.provenance;
+ const calls=[],sql=async(q,args)=>{calls.push({q,args});
+  if(q===TASK_READ_SQL)return fakeTask;
+  if(q===CAPTURE_READ_SQL)return {rows:[receipt]};
+  if(q===TASK_SUBMIT_SQL)return {id:"22222222-2222-4222-8222-222222222222",
+   repository_key:repo,state:"READY_FOR_REVIEW"};
+  throw Error("Unexpected DB operation")};
+ const validated=await taskAgentAction("/v3/task/validate",request("/v3/task/validate",x),sql,
+  {validateSubmission,githubVerify:async()=>true,criteria:TASK_CRITERIA});
+ assert.equal(validated.data.valid,true,JSON.stringify(validated.data.errors));
+ const submitted=await taskAgentAction("/v3/task/submit",request("/v3/task/submit",x),sql,
+  {validateSubmission,githubVerify:async()=>true,criteria:TASK_CRITERIA});
+ assert.equal(submitted.status,200,JSON.stringify(submitted.data));
+ assert.equal(submitted.data.stage,"READY_FOR_REVIEW");
+ const insert=calls.find(c=>c.q===TASK_SUBMIT_SQL);
+ assert.ok(insert);
+ const persisted=JSON.parse(insert.args[10]).evidence_artifacts.find(a=>a.id==="raw-tool");
+ assert.equal(persisted.content,receipt.content);
+ assert.equal(persisted.sha256,receipt.sha256);
+ assert.equal(persisted.capture_id,receipt.id);
+ assert.deepEqual(calls.map(x=>x.q).filter(q=>q===TASK_SUBMIT_SQL),[TASK_SUBMIT_SQL]);
 });

@@ -71,7 +71,7 @@ export function validateSubmission(data, reviewerId) {
  "READY_FOR_REVIEW":"NEEDS_EVIDENCE";
  const sanitized={cohort_id,repository_key,report,agent_tasks,recommendations,summary,contact_route,source_binding};
  const content=stable(sanitized);
- if(Buffer.byteLength(content)>340000||/\b(?:sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{20,}|-----BEGIN PRIVATE KEY-----)\b/.test(content))fail("sensitive_or_oversize_payload");
+ if(Buffer.byteLength(content)>3000000||/\b(?:sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{20,}|-----BEGIN PRIVATE KEY-----)\b/.test(content))fail("sensitive_or_oversize_payload");
  return {submission_sha256:sha(content),repository_key,cohort_id,report,agent_tasks,recommendations,summary,contact_route,source_binding,decisive,verifiedTasks,stage,assessor_id:reviewerId,assessor_organization:assessor.organization,source_revision:target.source_revision,observed_version:target.observed_version,endpoint:target.endpoint||""};
 }
 function authorized(req,hash){const s=req.headers.get("authorization")||"";

@@ -11,7 +11,7 @@ const sha=x=>createHash("sha256").update(x).digest("hex");
 function error(code){const e=new Error(code);e.code=code;throw e;}
 async function jsonBody(req){
  const raw=await req.text();
- if(Buffer.byteLength(raw)>340000)error("payload_too_large");
+ if(Buffer.byteLength(raw)>1800000)error("payload_too_large");
  try{return JSON.parse(raw)}catch{error("malformed_json")}
 }
 const txt=(x,max=160)=>typeof x==="string"&&x.trim().length>0&&x.length<=max;
@@ -133,7 +133,18 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
    const ids=[...new Set((Array.isArray(payload?.evidence_artifacts)?payload.evidence_artifacts:[])
     .map(a=>a?.capture_id).filter(validCaptureId))].slice(0,100);
    const captureRows=ids.length?(await sql(CAPTURE_READ_SQL,[digest,task.id,ids]))?.rows||[]:[];
-   const result=preflightAssessment(payload,{
+   // Server-issued observations can be referenced by receipt ID rather than
+   // repeatedly pasting raw tool frames into the Agent's context and HTTP body.
+   // A supplied hash/content is NEVER replaced, so a tampered receipt still fails.
+   const receipts=new Map(captureRows.map(row=>[row.id,row]));
+   const hydrated={...payload,evidence_artifacts:Array.isArray(payload?.evidence_artifacts)?
+     payload.evidence_artifacts.map(a=>{
+       const receipt=a?.capture_id&&receipts.get(a.capture_id);
+       if(!receipt||a?.kind!=="trace")return a;
+       return {...a,content:a.content??receipt.content,sha256:a.sha256??receipt.sha256,
+         provenance:a.provenance??"ARE server-origin immutable observation"};
+     }):payload?.evidence_artifacts};
+   const result=preflightAssessment(hydrated,{
      taskId:task.id,captures:captureRows,
      assigneeId:task.assignee_id,organization:task.assessor_organization,
      repositoryKey:task.repository_key,expectedEndpoint:task.endpoint.url,
@@ -146,11 +157,11 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
       payload.test_metadata.minutes_used>observed+10)
      result.warnings.push({path:"test_metadata.minutes_used",code:"elapsed_time_claim_exceeds_server_window",
       message:"Reported test duration exceeds the task's server-observed lifetime; preserve timeline evidence for reviewer"});
-   return result;
+   return {result,hydrated};
  };
  if(path==="/v3/task/validate"&&req.method==="POST"){
    const payload=await jsonBody(req);
-   const result=await runPreflight(payload);
+   const {result}=await runPreflight(payload);
    // No SQL INSERT/UPDATE, no revision slot consumed. Only the task read above is authorized.
    return {status:200,data:{ok:true,...result,
     server_elapsed_minutes:Math.max(0,Math.round((Date.now()-new Date(task.created_at).getTime())/60000)),
@@ -178,27 +189,27 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
  }
  if(path==="/v3/task/submit"&&req.method==="POST"){
   const input=await jsonBody(req);
-  const preflight=await runPreflight(input);
+  const {result:preflight,hydrated}=await runPreflight(input);
   if(!preflight.valid)return {status:422,data:{ok:false,error:"assessment_preflight_failed",
     issues:preflight.errors,warnings:preflight.warnings,metrics:preflight.metrics,
     hint:"Call are_validate_assessment; correct evidence without consuming formal submission slots"}};
   const {validateCoverage}=await import("./pipeline-service.mjs");
-  if(!input||!input.test_metadata||!Number.isInteger(input.test_metadata.discovered_tool_count)||
-     !Number.isInteger(input.test_metadata.minutes_used)||
-     input.test_metadata.minutes_used<0||input.test_metadata.minutes_used>1440)
+  if(!hydrated||!hydrated.test_metadata||!Number.isInteger(hydrated.test_metadata.discovered_tool_count)||
+     !Number.isInteger(hydrated.test_metadata.minutes_used)||
+     hydrated.test_metadata.minutes_used<0||hydrated.test_metadata.minutes_used>1440)
     error("missing_full_test_metadata");
-  const coverage=validateCoverage(input.tool_coverage,input.test_blockers,input.test_metadata.discovered_tool_count);
+  const coverage=validateCoverage(hydrated.tool_coverage,hydrated.test_blockers,hydrated.test_metadata.discovered_tool_count);
   if(coverage.total===0&&input.report?.target?.endpoint&&!(
     (task.auth_mode==="OAUTH"||input.test_metadata?.auth_mode==="OAUTH")&&
     input.test_blockers?.some(x=>x.cause==="OAUTH")&&
     input.agent_tasks?.some(x=>x.status==="BLOCKED_AUTH")
   ))error("tool_discovery_missing");
   const elapsed=Math.max(0,Math.round((Date.now()-new Date(task.created_at).getTime())/60000));
-  const extended={...input,summary:preflight.normalized_summary,report:{...input.report,
+  const extended={...hydrated,summary:preflight.normalized_summary,report:{...hydrated.report,
     integrity_readiness:preflight.readiness,integrity_metrics:preflight.metrics.semantic,
-    evidence_artifacts:input.evidence_artifacts,
-    test_metadata:{...input.test_metadata,server_observed_minutes:elapsed},tool_coverage:input.tool_coverage,
-    test_blockers:input.test_blockers}};
+    evidence_artifacts:hydrated.evidence_artifacts,
+    test_metadata:{...hydrated.test_metadata,server_observed_minutes:elapsed},tool_coverage:hydrated.tool_coverage,
+    test_blockers:hydrated.test_blockers}};
   const assessment=validateSubmission(extended,task.assignee_id);
   if(assessment.repository_key!==task.repository_key||assessment.cohort_id!==task.cohort_id||
       assessment.assessor_organization!==task.assessor_organization)error("task_scope_mismatch");

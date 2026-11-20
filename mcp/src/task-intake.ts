@@ -5,6 +5,7 @@ const ENDPOINT="https://br-raspy-hat-b96bluqn-areintake.compute.c-7.eu-central-1
 const TOKEN_PATTERN=/^aret_[A-Za-z0-9_-]{43}$/;
 const TASK_READONLY={readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false} as const;
 const TASK_SUBMISSION={readOnlyHint:false,destructiveHint:false,idempotentHint:true,openWorldHint:false} as const;
+const TASK_CAPTURE={readOnlyHint:false,destructiveHint:false,idempotentHint:false,openWorldHint:false} as const;
 type TaskData=Record<string,unknown>;
 const token=z.string().regex(TOKEN_PATTERN).describe("Task-specific scoped token from the ARE task draw page; never pass Owner Token");
 function ok(data:TaskData){return {content:[{type:"text" as const,text:JSON.stringify(data,null,2)}],structuredContent:data};}
@@ -14,7 +15,7 @@ export async function callTaskApi(
   taskToken:string, payload:TaskData={},requestFetch:typeof fetch=fetch
 ):Promise<{ok:boolean;data:TaskData}>{
  if(!TOKEN_PATTERN.test(taskToken))return {ok:false,data:{error:"invalid_task_token"}};
- if(JSON.stringify(payload).length>340000)return {ok:false,data:{error:"payload_too_large"}};
+ if(Buffer.byteLength(JSON.stringify(payload))>1800000)return {ok:false,data:{error:"payload_too_large"}};
  try{
   const response=await requestFetch(ENDPOINT+path,{
     method:"POST",
@@ -73,9 +74,9 @@ export function registerTaskTools(server:McpServer):void{
   title:"Capture an independently observed read-only MCP response from a screened target",
   description:"ARE's server calls the task's already-screened PUBLIC HTTPS MCP (NO auth tokens or arbitrary URLs). tools/list is always allowed; tools/call requires human-approved safe testing, verified readOnlyHint=true, destructiveHint=false and openWorldHint=false, and excludes write-like names. Returns one scoped immutable server-origin raw request/response artifact with content SHA-256 and capture_id. This writes only a private observation to Neon; the target call is read-only by screened tool contract, not guaranteed safe if vendor metadata lies. Strict quotas. For OAuth or STDIO, use the Agent host to capture raw frames and clearly label them unverified until manual review.",
   inputSchema:z.object({task_token:token,method:z.enum(["tools/list","tools/call"]),
-    tool_name:z.string().max(128).optional(),arguments:z.record(z.string(),z.unknown()).optional(),
+    tool_name:z.string().max(128).optional(),cursor:z.string().min(1).max(500).optional(),arguments:z.record(z.string(),z.unknown()).optional(),
     user_authorized:z.boolean().optional()}),
-  annotations:TASK_SUBMISSION
+  annotations:TASK_CAPTURE
  },async ({task_token,...fields})=>request("/v3/task/capture",task_token,fields));
 
  server.registerTool("are_validate_assessment",{

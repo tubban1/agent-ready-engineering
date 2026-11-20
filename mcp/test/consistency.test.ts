@@ -1,6 +1,7 @@
 // M1 consistency test: data/*.yaml must match the canonical Markdown, and every
 // Chinese reading aid must track the current English version.
 import { test } from "node:test";
+import { execFileSync } from "node:child_process";
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -71,7 +72,16 @@ function markdownFiles(dir: string): string[] {
 }
 
 test("every Chinese reading aid tracks the current English version", () => {
-  const zhFiles = markdownFiles(REPO_ROOT).filter((f) => f.endsWith(".zh.md"));
+  // Ignore scratch notes and other untracked workbench material; repository
+  // consistency checks must be reproducible across a clean CI checkout.
+  let files: string[];
+  try {
+    files = execFileSync("git", ["ls-files", "-z", "--", "*.md"],
+      { cwd: REPO_ROOT, encoding: "utf8" }).split("\0").filter(Boolean);
+  } catch {
+    files = markdownFiles(REPO_ROOT);
+  }
+  const zhFiles = files.filter((f) => !f.split("/").includes("archive") && f.endsWith(".zh.md"));
   assert.ok(zhFiles.length > 0);
   for (const zh of zhFiles) {
     const en = zh.replace(/\.zh\.md$/, ".md");

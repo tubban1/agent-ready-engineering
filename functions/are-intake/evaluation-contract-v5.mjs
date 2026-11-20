@@ -72,13 +72,33 @@ function checkIndependentOracle(a,refs){
 }
 // Avoid treating the project as "N/A" merely because a fact has not been tested.
 function discoveryTools(refs,endpoint){
- for(const a of refs.values()){
-  if(!isRawCapture(a,{method:"tools/list"}))continue;
-  const c=parsed(a.content);
-  if(endpoint&&c.endpoint!==endpoint)continue;
-  if(Array.isArray(c.response?.result?.tools))return {artifact:a,tools:c.response.result.tools};
+ const pages=[...refs.values()].filter(a=>isRawCapture(a,{method:"tools/list"})).map(artifact=>({artifact,raw:parsed(artifact.content)}))
+  .filter(x=>!endpoint||x.raw.endpoint===endpoint);
+ const first=pages.find(x=>!x.raw.request?.params?.cursor);
+ if(!first)return null;
+ const tools=[],artifacts=[],visited=new Set(),names=new Set();
+ let current=first,complete=true;
+ for(let i=0;i<100;i++){
+  if(!current||visited.has(current.artifact.id)){complete=false;break}
+  visited.add(current.artifact.id);artifacts.push(current.artifact);
+  const result=current.raw.response?.result;
+  if(!Array.isArray(result?.tools)){complete=false;break}
+  for(const tool of result.tools){
+   if(!nonblank(tool?.name,1,160)||names.has(tool.name)||
+      !record(tool.inputSchema)){complete=false}
+   if(nonblank(tool?.name,1,160))names.add(tool.name);
+   tools.push(tool);
+  }
+  const cursor=result.nextCursor;
+  if(cursor===undefined||cursor===null||cursor==="")break;
+  if(!nonblank(cursor,1,500)){complete=false;break}
+  const matching=pages.filter(x=>x.raw.request?.params?.cursor===cursor);
+  if(!matching.length){complete=false;break}
+  current=matching.find(x=>!visited.has(x.artifact.id));
+  if(!current){complete=false;break}
+  if(i===99)complete=false;
  }
- return null;
+ return {artifact:first.artifact,artifacts,tools,complete};
 }
 function factValue(name,data,refs,issue){
  const count=data.test_metadata?.discovered_tool_count;
@@ -135,6 +155,72 @@ function applicability(rule,data,refs,issue){
   if(pass===false)return {known:true,applies:false,fact:c.fact};
  }
  return unknown?{known:false,applies:false}:{known:true,applies:true};
+}
+// Bind decisive measurements to fields in the ACTUAL wire response, rather than
+// accepting assessor-provided metric values paired with an unrelated trace.
+// For semantic criteria this proves the asserted facts were observed, not that
+// the assessor chose the right test; reviewers still adjudicate that relevance.
+function measuredCriterion(rule,observation,samples,refs,discovery,issue,path){
+ if(rule.id==="MCP-L1-V4"){
+  if(!discovery||!discovery.complete){
+   issue(path,"incomplete_native_discovery","Collect every tools/list page through nextCursor before scoring native inventory");
+   return null;
+  }
+  if(observation.evidence_ref!==discovery.artifact.id||
+     discovery.artifacts.some(a=>!samples.some(s=>s.trace_ref===a.id))){
+   issue(path,"inventory_pages_not_bound","Inventory measurement and samples must cite all original tools/list pages");
+   return null;
+  }
+  return {value:true};
+ }
+ const numerical=typeof rule.pass_if.value==="number";
+ let valid=true;
+ const measured=[];
+ for(let i=0;i<samples.length;i++){
+  const sample=samples[i],p=path+".samples["+i+"]";
+  if(!record(sample)||sample.criterion_id!==rule.id||
+     !nonblank(sample.case_label,8,240)||!nonblank(sample.expected_source,8,800)){
+   issue(p,"unattributed_criterion_test","Name the criterion, actual test case and independent expected source for each sample");
+   valid=false;continue;
+  }
+  const trace=refs.get(sample.trace_ref),raw=trace&&parsed(trace.content);
+  if(!isRawCapture(trace)){valid=false;continue}
+  if(numerical){
+   if(rule.id==="MCP-L2-X4"&&(!/(?:^|[\/#])(?:output_tokens|token_count|tokens)$/.test(sample.numeric_pointer||"")||
+      !nonblank(sample.tokenizer_id,4,200))){
+    issue(p+".numeric_pointer","token_measurement_not_instrumented","A raw token-count field and identified tokenizer are required; arbitrary numeric fields do not measure token output");
+    valid=false;continue;
+   }
+   const measurement=fromPointer(raw.response,sample.numeric_pointer);
+   if(!measurement.valid||typeof measurement.value!=="number"||!Number.isFinite(measurement.value)||
+      measurement.value<0){
+    issue(p+".numeric_pointer","raw_numeric_measurement_missing","Numerical metrics must extract a finite nonnegative measurement from the raw response");
+    valid=false;
+   }else measured.push(measurement.value);
+  }else{
+   if(!Array.isArray(sample.assertions)||sample.assertions.length===0||sample.assertions.length>20){
+    issue(p+".assertions","raw_assertion_missing","Boolean criteria need one or more raw response field assertions per test case");
+    valid=false;continue;
+   }
+   let passed=true;
+   for(const [n,a] of sample.assertions.entries()){
+    const actual=fromPointer(raw.response,a?.pointer);
+    if(!actual.valid||!["eq","gte","lte","contains","exists"].includes(a?.operator)||
+       (a.operator!=="exists"&&(!["boolean","string","number"].includes(typeof a.expected)||a.expected===null))){
+     issue(p+".assertions["+n+"]","raw_assertion_uncheckable","Use a real raw response pointer, supported comparison and explicit expected scalar");
+     valid=false;continue;
+    }
+    const outcome=a.operator==="contains"?typeof actual.value==="string"&&
+      typeof a.expected==="string"&&actual.value.includes(a.expected):
+      a.operator==="exists"?actual.value!==undefined:
+      operators[a.operator]?.(actual.value,a.expected)===true;
+    passed=passed&&outcome;
+   }
+   measured.push(passed);
+  }
+ }
+ if(!valid||measured.length!==samples.length||!measured.length)return null;
+ return {value:numerical?Math.max(...measured):measured.every(Boolean)};
 }
 function checkToolRow(row,i,refs,issue,raw){
  const path="tool_coverage["+i+"]";
@@ -237,6 +323,16 @@ export function validateV5(data,{expectedEndpoint="",taskId="",captures=[]}={}){
      if(unique.has(ref))issue(path+".samples","criterion_duplicate_samples","Minimum sample count cannot be satisfied with repeated reference");
      unique.add(ref);
     }
+    if(!samples.some(s=>s.trace_ref===f.evidence_ref)||
+       !samples.some(s=>s.trace_ref===observed?.evidence_ref)){
+     issue(path+".samples","decisive_trace_not_sampled","Finding and metric evidence must link to an actual scored sample, not an unrelated trace");
+    }
+    if(record(observed)){
+     const measured=measuredCriterion(rule,observed,samples,refs,discovery,issue,path);
+     if(measured&&observed.value!==measured.value)
+      issue(path+".observation.value","measurement_not_derived_from_raw",
+        "Observed metric must equal the value recalculated from raw sample response fields");
+    }
    }
   }
   if(f.status==="NOT_TESTED"&&!nonblank(f.reason,8,500))
@@ -293,7 +389,7 @@ export function v5EvidenceGuide(){
    default_finding_status:"NOT_TESTED",
    task_scope:"Task Token is supplied only to the ARE MCP, never to the evaluated project.",
    facts:"test_metadata.applicability_facts: {fact:{value:boolean|integer,evidence_ref:attached_raw_trace_id}}. Unknown applicability MUST use UNKNOWN/NOT_TESTED, never automatic N/A.",
-   findings:"For PASS/FAIL, supply {check_id,status,evidence_ref,observation:{metric:<exact pass_if.metric>,value:<observed_value>,evidence_ref:<trace_id>},samples:[{trace_ref:<raw_trace_id>}...]}. Minimum sample count from are_get_criteria. For N/A supply reason + known false applies_when fact with trace.",
+   findings:"For PASS/FAIL, supply exact pass_if.metric and observation.value plus raw trace samples. MCP-L1-V4 is recomputed from complete, unique, schema-valid tools/list pages (including nextCursor). Other boolean metrics require samples [{trace_ref,criterion_id,case_label,expected_source,assertions:[{pointer,operator,expected}]}] where pointer extracts an actual response field and computed all-assertion truth equals observation.value. Numeric metrics use samples [{trace_ref,criterion_id,case_label,expected_source,numeric_pointer,tokenizer_id}] with observed.value equal to maximum raw extracted number; output-token count must point to an actual token_count/output_tokens/tokens field, never a generic total. For N/A supply reason + known false applies_when fact with trace. Each sample must be distinct; expected_source must be separately defensible in review.",
    trace:{id:"raw-t1",kind:"trace",sha256:"SHA256_OF_EXACT_UTF8_CONTENT",
      provenance:"Agent host captured native MCP frames; verification pending",
      content:traceContent},
@@ -308,7 +404,8 @@ export function v5EvidenceGuide(){
    agent_task_artifact:"agent_task artifact content JSON must contain steps:[{trace_ref:'raw-t1'}] pointing to raw tool call evidence",
    source_binding:"Set verified=false and record the provider's published endpoint/source association plus uncertainty. Do not claim verified=true from README, STDIO forwarding, or self-asserted signatures; only a separate trusted deployment-verifier can establish it.",
    accepted_oracle_methods:["external_source","known_fixture","state_readback","independent_calculation"],
-   cannot_prove:"Agent-authored JSON plus SHA-256 is not an independent network trace. ARE-assisted capture can independently attest no-auth read-only observations. OAuth/STDIO traces require human adjudication.",
+   cannot_prove:"Raw field assertions can be recomputed, but ARE cannot automatically determine if a chosen case covers every semantic requirement or verify external expected truth. Agent-authored JSON plus SHA-256 is not an independent network trace. ARE-assisted capture can independently attest no-auth read-only observations. OAuth/STDIO and source build provenance require human adjudication.",
+   server_captures:"For server-origin trace artifacts, send {id,kind:\"trace\",capture_id} instead of repeating content; the service resolves immutable content/hash/provenance within the assigned task. Client captures require full content and SHA-256. Single raw capture maximum 70 KB; keep entire submission below 1.8 MB.",
    review:"Valid=true means structurally reproducible. READY_FOR_REVIEW is private, not independent certification or authorization for outreach. An Owner must inspect and approve evidence.",
    safety:"Never embed bearer/OAuth token, cookie, credentials, personal data, authorization headers or secrets in artifacts; redact before attaching."};
 }
