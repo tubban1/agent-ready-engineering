@@ -1,6 +1,6 @@
 // Dual-era MCP Streamable HTTP entry, 2026-07-28 + legacy 2025 clients.
 // Official v2 SDK owns server/discover, per-request metadata validation and result codecs.
-// Source of truth remains createServer(): public entry never receives a local workspace.
+// Source of truth remains createServer(): no local workspace, task submission requires scoped per-task Token.
 import { createMcpHandler, originValidationResponse } from "@modelcontextprotocol/server";
 import { createServer } from "./server.js";
 

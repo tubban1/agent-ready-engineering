@@ -4,6 +4,9 @@
  */
 import {createHash,timingSafeEqual} from "node:crypto";
 import {ownerPage} from "./owner-page.mjs";
+import {taskBoardPage} from "./task-board.mjs";
+import {TASK_CRITERIA} from "./criteria-compact.mjs";
+import {taskOwnerAction,taskAgentAction} from "./task-service.mjs";
 
 export const PRODUCT_CHECKS = Object.freeze("MCP-L1-V4 MCP-L1-C1 MCP-L2-C1 MCP-L2-C2 MCP-L2-X1 MCP-L2-X2 MCP-L2-X3 MCP-L2-X4 MCP-L2-A1 MCP-L2-A2 MCP-L2-I1 MCP-L2-O1 MCP-L2-O2 MCP-L3-C1 MCP-L3-C2 MCP-L3-C3 MCP-L3-C4 MCP-L3-S1 MCP-L3-S2 MCP-L3-S3 MCP-L3-S4 MCP-L3-A2 MCP-L3-A3 MCP-L3-A4 MCP-L3-O1 MCP-L3-O2 MCP-L4-O1 MCP-L4-O2 MCP-L4-I1 MCP-L4-I2 MCP-L4-R1 MCP-L4-R4".split(" "));
 const STATES=new Set(["PASS","FAIL","UNKNOWN","NOT_TESTED","NOT_APPLICABLE","BLOCKED_AUTH","NOT_ASSESSED","ADVISORY_ONLY"]);
@@ -138,9 +141,12 @@ export function makeHandler({sql=neonSql,githubVerify=verifiedGitHubSha,env=proc
      "Access-Control-Allow-Headers":"Authorization, Content-Type, X-ARE-Reviewer",
      "Access-Control-Allow-Methods":"GET, POST, OPTIONS","Cache-Control":"no-store"}});
    if(req.method==="GET"&&path==="/v1/health")return response(req,200,{ok:true,service:"are-private-intake",public_reports:0});
-   if(req.method==="GET"&&path==="/v1/owner")return new Response(ownerPage(),{status:200,headers:{
+   if(req.method==="GET"&&path==="/v1/owner")return new Response(ownerPage().replace("</h1>","</h1><p><a href=\"/v1/tasks/board\">前往任务分配中心</a></p>"),{status:200,headers:{
      "Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store","X-Content-Type-Options":"nosniff",
      "X-Frame-Options":"DENY","Content-Security-Policy":"default-src 'none'; base-uri 'none'; form-action 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'"}});
+   if(req.method==="GET"&&path==="/v1/tasks/board")return new Response(taskBoardPage(),{status:200,headers:{
+     "Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store","X-Content-Type-Options":"nosniff",
+     "X-Frame-Options":"DENY","Content-Security-Policy":"default-src 'none'; base-uri 'none'; form-action 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'" }});
    const owner=authorized(req,env.ARE_INTAKE_OWNER_HASH);
    let reviewers={};
    try{reviewers=JSON.parse(env.ARE_INTAKE_REVIEWERS_JSON||"{}")}catch{}
@@ -163,8 +169,20 @@ export function makeHandler({sql=neonSql,githubVerify=verifiedGitHubSha,env=proc
          stage:row.state,idempotency_sha256:data.submission_sha256,private:true,public_release_authorized:false});
      }catch(e){const code=e.code||"invalid_submission";return response(req,400,{error:code});}
    }
+   if(path.startsWith("/v1/task/")){
+     try{
+       const result=await taskAgentAction(path,req,sql,{validateSubmission,githubVerify,criteria:TASK_CRITERIA});
+       return response(req,result.status,result.data);
+     }catch(e){
+       return response(req,e.code?400:503,{error:e.code||"task_service_unavailable"});
+     }
+   }
    if(!owner)return response(req,401,{error:"owner_token_required"});
    try{
+     if(path.startsWith("/v1/tasks")){
+       const result=await taskOwnerAction(path,req,sql);
+       return response(req,result?200:404,result||{error:"not_found"});
+     }
      if(req.method==="GET"&&path==="/v1/inbox"){
        const data=await sql(QUEUE_SQL);return response(req,200,{ok:true,private:true,...data});
      }
