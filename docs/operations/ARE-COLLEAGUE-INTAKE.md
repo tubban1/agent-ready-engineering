@@ -2,6 +2,10 @@
 
 **Status:** working internal pilot, 20 November 2026. This is not certification or permission to publish new third-party reviews.
 
+## Preferred workflow: ARE Task Center (2026-11-20)
+
+For new assignments use [ARE Task Center](https://are.world2.co/tasks/) instead of provisioning general colleague reviewer tokens or requiring the Python CLI. Each assignment issues a revocable, expiring, repository-scoped Token that the colleague may paste into their own Agent prompt; `are_get_task`, `are_get_criteria`, `are_submit_assessment`, and `are_get_submission` call this same private Neon intake directly through the existing ARE MCP endpoint. The original CLI and owner inbox below remain compatible. Details: [ARE-TASK-CENTER.md](ARE-TASK-CENTER.md).
+
 ## Goal
 
 An independent coworker/Agent can select an existing public open-source World2/ARE catalog project, collect evidence, calculate all 32 product-side pilot findings, and **submit directly into private Neon tables**. The owner sees an authenticated outreach queue and drafts an email; no manual JSON import or per-PR approval. Owner approval in chat is still required for the **first public release** of a new independent third-party evaluation.

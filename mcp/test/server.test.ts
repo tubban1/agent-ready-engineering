@@ -28,16 +28,20 @@ test("exposes framework tools, local self-audit guidance and explicit opt-in rem
   assert.deepEqual(tools.map((t) => t.name).sort(), [
     "are_evidence_request",
     "are_get_check",
+    "are_get_criteria",
     "are_get_document",
+    "are_get_submission",
+    "are_get_task",
     "are_get_template",
     "are_list_checks",
     "are_list_documents",
     "are_local_mcp_audit_guide",
     "are_score_mcp",
     "are_search",
+    "are_submit_assessment"
   ]);
   for (const t of tools) {
-    assert.equal(t.annotations?.readOnlyHint, t.name !== "are_score_mcp", t.name);
+    assert.equal(t.annotations?.readOnlyHint, !["are_score_mcp","are_submit_assessment"].includes(t.name), t.name);
     assert.equal(t.annotations?.destructiveHint, false, t.name);
     if (t.name === "are_score_mcp") assert.equal(t.annotations?.openWorldHint, true);
     assert.ok((t.description ?? "").length > 40, `${t.name} has a description`);
