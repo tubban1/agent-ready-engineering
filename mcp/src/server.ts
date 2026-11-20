@@ -25,7 +25,7 @@ import { reviewRiskProfile } from "./risk-profile.js";
 import {registerTaskTools} from "./task-intake.js";
 
 export const SERVER_NAME = "are";
-export const SERVER_VERSION = "0.14.0";
+export const SERVER_VERSION = "0.15.0";
 
 const BASE_INSTRUCTIONS = [
   "ARE (Agent-Ready Engineering): knowledge tools are read-only; are_score_mcp accepts ONLY a publicly reachable HTTPS MCP Endpoint and saves an evidence-scoped preliminary report after a successful live tools/list. It never certifies L0-L4 or executes external business operations.",
@@ -36,7 +36,7 @@ const BASE_INSTRUCTIONS = [
   "English is canonical; lang=zh returns Chinese reading aids with zh_outdated when they lag behind English.",
   "Cite document and check IDs (e.g. ARE-A02, L3-A2) in answers.",
   "Workflow prompts — consultants: are_screen_scenarios, are_interview_guide, are_assess_scenario, are_portfolio_report; implementation: are_quick_triage, are_capability_inventory, are_operation_contract; governance: are_authorization_review; decision makers: are_decision_brief.",
-  "For an explicitly assigned private independent assessment, use are_get_task then are_get_criteria (offsets 0,8,16,24), save per-tool work via are_checkpoint, preflight exact 32 criteria and primary artifacts via read-only are_validate_assessment until valid, then are_submit_assessment and are_get_submission; show canonical_report from the stored receipt with only the task-scoped Token. NEVER use the Owner Token, publish third-party findings, claim certification, or execute unapproved third-party writes.",
+  "For an explicitly assigned private independent assessment, use are_get_task then are_get_criteria (offsets 0,8,16,24), save per-tool work via are_checkpoint, read strict V5 schema via are_get_evidence_contract, capture safe raw responses via are_capture_readonly, preflight exact 32 criteria and primary artifacts via read-only are_validate_assessment until valid, then are_submit_assessment and are_get_submission; show canonical_report from the stored receipt with only the task-scoped Token. NEVER use the Owner Token, publish third-party findings, claim certification, or execute unapproved third-party writes.",
 ];
 
 const WORKSPACE_INSTRUCTIONS = [

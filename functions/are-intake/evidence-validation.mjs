@@ -1,6 +1,7 @@
 // ARE assessment preflight: deterministic, read-only and free of database writes.
 // Evidence here is assessor supplied, NOT externally attested by ARE.
 import {createHash} from "node:crypto";
+import {validateV5,EVIDENCE_PROTOCOL} from "./evaluation-contract-v5.mjs";
 const HEX=/^[a-f0-9]{64}$/;
 const CHECKS=new Set("MCP-L1-V4 MCP-L1-C1 MCP-L2-C1 MCP-L2-C2 MCP-L2-X1 MCP-L2-X2 MCP-L2-X3 MCP-L2-X4 MCP-L2-A1 MCP-L2-A2 MCP-L2-I1 MCP-L2-O1 MCP-L2-O2 MCP-L3-C1 MCP-L3-C2 MCP-L3-C3 MCP-L3-C4 MCP-L3-S1 MCP-L3-S2 MCP-L3-S3 MCP-L3-S4 MCP-L3-A2 MCP-L3-A3 MCP-L3-A4 MCP-L3-O1 MCP-L3-O2 MCP-L4-O1 MCP-L4-O2 MCP-L4-I1 MCP-L4-I2 MCP-L4-R1 MCP-L4-R4".split(" "));
 const TERMINAL=new Set(["PASS","FAIL","NOT_APPLICABLE","BLOCKED_AUTH","UNKNOWN","NOT_TESTED","NOT_ASSESSED"]);
@@ -39,7 +40,7 @@ export function renderStructuredReport(data,metrics){
  lines.push("","**Evidence integrity:** attached references are checked for consistency; independent provenance and business truth require human inspection.");
  return lines.join("\n");
 }
-export function preflightAssessment(data,{assigneeId,organization,repositoryKey,expectedEndpoint="",authMode="UNKNOWN",baseValidate=null}={}){
+export function preflightAssessment(data,{assigneeId,organization,repositoryKey,expectedEndpoint="",authMode="UNKNOWN",taskId="",captures=[],baseValidate=null}={}){
  const errors=[],warnings=[];const issue=(path,code,message,severity="error")=>(severity==="error"?errors:warnings).push({path,code,message});
  if(!data||typeof data!=="object"||Array.isArray(data))return {valid:false,errors:[{path:"$",code:"invalid_package",message:"Expected a JSON object"}],warnings:[],metrics:null,report_preview:null};
  if(data.repository_key!==repositoryKey)issue("repository_key","wrong_project","Assessment must use the assigned repository");
@@ -133,7 +134,11 @@ export function preflightAssessment(data,{assigneeId,organization,repositoryKey,
  if(Number.isFinite(data.test_metadata?.server_observed_minutes)&&
    data.test_metadata.minutes_used>data.test_metadata.server_observed_minutes+10)
    issue("test_metadata.minutes_used","elapsed_time_discrepancy","Reported elapsed time exceeds server observed task duration; investigate before approval","warning");
+ const verified=validateV5(data,{expectedEndpoint,taskId,captures});
+ errors.push(...verified.errors);warnings.push(...verified.warnings);
+ metrics.semantic=verified.metrics;
  const package_sha256=sha(canonical(data));
- return {valid:errors.length===0,errors,warnings,metrics,normalized_summary,report_preview,package_sha256,
+ return {valid:errors.length===0,errors,warnings,metrics,readiness:verified.readiness,
+   evidence_protocol:EVIDENCE_PROTOCOL,normalized_summary,report_preview,package_sha256,
   private:true,public_release_authorized:false,provenance:"ASSESSOR_DECLARED_REQUIRES_HUMAN_INSPECTION"};
 }

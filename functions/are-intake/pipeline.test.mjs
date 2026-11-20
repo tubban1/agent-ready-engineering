@@ -102,7 +102,8 @@ test("task-only credential cannot read owner verification, release or other task
  }
 });
 test("owner verified review requires actual complete tool inventory; draft remains private",async()=>{
- const calls=[],report={runs:[{id:uid,state:"READY_FOR_OUTREACH",decisive_count:1,verified_task_count:1,
+ const calls=[],report={runs:[{id:uid,state:"READY_FOR_REVIEW",decisive_count:1,verified_task_count:1,
+  integrity_readiness:"READY_FOR_REVIEW",integrity_metrics:{raw_agent_tasks:1,raw_tool_traces:1},
   tool_coverage:[{name:"get",status:"PASS",oracle_ref:"source-oracle"}],
   blockers:[],test_metadata:{discovered_tool_count:1},
   findings:PRODUCT_CHECKS.map(check_id=>({check_id,status:"NOT_APPLICABLE"})),

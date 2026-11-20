@@ -25,13 +25,13 @@ export function validateSubmission(data, reviewerId) {
  if(!data||typeof data!=="object"||Array.isArray(data))fail("invalid_submission");
  const {cohort_id,repository_key,report,agent_tasks=[],recommendations=[],summary="",contact_route={},source_binding={}}=data;
  if(cohort_id!=="ARE100-VALUE-20261115"||!REPO.test(repository_key||"")||repository_key.length>160)fail("not_catalog_target");
- if(!report||report.schema!=="are.assessment.result.v1"||report.mode!=="ARE_INDEPENDENT"||
+ if(!report||report.schema!=="are.assessment.result.v2"||report.mode!=="ARE_INDEPENDENT"||
     report.track!=="product"||report.criteria_version!=="pilot-2026-11-18"||
     report.certification!==false||report.public_release_authorized!==false||
     report.maturity_level!==null)fail("unsupported_assessment");
  const target=report.target,assessor=report.assessor;
  if(!target||target.id!==repository_key||!HASH_SHA.test(target.source_revision||"")||
-    !validText(target.observed_version,150)||["unknown","unverified","not_pinned"].includes(target.observed_version.toLowerCase())||
+    !validText(target.observed_version,150)||["unknown","unverified","not_pinned","replace_with_actually_observed_version"].includes(target.observed_version.toLowerCase())||
     !validText(target.owner_organization,200)||!assessor||
     assessor.id!==reviewerId||!validText(assessor.organization,200)||
     assessor.organization.trim().toLowerCase()===target.owner_organization.trim().toLowerCase())fail("reviewer_or_version_mismatch");
@@ -66,7 +66,9 @@ export function validateSubmission(data, reviewerId) {
  if(!source_binding||typeof source_binding!=="object"||Array.isArray(source_binding)||
     (source_binding.verified===true&&!validText(source_binding.evidence_ref,300)))fail("invalid_source_binding");
  // READY means a staff evidence packet exists, not that the claims are independently certified.
- const stage=decisive>0&&verifiedTasks>0&&source_binding.verified===true ? "READY_FOR_OUTREACH":"NEEDS_EVIDENCE";
+ const stage=decisive>0&&verifiedTasks>0&&report.integrity_readiness==="READY_FOR_REVIEW"&&
+ !["NOT_EXPOSED","AUTH_BLOCKED"].includes(target.observed_version) ?
+ "READY_FOR_REVIEW":"NEEDS_EVIDENCE";
  const sanitized={cohort_id,repository_key,report,agent_tasks,recommendations,summary,contact_route,source_binding};
  const content=stable(sanitized);
  if(Buffer.byteLength(content)>340000||/\b(?:sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{20,}|-----BEGIN PRIVATE KEY-----)\b/.test(content))fail("sensitive_or_oversize_payload");
