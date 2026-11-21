@@ -68,6 +68,24 @@ test("A permitted official sign-in attempt does not prove protected tool tests s
  assert.equal(r.completion.status,"PARTIAL");
  assert.ok(r.completion.reasons.includes("PROVIDER_AUTH_OR_EXECUTION_NOT_COMPLETED"));
 });
+test("Generic local STDIO API-key errors may block the exact tool, never the unrelated remote gateway",()=>{
+ const p=blockedPacket();
+ const toolName="list_supported_models";
+ const request={jsonrpc:"2.0",id:13,method:"tools/call",params:{name:toolName,arguments:{}}};
+ const response={jsonrpc:"2.0",id:13,error:{code:-32000,message:"missing_api_key"}};
+ const content=JSON.stringify({protocol:"mcp.raw-observation.v1",observed_at:"2026-11-21T12:24:00Z",
+   endpoint:"stdio://local-provider",transport:"stdio",request,response,
+   wire_request:JSON.stringify(request),wire_response:JSON.stringify(response)});
+ p.evidence_artifacts.push({id:"stdio-missing-api-key",kind:"trace",content,sha256:sha(content),
+  provenance:"Agent host recorded local original MCP frames pending external attestation"});
+ p.tool_coverage[0].trace_ref="stdio-missing-api-key";
+ p.tool_coverage[0].blocking_scope="TOOL";
+ const allowed=preflightAssessment(p,{...cfg,authorization:{decision:"DECLINED"}});
+ assert.equal(allowed.valid,true,JSON.stringify(allowed.errors));
+ p.tool_coverage[0].blocking_scope="ENDPOINT";
+ const bad=preflightAssessment(p,{...cfg,authorization:{decision:"DECLINED"}});
+ assert.ok(bad.errors.some(x=>x.code==="auth_denial_endpoint_mismatch"));
+});
 test("Human decline still allows an explicit private partial evidence report",()=>{
  const p=blockedPacket(),r=preflightAssessment(p,{...cfg,authorization:{decision:"DECLINED"}});
  assert.equal(r.valid,true,JSON.stringify(r.errors));

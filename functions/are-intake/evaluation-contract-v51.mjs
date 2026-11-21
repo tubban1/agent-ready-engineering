@@ -229,7 +229,7 @@ function authorizationError(capture){
  const obj=raw.response?.error||{};
  const body=JSON.stringify(obj).slice(0,2000);
  const text=(raw.response?.result?.content||[]).map(x=>x?.text||"").join(" ").slice(0,2000);
- return /unauthori[sz]ed|missing[_ -]?(bearer[_ -]?)?token|oauth|bearer|authentication.required|http.?401|api.key.required|credential.required/i.test(body+" "+text);
+ return /unauthori[sz]ed|missing[_ -]?(bearer[_ -]?)?token|oauth|bearer|authentication.required|http.?401|api.key.required|missing.api.key|credential.required/i.test(body+" "+text);
 }
 function checkToolRow(row,i,refs,issue,raw){
  const path="tool_coverage["+i+"]";
@@ -242,8 +242,10 @@ function checkToolRow(row,i,refs,issue,raw){
   if(!authorizationError(t))
    issue(path+".trace_ref","auth_denial_not_observed",
     "BLOCKED_AUTH requires a native tools/call authorization error, not an unrelated trace.");
-  else if(parsed(t.content).endpoint!==raw.endpoint)
-   issue(path+".trace_ref","auth_denial_endpoint_mismatch","Authentication denial must be on the evaluated endpoint.");
+  else if((row.blocking_scope==="ENDPOINT"&&parsed(t.content).endpoint!==raw.endpoint)||
+    (parsed(t.content).endpoint!==raw.endpoint&&parsed(t.content).transport!=="stdio"))
+   issue(path+".trace_ref","auth_denial_endpoint_mismatch",
+    "Gateway-wide denial must originate from the screened endpoint; per-tool STDIO auth denials are allowed only for the exact same native tool name.");
   else if(row.blocking_scope==="TOOL"&&parsed(t.content).request?.params?.name!==row.name)
    issue(path+".trace_ref","tool_auth_trace_name_mismatch",
     "For per-tool auth blocking the trace must call that exact native tool; a different tool's 401 is not evidence.");
