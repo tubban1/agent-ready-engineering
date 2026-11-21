@@ -90,7 +90,7 @@ test("an ineligible, claimed or time-exceeding project cannot issue a second Tok
   max_minutes:90,allow_oauth:true,expires_days:1};
  const r=await api(request("/v3/tasks/issue",owner,obj));
  assert.equal(r.status,409);
- assert.equal((await r.json()).error,"project_not_eligible_already_issued_or_exceeds_test_budget");
+ assert.equal((await r.json()).error,"project_not_eligible_or_quality_source_unverified_or_exceeds_test_budget");
 });
 test("task-only credential cannot read owner verification, release or other tasks",async()=>{
  const api=makeHandler({env,sql:async()=>{throw Error("not authorized")}});

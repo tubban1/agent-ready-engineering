@@ -2,7 +2,9 @@
 const q=(...lines)=>lines.join(" ");
 export const POOL=q(
  "SELECT json_build_object('projects',COALESCE(json_agg(row_to_json(s)),'[]'::json))::text FROM (",
- "SELECT c.repository_key,c.display_name,COALESCE(p.decision,'UNFILTERED') decision,p.reason,p.tool_count,p.auth_mode,p.risk_level,p.priority,p.claimed_task_id,p.runtime_endpoint",
+ "SELECT c.repository_key,c.display_name,COALESCE(p.decision,'UNFILTERED') decision,p.reason,p.tool_count,p.auth_mode,p.risk_level,p.priority,p.claimed_task_id,p.runtime_endpoint,",
+ "p.quality_score,p.quality_breakdown,p.quality_evidence,c.repository_match_verified,c.creator_contact_verified,",
+ "c.repository_match_evidence,c.creator_contact_evidence",
  "FROM are_eval.benchmark_study_candidates c LEFT JOIN are_eval.private_project_pool p ON p.cohort_id=c.cohort_id AND p.repository_key=c.repository_key",
  "WHERE c.cohort_id='ARE100-VALUE-20261115' ORDER BY c.repository_key LIMIT 150) s"
 );
@@ -10,6 +12,9 @@ export const FILTER=q(
  "WITH x AS (INSERT INTO are_eval.private_project_pool",
  "(cohort_id,repository_key,decision,reason,tool_count,auth_mode,risk_level,runtime_endpoint,priority,updated_at)",
  "SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,now() FROM are_eval.benchmark_study_candidates c WHERE c.cohort_id=$1 AND c.repository_key=$2",
+ "AND ($3<>'ELIGIBLE' OR (c.repository_match_verified=true AND EXISTS (",
+ "SELECT 1 FROM are_eval.private_project_pool existing WHERE existing.cohort_id=$1",
+ "AND existing.repository_key=$2 AND existing.quality_score>=75)))",
  "ON CONFLICT (cohort_id,repository_key) DO UPDATE SET",
  "decision=EXCLUDED.decision,reason=EXCLUDED.reason,tool_count=EXCLUDED.tool_count,auth_mode=EXCLUDED.auth_mode,",
  "risk_level=EXCLUDED.risk_level,runtime_endpoint=EXCLUDED.runtime_endpoint,priority=EXCLUDED.priority,updated_at=now()",
@@ -20,6 +25,8 @@ export const ISSUE=q(
  "WITH chosen AS (SELECT p.cohort_id,p.repository_key,p.tool_count,p.auth_mode,p.risk_level,p.runtime_endpoint",
  "FROM are_eval.private_project_pool p WHERE p.cohort_id='ARE100-VALUE-20261115'",
  "AND p.repository_key=$1 AND p.decision='ELIGIBLE' AND p.claimed_task_id IS NULL",
+ "AND p.quality_score>=75 AND EXISTS (SELECT 1 FROM are_eval.benchmark_study_candidates c",
+ "WHERE c.cohort_id=p.cohort_id AND c.repository_key=p.repository_key AND c.repository_match_verified)",
  "FOR UPDATE OF p),",
  "created AS (INSERT INTO are_eval.private_assessment_tasks",
  "(cohort_id,repository_key,title,instructions,assignee_id,assessor_organization,token_sha256,expires_at,plan_snapshot)",
@@ -121,6 +128,7 @@ export const PUBLICATION_APPROVE=q(
 // Tester-facing read model: only screened public repository metadata, never private evidence or tokens.
 export const PUBLIC_POOL=q(
  "WITH x AS (SELECT p.repository_key,c.display_name,p.tool_count,p.auth_mode,p.risk_level,p.priority,p.runtime_endpoint,",
+ "p.quality_score,c.repository_match_verified,c.creator_contact_verified,",
  "CASE WHEN EXISTS (SELECT 1 FROM are_eval.private_task_submissions s",
  "JOIN are_eval.private_review_verdicts v ON v.run_id=s.run_id",
  "JOIN are_eval.private_assessment_tasks completed ON completed.id=s.task_id",
@@ -131,7 +139,8 @@ export const PUBLIC_POOL=q(
  "FROM are_eval.private_project_pool p JOIN are_eval.benchmark_study_candidates c",
  "ON c.cohort_id=p.cohort_id AND c.repository_key=p.repository_key",
  "LEFT JOIN are_eval.private_assessment_tasks t ON t.id=p.claimed_task_id",
- "WHERE p.cohort_id='ARE100-VALUE-20261115' AND p.decision='ELIGIBLE'),",
+ "WHERE p.cohort_id='ARE100-VALUE-20261115' AND p.decision='ELIGIBLE'",
+ "AND p.quality_score>=75 AND c.repository_match_verified),",
  "stats AS (SELECT",
  "(SELECT count(*)::int FROM are_eval.benchmark_study_candidates WHERE cohort_id='ARE100-VALUE-20261115') AS candidate_total,",
  "(SELECT count(*)::int FROM are_eval.private_project_pool WHERE cohort_id='ARE100-VALUE-20261115' AND decision='HOLD') AS held,",
@@ -165,10 +174,25 @@ export const TESTER_SESSION_READ=q(
 export const TESTER_MY_TASKS=q(
  "SELECT json_build_object('tasks',COALESCE(json_agg(row_to_json(x)),'[]'::json))::text FROM (",
  "SELECT t.id,t.repository_key,t.created_at,t.expires_at,t.revoked_at,",
- "t.plan_snapshot->>'auth_mode' AS auth_mode,",
- "t.plan_snapshot->>'runtime_endpoint' AS endpoint,",
- "p.phase,p.total_tools,p.minutes_used,",
- "(SELECT count(*)::integer FROM are_eval.private_task_submissions l WHERE l.task_id=t.id) submissions",
+ "t.plan_snapshot->>'auth_mode' AS auth_mode,t.plan_snapshot->>'runtime_endpoint' AS endpoint,",
+ "p.phase,p.total_tools,p.minutes_used,p.updated_at AS last_checkpoint_at,",
+ "(SELECT count(*)::integer FROM are_eval.private_task_submissions l WHERE l.task_id=t.id) submissions,",
+ "COALESCE((SELECT json_agg(row_to_json(z) ORDER BY z.submitted_at DESC) FROM (",
+ "SELECT r.id AS submission_id,l.created_at AS submitted_at,r.state AS evidence_state,",
+ "r.decisive_count,r.verified_task_count,",
+ "rv.decision AS review_decision,rv.explanation AS review_reason,rv.created_at AS reviewed_at,",
+ "(SELECT COALESCE(jsonb_object_agg(k.status,k.n),'{}'::jsonb) FROM (",
+ "SELECT x->>'status' AS status,count(*)::integer AS n",
+ "FROM jsonb_array_elements(COALESCE(r.report->'findings','[]'::jsonb)) x GROUP BY x->>'status') k) AS criteria_counts,",
+ "(SELECT COALESCE(jsonb_object_agg(k.status,k.n),'{}'::jsonb) FROM (",
+ "SELECT x->>'status' AS status,count(*)::integer AS n",
+ "FROM jsonb_array_elements(COALESCE(r.report->'tool_coverage','[]'::jsonb)) x GROUP BY x->>'status') k) AS tool_counts,",
+ "jsonb_array_length(COALESCE(r.report->'tool_coverage','[]'::jsonb)) AS total_tools,",
+ "r.report->>'integrity_readiness' AS integrity_readiness",
+ "FROM are_eval.private_task_submissions l JOIN are_eval.private_evaluation_runs r ON r.id=l.run_id",
+ "LEFT JOIN LATERAL (SELECT v.decision,v.explanation,v.created_at FROM are_eval.private_review_verdicts v",
+ "WHERE v.run_id=r.id ORDER BY v.id DESC LIMIT 1) rv ON true",
+ "WHERE l.task_id=t.id ORDER BY l.created_at DESC LIMIT 25) z),'[]'::json) AS receipts",
  "FROM are_eval.private_assessment_tasks t",
  "JOIN are_eval.private_tester_sessions s ON s.id::text=t.plan_snapshot->>'tester_session_id'",
  "LEFT JOIN are_eval.private_task_progress p ON p.task_id=t.id",
@@ -181,6 +205,8 @@ export const PUBLIC_CLAIM=q(
  "eligible AS (SELECT p.cohort_id,p.repository_key,p.tool_count,p.auth_mode,p.risk_level,p.runtime_endpoint,p.priority",
  "FROM are_eval.private_project_pool p LEFT JOIN are_eval.private_assessment_tasks prior ON prior.id=p.claimed_task_id",
  "WHERE p.cohort_id='ARE100-VALUE-20261115' AND p.decision='ELIGIBLE'",
+ "AND p.quality_score>=75 AND EXISTS (SELECT 1 FROM are_eval.benchmark_study_candidates c",
+ "WHERE c.cohort_id=p.cohort_id AND c.repository_key=p.repository_key AND c.repository_match_verified)",
  "AND ($2::text='' OR p.repository_key=$2)",
  "AND (p.claimed_task_id IS NULL OR prior.id IS NULL OR prior.revoked_at IS NOT NULL OR prior.expires_at<=now())",
  "AND NOT EXISTS (SELECT 1 FROM are_eval.private_task_submissions s",
@@ -216,4 +242,29 @@ export const PUBLIC_CLAIM=q(
  "claimed AS (UPDATE are_eval.private_project_pool p SET claimed_task_id=c.id,updated_at=now()",
  "FROM created c WHERE p.cohort_id=c.cohort_id AND p.repository_key=c.repository_key RETURNING c.id)",
  "SELECT COALESCE((SELECT row_to_json(c) FROM created c JOIN claimed x ON c.id=x.id),'null'::json)::text"
+);
+
+// Owner-only evidence review: no user-submitted boolean can directly set verification flags.
+export const SCREEN_TARGET=q(
+ "SELECT COALESCE((SELECT row_to_json(x) FROM (SELECT c.repository_key,p.runtime_endpoint",
+ "FROM are_eval.benchmark_study_candidates c JOIN are_eval.private_project_pool p",
+ "ON p.cohort_id=c.cohort_id AND p.repository_key=c.repository_key",
+ "WHERE c.cohort_id='ARE100-VALUE-20261115' AND c.repository_key=$1) x),'null'::json)::text"
+);
+export const SCREEN_SAVE=q(
+ "WITH target AS (SELECT p.repository_key FROM are_eval.private_project_pool p",
+ "WHERE p.cohort_id='ARE100-VALUE-20261115' AND p.repository_key=$1 AND p.runtime_endpoint=$2),",
+ "saved AS (UPDATE are_eval.benchmark_study_candidates c SET repository_match_verified=$3::boolean,",
+ "creator_contact_verified=$4::boolean,repository_match_evidence=$5::jsonb,creator_contact_evidence=$6::jsonb",
+ "FROM target t WHERE c.cohort_id='ARE100-VALUE-20261115' AND c.repository_key=t.repository_key",
+ "RETURNING c.repository_key,c.repository_match_verified,c.creator_contact_verified,",
+ "c.repository_match_evidence,c.creator_contact_evidence)",
+ "SELECT COALESCE((SELECT row_to_json(saved) FROM saved),'null'::json)::text"
+);
+export const QUALITY_SAVE=q(
+ "WITH changed AS (UPDATE are_eval.private_project_pool p SET quality_score=$2::integer,",
+ "quality_breakdown=$3::jsonb,quality_evidence=$4::jsonb,updated_at=now()",
+ "WHERE p.cohort_id='ARE100-VALUE-20261115' AND p.repository_key=$1",
+ "RETURNING repository_key,quality_score,quality_breakdown,quality_evidence)",
+ "SELECT COALESCE((SELECT row_to_json(changed) FROM changed),'null'::json)::text"
 );

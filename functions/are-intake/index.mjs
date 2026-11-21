@@ -8,6 +8,7 @@ import {TASK_CRITERIA} from "./criteria-compact.mjs";
 import {taskAgentAction} from "./task-service.mjs";
 import {publicTesterAction} from "./tester-service.mjs";
 import {ownerAction,checkpointAction,checkpointRead} from "./pipeline-service.mjs";
+import {verifyRepositoryCandidate} from "./quality-screening.mjs";
 
 export const PRODUCT_CHECKS = Object.freeze("MCP-L1-V4 MCP-L1-C1 MCP-L2-C1 MCP-L2-C2 MCP-L2-X1 MCP-L2-X2 MCP-L2-X3 MCP-L2-X4 MCP-L2-A1 MCP-L2-A2 MCP-L2-I1 MCP-L2-O1 MCP-L2-O2 MCP-L3-C1 MCP-L3-C2 MCP-L3-C3 MCP-L3-C4 MCP-L3-S1 MCP-L3-S2 MCP-L3-S3 MCP-L3-S4 MCP-L3-A2 MCP-L3-A3 MCP-L3-A4 MCP-L3-O1 MCP-L3-O2 MCP-L4-O1 MCP-L4-O2 MCP-L4-I1 MCP-L4-I2 MCP-L4-R1 MCP-L4-R4".split(" "));
 const STATES=new Set(["PASS","FAIL","UNKNOWN","NOT_TESTED","NOT_APPLICABLE","BLOCKED_AUTH","NOT_ASSESSED","ADVISORY_ONLY"]);
@@ -108,7 +109,7 @@ async function verifiedGitHubSha(repository_key,shaValue,requestFetch=fetch){
  return r.status===200;
  }catch{return false;}
 }
-export function makeHandler({sql=neonSql,githubVerify=verifiedGitHubSha,env=process.env}={}){
+export function makeHandler({sql=neonSql,githubVerify=verifiedGitHubSha,repoVerify=verifyRepositoryCandidate,env=process.env}={}){
  return async function handle(req){
   const {pathname:path}=new URL(req.url);
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{
@@ -145,7 +146,7 @@ export function makeHandler({sql=neonSql,githubVerify=verifiedGitHubSha,env=proc
    }
    if(!authorized(req,env.ARE_INTAKE_OWNER_HASH))
      return response(req,401,{error:"owner_token_required"});
-   const result=await ownerAction(path,req,sql);
+   const result=await ownerAction(path,req,sql,{repoVerify});
    return response(req,result.status,result.data);
   }catch(e){
    if(e.code)return response(req,400,{error:e.code});
