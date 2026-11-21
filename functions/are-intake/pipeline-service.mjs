@@ -1,7 +1,6 @@
 import {randomBytes,createHash} from "node:crypto";
 import * as Q from "./pipeline-queries.mjs";
 import {qualityAssessment} from "./quality-screening.mjs";
-import {AUTH_OWNER_DECIDE_SQL,mustBeHumanConsent} from "./authorization-service.mjs";
 const sha=x=>createHash("sha256").update(x).digest("hex");
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const repo=/^[a-z\d_.-]+\/[a-z\d_.-]+$/i;
@@ -123,15 +122,6 @@ export async function ownerAction(path,req,sql,{repoVerify,refill}={}){
     {error:"project_not_eligible_or_quality_source_unverified_or_exceeds_test_budget"}};
  }
  if(path==="/v3/tasks"&&req.method==="GET")return {status:200,data:{ok:true,...await sql(Q.TASK_LIST)}};
- if(path==="/v3/tasks/auth/decide"&&req.method==="POST"){
-   const data=await input(req);
-   if(!data||Object.keys(data).sort().join(",")!=="decision,id"||!uuid.test(data.id||""))
-    fail("invalid_owner_auth_decision");
-   const decision=mustBeHumanConsent(data.decision);
-   const result=await sql(AUTH_OWNER_DECIDE_SQL,[data.id,decision]);
-   return {status:result?200:409,data:result?{ok:true,authorization:result,
-    provider_oauth_completed:false,private:true}:{error:"authorization_request_not_pending_or_not_owner_issued"}};
- }
  if(path==="/v3/tasks/revoke"&&req.method==="POST"){
   const d=await input(req);if(!uuid.test(d?.id||""))fail("invalid_task_id");
   const row=await sql(Q.TASK_REVOKE,[d.id]);return {status:row?200:404,data:{ok:!!row,task:row}};

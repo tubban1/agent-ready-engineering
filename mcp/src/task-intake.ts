@@ -51,19 +51,19 @@ export function registerTaskTools(server:McpServer):void{
  },async ({task_token,offset})=>request("/v3/task/criteria",task_token,{offset}));
 
  server.registerTool("are_request_authorization",{
-  title:"Request a tester's explicit human authorization for protected MCP tests",
-  description:"When ANY target tool or endpoint requires OAuth, bearer token or API key, register the challenge in ARE. If the tester already checked allow_oauth on task claim, their decision is preauthorized and you MUST immediately open the provider's official OAuth URL in the human user's browser through your host's native MCP OAuth connect/reconnect flow. Otherwise wait for their ARE page decision, then launch the browser. Never ask for secrets in chat. This scoped request is written to Neon, appears on their own tester dashboard, and NEVER sends credentials or initiates third-party login. Required before treating credentialed tool tests as legitimately blocked. Call are_get_authorization_status and wait for GRANTED or DECLINED; neither state proves provider sign-in.",
+  title:"Record target MCP authentication challenge and initiate provider-native login",
+  description:"On OAuth, call this with auth_scheme=OAUTH, then IMMEDIATELY use the Agent host's native MCP OAuth connect/reconnect to OPEN the provider's official login page in the user's browser. NO ARE approval, button or checkbox. The user decides whether to consent ONLY on the provider page. This tool records the challenge, it does not open the browser or grant third-party consent. For API_KEY use only securely preconfigured host credentials; never solicit secrets in chat. If the host cannot open OAuth, record that limitation and provide only a verified official provider URL. Actual authorized native MCP traces must prove successful tool execution.",
   inputSchema:z.object({task_token:token,
    reason:z.string().min(12).max(500).describe("User-visible authorization requirement, scoped to the screened project; never credentials"),
    requested_scopes:z.array(z.string().min(1).max(100)).max(20).default([]),
-   auth_scheme:z.enum(["OAUTH","API_KEY","UNKNOWN"]).default("UNKNOWN").describe("Actual observed authorization mechanism. Assignment's allow_oauth only preapproves OAUTH, never API keys.")}),
+   auth_scheme:z.enum(["OAUTH","API_KEY","UNKNOWN"]).default("UNKNOWN").describe("Actual observed mechanism; no ARE preauthorization choice is required. The user consents at the provider.")}),
   annotations:TASK_SUBMISSION
  },async ({task_token,reason,requested_scopes,auth_scheme})=>
    request("/v3/task/auth/request",task_token,{reason,requested_scopes,auth_scheme}));
 
  server.registerTool("are_get_authorization_status",{
-  title:"Read the human authorization decision for this private evaluation task",
-  description:"Read whether the tester approved during task assignment or subsequently on the ARE page, declined, or has not yet decided. If GRANTED immediately launch host/browser official OAuth connect/reconnect; do not only say it could be done. GRANTED permits prompting the tester to sign in on the third party's official OAuth site; it is NOT an OAuth token or proof of authenticated tool calls. Continue using original native MCP traces and the proper per-tool coverage statuses.",
+  title:"Read task-scoped authentication handoff status, not third-party consent",
+  description:"Reads the authentication challenge, never ARE user approval. GRANTED means the Agent may start provider-native OAuth; the real consent decision is on the provider page. For OAuth immediately launch the host's native MCP OAuth browser flow without ARE UI interaction. This receipt does not prove provider login, a granted token or successful protected tool execution. Save original native MCP traces.",
   inputSchema:z.object({task_token:token}),annotations:TASK_READONLY
  },async ({task_token})=>request("/v3/task/auth/status",task_token));
 

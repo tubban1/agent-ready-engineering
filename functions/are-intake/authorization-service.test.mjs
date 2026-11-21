@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
-import {authorizationRequestData,authRequired,AUTH_REQUEST_SQL,AUTH_STATUS_SQL,AUTH_DECIDE_SQL} from "./authorization-service.mjs";
+import {authorizationRequestData,authRequired,AUTH_REQUEST_SQL,AUTH_STATUS_SQL} from "./authorization-service.mjs";
 import {preflightAssessment} from "./evidence-validation.mjs";
 import {samplePackage} from "./evidence-validation.test.mjs";
 import {taskAgentAction,TASK_READ_SQL,TASK_SUBMIT_SQL} from "./task-service.mjs";
@@ -37,12 +37,12 @@ function blockedPacket(){
  p.test_metadata.auth_mode="UNKNOWN";
  return p;
 }
-test("Any observed authentication denial triggers human consent even if declared mode is UNKNOWN",()=>{
+test("Observed auth challenge requires Agent to record provider handoff, no ARE click",()=>{
  const p=blockedPacket();
  assert.equal(authRequired(p,"UNKNOWN"),true);
  const r=preflightAssessment(p,cfg);
  assert.equal(r.valid,false);
- assert.ok(r.errors.some(x=>x.code==="human_authorization_request_missing"),JSON.stringify(r.errors));
+ assert.ok(r.errors.some(x=>x.code==="auth_handoff_unrecorded"),JSON.stringify(r.errors));
  assert.equal(r.completion.status,"PARTIAL");
 });
 test("Endpoint-wide 401 may be shared with explicit scope, but never implies a per-tool native attempt",()=>{
@@ -53,7 +53,7 @@ test("Endpoint-wide 401 may be shared with explicit scope, but never implies a p
  assert.equal(r.valid,true,JSON.stringify(r.errors));
  assert.equal(r.completion.status,"PARTIAL");
  assert.ok(r.completion.reasons.includes("TOOLS_INCOMPLETE"));
- assert.equal(r.completion.authorization,"AWAITING_USER_DECISION");
+ assert.equal(r.completion.authorization,"LEGACY_PENDING");
  p.tool_coverage[0].blocking_scope="TOOL";
  const bad=preflightAssessment(p,{...cfg,authorization:waiting});
  assert.equal(bad.valid,false);
@@ -91,7 +91,7 @@ test("Human decline still allows an explicit private partial evidence report",()
  assert.equal(r.valid,true,JSON.stringify(r.errors));
  assert.equal(r.readiness,"READY_FOR_REVIEW");
  assert.equal(r.completion.status,"PARTIAL");
- assert.equal(r.completion.authorization,"USER_DECLINED");
+ assert.equal(r.completion.authorization,"LEGACY_USER_DECLINED");
 });
 test("Measured duration needs matching instrument artifact and cannot be invented from task age/budget",()=>{
  const p=samplePackage(),source="AGENT_HOST_TIMER",active_minutes=12;
@@ -111,8 +111,8 @@ test("Measured duration needs matching instrument artifact and cannot be invente
  assert.equal(r.valid,true,JSON.stringify(r.errors));
  assert.ok(r.completion.reasons.includes("ACTIVE_TIME_UNMEASURED"));
 });
-test("Authorization request API writes scoped pending state and read-only polling returns actual DB state",async()=>{
- const readOnly=[],saved={task_id:tid,decision:"PENDING",reason:"Need official OAuth for all protected tools",requested_scopes:[]};
+test("Agent records OAuth challenge and directly receives provider browser handoff",async()=>{
+ const readOnly=[],saved={task_id:tid,decision:"GRANTED",auth_scheme:"OAUTH",reason:"Official OAuth required",requested_scopes:[]};
  const sql=async(q,params)=>{
   if(q===TASK_READ_SQL)return assignment;
   if(q===AUTH_REQUEST_SQL){assert.equal(params[0],sha(secret));assert.equal(params[1],tid);return saved;}
@@ -121,9 +121,12 @@ test("Authorization request API writes scoped pending state and read-only pollin
  };
  const deps={validateSubmission,githubVerify:async()=>true,criteria:TASK_CRITERIA};
  const r=await taskAgentAction("/v3/task/auth/request",post("/v3/task/auth/request",{
-  reason:saved.reason,requested_scopes:[]},{bearer:secret}),sql,deps);
+  reason:saved.reason,requested_scopes:[],auth_scheme:"OAUTH"},{bearer:secret}),sql,deps);
  assert.equal(r.status,200);
- assert.equal(r.data.authorization.decision,"PENDING");
+ assert.equal(r.data.authorization.decision,"GRANTED");
+ assert.equal(r.data.are_approval_required,false);
+ assert.equal(r.data.next_action,"OPEN_PROVIDER_OAUTH_IN_AGENT_HOST_BROWSER");
+ assert.match(r.data.instruction,/provider.*page|provider.*consent|provider.*login/i);
  const status=await taskAgentAction("/v3/task/auth/status",
   post("/v3/task/auth/status",{}, {bearer:secret}),sql,deps);
  assert.equal(status.status,200);
@@ -133,40 +136,21 @@ test("Authorization request API writes scoped pending state and read-only pollin
  assert.equal(authorizationRequestData({reason:saved.reason,requested_scopes:[],auth_scheme:"OAUTH"}).scheme,"OAUTH");
  assert.equal(authorizationRequestData({reason:saved.reason,requested_scopes:[]}).scheme,"UNKNOWN");
  assert.throws(()=>authorizationRequestData({reason:saved.reason,requested_scopes:[],auth_scheme:"DISABLE_SECURITY"}),/invalid_authorization_request/);
- assert.match(AUTH_REQUEST_SQL,/\$5='OAUTH'/);
- assert.match(AUTH_REQUEST_SQL,/oauth_allowed/);
+ assert.match(AUTH_REQUEST_SQL,/ON CONFLICT\(task_id\) DO UPDATE/);
+ assert.match(AUTH_REQUEST_SQL,/GRANTED/);
+ assert.doesNotMatch(AUTH_REQUEST_SQL,/oauth_allowed/);
  assert.throws(()=>authorizationRequestData({reason:saved.reason,requested_scopes:[],decision:"GRANTED"}),/invalid_authorization_request/);
 });
-test("Only owner browser can GRANT or DECLINE; an Agent's Token cannot decide for user",async()=>{
- let writes=0;
- const sql=async(q,params)=>{
-  if(q===AUTH_DECIDE_SQL){writes++;assert.equal(params[0],sessionHash);
-    return {task_id:tid,decision:params[2],reason:"Third party OAuth request"};}
-  return null;
- };
- const h=makeHandler({env:{ARE_INTAKE_OWNER_HASH:sha("ario_"+("Z".repeat(64)))},sql});
- const payload={task_id:tid,decision:"GRANTED"},origin="https://br-raspy-hat-b96bluqn-areintake.compute.c-7.eu-central-1.aws.neon.tech";
- assert.equal((await h(post("/v3/tester/auth/decide",payload,{origin}))).status,401);
- assert.equal((await h(post("/v3/tester/auth/decide",payload,{cookie:"are_tester="+userCookie,origin:"https://evil.example"}))).status,403);
- assert.equal((await h(post("/v3/tester/auth/decide",{...payload,extra:true},{cookie:"are_tester="+userCookie,origin}))).status,400);
- assert.equal((await h(post("/v3/tester/auth/decide",{...payload,decision:"PENDING"},{cookie:"are_tester="+userCookie,origin}))).status,400);
- assert.equal(writes,0);
- const granted=await h(post("/v3/tester/auth/decide",payload,{cookie:"are_tester="+userCookie,origin}));
- assert.equal(granted.status,200);
- const body=await granted.json();
- assert.equal(body.provider_oauth_completed,false);
- assert.equal(body.authorization.decision,"GRANTED");
- assert.equal(writes,1);
- assert.match(AUTH_DECIDE_SQL,/session_sha256=\$1/);
- assert.match(AUTH_DECIDE_SQL,/a.decision='PENDING'/);
- assert.match(AUTH_DECIDE_SQL,/FOR UPDATE OF t/);
- assert.doesNotMatch(AUTH_DECIDE_SQL,/token_sha256/);
+test("Tester and Owner ARE pages have NO redundant OAuth approval controls",async()=>{
+ const h=makeHandler({env:{ARE_INTAKE_OWNER_HASH:sha("ario_"+("Z".repeat(64)))}});
  const html=await (await h(new Request("https://example.invalid/v3/board"))).text();
- assert.ok(html.includes("允许 Agent 在第三方官方页面发起授权"));
- assert.ok(html.includes("拒绝授权，保留部分测试"));
+ for(const old of ["允许 Agent 在第三方官方页面发起授权","拒绝授权，保留部分测试",
+  "允许 Agent 发起官方授权","拒绝授权，保持部分评测",
+  "testerAllowOAuth","auth/decide","decideAuthorization("])
+  assert.equal(html.includes(old),false,old);
+ assert.ok(html.includes("用户在服务商页面决定是否授权"));
 });
-
-test("Actual task endpoint refuses silent OAuth skip; pending human request permits PARTIAL private submission",async()=>{
+test("Formal submit refuses unrecorded auth challenge; recorded legacy partial remains honest",async()=>{
  const p=blockedPacket(),writes=[],steps=[];
  let authorization=null;
  const sql=async(q,args)=>{
@@ -179,7 +163,7 @@ test("Actual task endpoint refuses silent OAuth skip; pending human request perm
  const deps={validateSubmission,githubVerify:async()=>true,criteria:TASK_CRITERIA};
  const noConsent=await taskAgentAction("/v3/task/submit",post("/v3/task/submit",p,{bearer:secret}),sql,deps);
  assert.equal(noConsent.status,422);
- assert.ok(noConsent.data.issues.some(e=>e.code==="human_authorization_request_missing"));
+ assert.ok(noConsent.data.issues.some(e=>e.code==="auth_handoff_unrecorded"));
  assert.equal(writes.length,0);
  authorization={decision:"PENDING",reason:"Request official protected read permissions",requested_scopes:[]};
  const withPending=await taskAgentAction("/v3/task/submit",post("/v3/task/submit",p,{bearer:secret}),sql,deps);
@@ -189,7 +173,7 @@ test("Actual task endpoint refuses silent OAuth skip; pending human request perm
  assert.equal(writes.length,1);
  const stored=JSON.parse(writes[0][10]);
  assert.equal(stored.test_completion.status,"PARTIAL");
- assert.equal(stored.test_completion.authorization,"AWAITING_USER_DECISION");
+ assert.equal(stored.test_completion.authorization,"LEGACY_PENDING");
  assert.equal(stored.test_completion.tools_executed,0);
  assert.equal(stored.test_completion.total_tools,1);
  assert.equal(stored.test_metadata.duration.kind,"UNMEASURED");

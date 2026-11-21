@@ -7,9 +7,18 @@ export const AUTH_REQUEST_SQL=[
  "inserted AS (INSERT INTO are_eval.private_task_authorization_requests",
  "(task_id,reason,requested_scopes,auth_scheme,decision,decided_at)",
  "SELECT id,$3,$4::jsonb,$5,",
- "CASE WHEN plan_snapshot->>'oauth_allowed'='true' AND $5='OAUTH' THEN 'GRANTED' ELSE 'PENDING' END,",
- "CASE WHEN plan_snapshot->>'oauth_allowed'='true' AND $5='OAUTH' THEN now() ELSE NULL END FROM permitted",
- "ON CONFLICT(task_id) DO NOTHING RETURNING task_id,decision,reason,requested_scopes,auth_scheme,requested_at,decided_at),",
+ "'GRANTED',",
+ "now() FROM permitted",
+ "ON CONFLICT(task_id) DO UPDATE SET",
+ "decision=CASE WHEN are_eval.private_task_authorization_requests.decision='PENDING'",
+ "THEN 'GRANTED' ELSE are_eval.private_task_authorization_requests.decision END,",
+ "decided_at=CASE WHEN are_eval.private_task_authorization_requests.decision='PENDING'",
+ "THEN now() ELSE are_eval.private_task_authorization_requests.decided_at END,",
+ "auth_scheme=CASE WHEN (are_eval.private_task_authorization_requests.decision='PENDING'",
+ "OR are_eval.private_task_authorization_requests.auth_scheme='UNKNOWN')",
+ "AND EXCLUDED.auth_scheme<>'UNKNOWN'",
+ "THEN EXCLUDED.auth_scheme ELSE are_eval.private_task_authorization_requests.auth_scheme END",
+ "RETURNING task_id,decision,reason,requested_scopes,auth_scheme,requested_at,decided_at),",
  "visible AS (SELECT task_id,decision,reason,requested_scopes,auth_scheme,requested_at,decided_at FROM inserted",
  "UNION ALL SELECT a.task_id,a.decision,a.reason,a.requested_scopes,a.auth_scheme,a.requested_at,a.decided_at",
  "FROM are_eval.private_task_authorization_requests a JOIN permitted p ON p.id=a.task_id",
@@ -24,17 +33,6 @@ export const AUTH_STATUS_SQL=[
  "WHERE t.token_sha256=$1 AND t.id=$2::uuid AND t.revoked_at IS NULL",
  "AND t.expires_at>now()) a),'null'::json)::text"
 ].join(' ');
-export const AUTH_DECIDE_SQL=[
- "WITH owned AS (SELECT t.id FROM are_eval.private_assessment_tasks t",
- "JOIN are_eval.private_tester_sessions s ON s.id::text=t.plan_snapshot->>'tester_session_id'",
- "WHERE s.session_sha256=$1 AND s.expires_at>now() AND t.id=$2::uuid",
- "AND t.expires_at>now() AND t.revoked_at IS NULL FOR UPDATE OF t),",
- "updated AS (UPDATE are_eval.private_task_authorization_requests a SET decision=$3,decided_at=now()",
- "FROM owned WHERE a.task_id=owned.id AND a.decision='PENDING'",
- "RETURNING a.task_id,a.decision,a.reason,a.requested_scopes,a.requested_at,a.decided_at)",
- "SELECT COALESCE((SELECT row_to_json(updated) FROM updated),'null'::json)::text"
-].join(' ');
-const humanDecision= x=>x==="GRANTED"||x==="DECLINED";
 export function authRequired(payload,taskMode="UNKNOWN"){
  return ['OAUTH','API_KEY'].includes(taskMode)||
  ['OAUTH','API_KEY'].includes(payload?.test_metadata?.auth_mode)||
@@ -50,19 +48,19 @@ export function authRequired(payload,taskMode="UNKNOWN"){
  });
 }
 export function authorizationCompletion(auth){
- return !auth?"NOT_REQUESTED":auth.decision==="GRANTED"?"USER_ALLOWED_PROVIDER_LOGIN":
-  auth.decision==="DECLINED"?"USER_DECLINED":"AWAITING_USER_DECISION";
+ return !auth?"NOT_REQUESTED":auth.decision==="GRANTED"?"PROVIDER_AUTH_HANDOFF_READY":
+  auth.decision==="DECLINED"?"LEGACY_USER_DECLINED":"LEGACY_PENDING";
 }
 export function validateAuth(payload,mode,auth,issue){
  if(!authRequired(payload,mode))return {required:false,state:"NOT_REQUIRED"};
  if(!auth||!["PENDING","GRANTED","DECLINED"].includes(auth.decision)){
-  issue("test_metadata.authorization","human_authorization_request_missing",
-   "Request human authorization using are_request_authorization; never silently skip OAuth/API key and claim complete testing.");
+  issue("test_metadata.authorization","auth_handoff_unrecorded",
+   "Agent must record the authentication challenge using are_request_authorization and directly initiate the provider-native login. No approval is required on ARE.");
   return {required:true,state:"NOT_REQUESTED"};
  }
  if(auth.decision!=="GRANTED"){
-  issue("test_metadata.authorization","authorization_not_granted",
-   "Partial submission is allowed after authorization was requested; blocked tools remain untested until consent and real provider sign-in.",'warning');
+  issue("test_metadata.authorization","provider_authorization_not_completed",
+   "An older pending/declined flow is not proof of provider authentication; keep blocked tools untested until an actual authorized session.",'warning');
  }
  return {required:true,state:authorizationCompletion(auth)};
 }
@@ -75,20 +73,3 @@ export function authorizationRequestData(data){
     throw Object.assign(new Error("invalid_authorization_request"),{code:"invalid_authorization_request"});
  return {reason:data.reason.trim(),scopes:[...new Set(data.requested_scopes)],scheme:data.auth_scheme||"UNKNOWN"};
 }
-export function mustBeHumanConsent(value){
- if(!humanDecision(value))throw Object.assign(new Error("invalid_human_authorization_decision"),{code:"invalid_human_authorization_decision"});
- return value;
-}
-
-// Owner-issued tasks have no tester browser session; the human Owner can
-// decide these requests through their authenticated ARE admin workspace.
-export const AUTH_OWNER_DECIDE_SQL=[
- "WITH owned AS (SELECT t.id FROM are_eval.private_assessment_tasks t",
- "WHERE t.id=$1::uuid AND t.plan_snapshot->>'version'='are.test-plan.v3'",
- "AND (t.plan_snapshot->>'tester_session_id') IS NULL",
- "AND t.expires_at>now() AND t.revoked_at IS NULL FOR UPDATE),",
- "updated AS (UPDATE are_eval.private_task_authorization_requests a SET decision=$2,decided_at=now()",
- "FROM owned WHERE a.task_id=owned.id AND a.decision='PENDING'",
- "RETURNING a.task_id,a.decision,a.reason,a.requested_scopes,a.requested_at,a.decided_at)",
- "SELECT COALESCE((SELECT row_to_json(updated) FROM updated),'null'::json)::text"
-].join(' ');
