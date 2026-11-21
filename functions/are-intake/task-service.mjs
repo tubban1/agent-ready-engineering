@@ -28,35 +28,40 @@ export const TASK_READ_SQL=`SELECT COALESCE((SELECT row_to_json(a) FROM (
 export const TASK_SUBMIT_SQL=`WITH permitted AS (
  SELECT t.id FROM are_eval.private_assessment_tasks t
  WHERE t.token_sha256=$1 AND t.revoked_at IS NULL AND t.expires_at>now()
-   AND t.cohort_id=$3 AND t.repository_key=$4 AND t.assignee_id=$5 AND t.assessor_organization=$6 AND t.plan_snapshot->>'version'='are.test-plan.v3'
+ AND t.cohort_id=$3 AND t.repository_key=$4 AND t.assignee_id=$5
+ AND t.assessor_organization=$6 AND t.plan_snapshot->>'version'='are.test-plan.v3'
+ AND NOT EXISTS (SELECT 1 FROM are_eval.private_task_submissions previous WHERE previous.task_id=t.id)
  FOR UPDATE OF t
+),
+reserved AS (
+ INSERT INTO are_eval.private_task_finalizations (task_id,submission_sha256)
+ SELECT p.id,$2 FROM permitted p
+ ON CONFLICT (task_id) DO NOTHING RETURNING task_id
 ),
 created AS (
  INSERT INTO are_eval.private_evaluation_runs
-  (submission_sha256,cohort_id,repository_key,assessor_id,assessor_organization,
-   source_revision,observed_version,endpoint,state,report,agent_tasks,recommendations,
-   contact_route,source_binding,summary,decisive_count,verified_task_count)
+ (submission_sha256,cohort_id,repository_key,assessor_id,assessor_organization,
+ source_revision,observed_version,endpoint,state,report,agent_tasks,recommendations,
+ contact_route,source_binding,summary,decisive_count,verified_task_count)
  SELECT $2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb,$13::jsonb,
-        $14::jsonb,$15::jsonb,$16,$17::integer,$18::integer
- FROM permitted p JOIN are_eval.benchmark_study_candidates c
-   ON c.cohort_id=$3 AND c.repository_key=$4
- WHERE (SELECT COUNT(*) FROM are_eval.private_task_submissions l WHERE l.task_id=p.id)<25
+ $14::jsonb,$15::jsonb,$16,$17::integer,$18::integer
+ FROM reserved p JOIN are_eval.benchmark_study_candidates c
+ ON c.cohort_id=$3 AND c.repository_key=$4
  ON CONFLICT(submission_sha256) DO NOTHING
  RETURNING id,submission_sha256,repository_key,state,created_at
 ),
 linked AS (
  INSERT INTO are_eval.private_task_submissions(task_id,run_id)
- SELECT p.id,c.id FROM permitted p CROSS JOIN created c
+ SELECT p.task_id,c.id FROM reserved p CROSS JOIN created c
  ON CONFLICT DO NOTHING RETURNING task_id,run_id
+),
+closed AS (
+ UPDATE are_eval.private_assessment_tasks t SET revoked_at=now(),
+ plan_snapshot=jsonb_set(t.plan_snapshot,'{final_submission}',to_jsonb('CLOSED'::text),true)
+ FROM linked l WHERE t.id=l.task_id RETURNING t.id
 )
-SELECT COALESCE(
- (SELECT row_to_json(c) FROM created c JOIN linked l ON l.run_id=c.id),
- (SELECT row_to_json(e) FROM (
-  SELECT r.id,r.submission_sha256,r.repository_key,r.state,r.created_at
-  FROM permitted p JOIN are_eval.private_task_submissions l ON l.task_id=p.id
-   JOIN are_eval.private_evaluation_runs r ON r.id=l.run_id
-   WHERE r.submission_sha256=$2 LIMIT 1
- ) e),'null'::json)::text`;
+SELECT COALESCE((SELECT row_to_json(c) FROM created c
+ JOIN linked l ON l.run_id=c.id JOIN closed done ON done.id=l.task_id),'null'::json)::text`;
 
 export const TASK_RECEIPT_SQL=`SELECT COALESCE((SELECT row_to_json(r) FROM (
  SELECT s.run_id AS id,p.repository_key,r.state,r.submission_sha256,r.source_revision,r.created_at,
@@ -117,12 +122,14 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
  }};
  if(path==="/v3/task/auth/request"&&req.method==="POST"){
    const input=authorizationRequestData(await jsonBody(req));
-   const state=await sql(AUTH_REQUEST_SQL,[digest,task.id,input.reason,JSON.stringify(input.scopes)]);
+   const state=await sql(AUTH_REQUEST_SQL,[digest,task.id,input.reason,JSON.stringify(input.scopes),input.scheme]);
    if(!state)return {status:409,data:{error:"authorization_request_not_saved"}};
    return {status:200,data:{ok:true,authorization:state,
+     next_action:state.decision==="GRANTED"?"OPEN_OFFICIAL_OAUTH_IN_AGENT_HOST_BROWSER":"AWAIT_USER_AUTHORIZATION",
+     preauthorized_by_task_choice:task.plan?.oauth_allowed===true&&input.scheme==="OAUTH",
      instruction:state.decision==="PENDING"?
-      "STOP credentialed tool tests. Tell the human to review and decide in their ARE tester task page; poll are_get_authorization_status.":
-      "Human decision recorded. Initiate provider login only if GRANTED, never ask for tokens in chat.",
+      "Ask for human approval on the ARE task page; do not run protected tools until approved. Prepare your host's OAuth browser connection.":
+      "Act now: initiate your host's native MCP OAuth connect/reconnect flow and OPEN the provider's official authorization page in the human user's browser. Let the user sign in/consent there. If your host cannot open it, show a verified provider login link and explain the limitation. Never request keys in chat.",
      privacy:"This approves attempting official provider authorization, not proof that third-party sign-in succeeded.",
      private:true}};
  }
@@ -132,7 +139,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
      credential_granted_by_provider:false,
      guidance:!state?"No ARE authorization request yet":
       state.decision==="PENDING"?"Await tester's decision; do not run credentialed tools":
-      state.decision==="GRANTED"?"Human allows official provider login; obtain a real authorized session outside ARE and verify with native MCP traces":
+      state.decision==="GRANTED"?"Immediately open the provider's official OAuth consent flow in the agent host browser using its native MCP OAuth client/reconnect capability. Ask the user to complete third-party sign-in there. If browser opening is unavailable provide the verified official link, record the blocker, then verify native authorized MCP traces":
       "Human declined; keep credentialed tools BLOCKED_AUTH and submit an explicitly partial report.",private:true}};
  }
  if(path==="/v3/task/contract"&&req.method==="POST")
@@ -218,7 +225,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   const {result:preflight,hydrated}=await runPreflight(input);
   if(!preflight.valid)return {status:422,data:{ok:false,error:"assessment_preflight_failed",
     issues:preflight.errors,warnings:preflight.warnings,metrics:preflight.metrics,
-    hint:"Call are_validate_assessment; correct evidence without consuming formal submission slots"}};
+    hint:"Call are_validate_assessment and finish all possible testing before the ONE final submission. Submission closes this Task Token."}};
   const {validateCoverage}=await import("./pipeline-service.mjs");
   if(!hydrated||!hydrated.test_metadata||!Number.isInteger(hydrated.test_metadata.discovered_tool_count)||
      !Number.isInteger(hydrated.test_metadata.minutes_used)||
@@ -249,13 +256,16 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
     assessment.stage,JSON.stringify(assessment.report),JSON.stringify(assessment.agent_tasks),
     JSON.stringify(assessment.recommendations),JSON.stringify(assessment.contact_route),
     JSON.stringify(assessment.source_binding),assessment.summary,assessment.decisive,assessment.verifiedTasks]);
-  if(!submitted)return {status:409,data:{error:"submission_capacity_or_task_state_changed"}};
+  if(!submitted)return {status:409,data:{error:"task_already_finalized_or_unavailable",
+   hint:"One formal submission per task. After human NEEDS_RETEST review, get a new task for the retest."}};
   return {status:200,data:{ok:true,submission_id:submitted.id,task_id:task.id,
     canonical_metrics:preflight.metrics,canonical_report:preflight.report_preview,
     test_completion:{...preflight.completion,wall_clock_minutes:elapsed},
     server_elapsed_minutes:elapsed,reported_minutes:input.test_metadata.minutes_used,
     repository_key:submitted.repository_key,stage:submitted.state,
-    content_sha256:taskScopedDigest,private:true,public_release_authorized:false}};
+    content_sha256:taskScopedDigest,task_token_closed:true,final_submission:true,
+    receipt_hint:"Read the submission in the ARE tester page. The task token has automatically expired.",
+    private:true,public_release_authorized:false}};
  }
  return {status:404,data:{error:"unknown_task_operation"}};
 }

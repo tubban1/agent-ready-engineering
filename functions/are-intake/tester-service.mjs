@@ -2,6 +2,7 @@ import {randomBytes,createHash} from "node:crypto";
 import * as Q from "./pipeline-queries.mjs";
 import {estimatePlan} from "./pipeline-service.mjs";
 import {AUTH_DECIDE_SQL,mustBeHumanConsent} from "./authorization-service.mjs";
+import {replenishQualifiedPool} from "./candidate-supply.mjs";
 const sha=x=>createHash("sha256").update(x).digest("hex");
 const fail=code=>{const e=new Error(code);e.code=code;throw e};
 const valid=(s,min,max)=>typeof s==="string"&&s.trim().length>=min&&s.length<=max;
@@ -18,7 +19,7 @@ async function parseJson(req){
  if(Buffer.byteLength(raw)>3000)fail("tester_payload_too_large");
  try{return JSON.parse(raw)}catch{fail("invalid_json")}
 }
-export async function publicTesterAction(path,req,sql){
+export async function publicTesterAction(path,req,sql,{refill=replenishQualifiedPool}={}){
  if(path==="/v3/tester/pool"&&req.method==="GET"){
   const data=await sql(Q.PUBLIC_POOL);
   return {status:200,data:{ok:true,projects:data?.projects||[],stats:data?.stats||{}}};
@@ -97,9 +98,15 @@ export async function publicTesterAction(path,req,sql){
      ![90,150,240].includes(d.max_minutes)||typeof d.allow_oauth!=="boolean")
     fail("invalid_claim_request");
   const secret="aret_"+randomBytes(32).toString("base64url");
-  const task=await sql(Q.PUBLIC_CLAIM,[sessionHash,repo,sha(secret),d.max_minutes,d.allow_oauth]);
+  let task=await sql(Q.PUBLIC_CLAIM,[sessionHash,repo,sha(secret),d.max_minutes,d.allow_oauth]);
+  // Fill qualified supply only on authenticated "next" claims with no match.
+  // Global database lease prevents repeated expensive or unsafe discovery.
+  if(!task&&!repo&&await sql(Q.TESTER_SESSION_READ,[sessionHash])){
+   try{await refill(sql)}catch{/* Discovery outage does not invalidate existing tasks. */}
+   task=await sql(Q.PUBLIC_CLAIM,[sessionHash,repo,sha(secret),d.max_minutes,d.allow_oauth]);
+  }
   if(!task)return {status:409,data:{error:"no_eligible_matching_project_or_parallel_limit_reached",
-    hint:"Available project may be claimed, your maximum is 3 active and 6 daily projects, and the global pilot cap is 12 claims/hour"}};
+    hint:"Claim a qualified available project. Up to 3 unfinished tasks at a time, with a platform-wide hourly anti-abuse cap. Completed tasks release slots."}};
   return {status:200,data:{ok:true,task,task_token:secret,visible_once:true,private:true,
    plan:estimatePlan(Number(task.plan_snapshot?.declared_tool_count??0),
     task.plan_snapshot?.auth_mode||"UNKNOWN",task.plan_snapshot?.risk_level||"LOW"),

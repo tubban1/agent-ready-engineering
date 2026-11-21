@@ -130,6 +130,11 @@ test("Authorization request API writes scoped pending state and read-only pollin
  assert.equal(status.data.credential_granted_by_provider,false);
  assert.equal(readOnly.length,1);
  assert.deepEqual(authorizationRequestData({reason:saved.reason,requested_scopes:["read","read"]}).scopes,["read"]);
+ assert.equal(authorizationRequestData({reason:saved.reason,requested_scopes:[],auth_scheme:"OAUTH"}).scheme,"OAUTH");
+ assert.equal(authorizationRequestData({reason:saved.reason,requested_scopes:[]}).scheme,"UNKNOWN");
+ assert.throws(()=>authorizationRequestData({reason:saved.reason,requested_scopes:[],auth_scheme:"DISABLE_SECURITY"}),/invalid_authorization_request/);
+ assert.match(AUTH_REQUEST_SQL,/\$5='OAUTH'/);
+ assert.match(AUTH_REQUEST_SQL,/oauth_allowed/);
  assert.throws(()=>authorizationRequestData({reason:saved.reason,requested_scopes:[],decision:"GRANTED"}),/invalid_authorization_request/);
 });
 test("Only owner browser can GRANT or DECLINE; an Agent's Token cannot decide for user",async()=>{

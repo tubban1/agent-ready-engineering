@@ -60,7 +60,11 @@ export function validateCoverage(rows,blockers=[],count){
   executed:pass+failed,
   executed_pass_rate:pass+failed?pass/(pass+failed):null};
 }
-export async function ownerAction(path,req,sql,{repoVerify}={}){
+export async function ownerAction(path,req,sql,{repoVerify,refill}={}){
+ if(path==="/v3/pool/replenish"&&req.method==="POST"){
+  if(typeof refill!=="function")fail("pool_replenisher_unavailable");
+  return {status:200,data:{ok:true,refill:await refill(sql)}};
+ }
  if(path==="/v3/pool/verify"&&req.method==="POST"){
   const data=await input(req);
   if(!repo.test(data?.repository_key||"")||Object.keys(data).join(",")!=="repository_key")fail("invalid_screening_request");
