@@ -47,7 +47,13 @@ export async function publicTesterAction(path,req,sql){
  }
  if(path==="/v3/tester/rotate"&&req.method==="POST"){
   // A changing, cookie-authenticated action is never exposed to cross-site forms.
-  if(req.headers.get("origin")!=="https://are.world2.co")
+  // /tasks/ currently 307-redirects from are.world2.co to the first-party
+  // Neon function's /v3/board. Both are production browser origins.
+  const browserOrigin=req.headers.get("origin");
+  if(!new Set([
+    "https://are.world2.co",
+    "https://br-raspy-hat-b96bluqn-areintake.compute.c-7.eu-central-1.aws.neon.tech"
+  ]).has(browserOrigin))
    return {status:403,data:{error:"same_origin_required"}};
   const sessionHash=getCookie(req);
   if(!sessionHash)return {status:401,data:{error:"tester_session_required"}};
