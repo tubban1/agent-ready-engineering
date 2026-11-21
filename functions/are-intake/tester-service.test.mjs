@@ -178,10 +178,11 @@ test("Rotation fails closed for inactive, mismatched or recently rotated tasks",
  assert.match(Q.TESTER_ROTATE_TASK,/t.revoked_at IS NULL AND t.expires_at>now\(\)/);
  assert.match(Q.TESTER_ROTATE_TASK,/FOR UPDATE OF t/);
  assert.match(Q.TESTER_ROTATE_TASK,/token_rotated_at/);
+ assert.match(Q.TESTER_ROTATE_TASK,/private_task_submissions submitted/);
  assert.match(Q.TESTER_ROTATE_TASK,/UPDATE are_eval.private_assessment_tasks/);
  assert.doesNotMatch(Q.TESTER_ROTATE_TASK,/INSERT INTO are_eval.private_assessment_tasks|DELETE FROM/);
  const html=await (await api(rq("/v3/board"))).text();
- for(const snippet of ["重新生成并复制完整提示词","旧 Task Token 将立即失效","/v3/tester/rotate",
+ for(const snippet of ["取回完整提示词（旧 Token 自动失效）","原 Token 不可恢复","/v3/tester/rotate",
   "完整评测提示词（新领取或重新生成后显示）"])assert.ok(html.includes(snippet),snippet);
 });
 test("No eligible match, quota or concurrent race must deny a new claim",async()=>{
@@ -196,7 +197,7 @@ test("SQL enforces safe parallel claims and one active token per repository, nev
  assert.match(Q.PUBLIC_CLAIM,/FOR UPDATE OF p SKIP LOCKED/);
  assert.match(Q.PUBLIC_CLAIM,/session_sha256=\$1 AND expires_at>now\(\) FOR UPDATE/);
  assert.match(Q.PUBLIC_CLAIM,/count\(\*\).*< 3/);
- assert.match(Q.PUBLIC_CLAIM,/count\(\*\).*< 6/);
+ assert.doesNotMatch(Q.PUBLIC_CLAIM,/24 hours/);
  assert.match(Q.PUBLIC_CLAIM,/count\(\*\).*< 12/);
  assert.match(Q.PUBLIC_CLAIM,/claimed_task_id IS NULL/);
  assert.match(Q.PUBLIC_CLAIM,/UPDATE are_eval.private_project_pool/);

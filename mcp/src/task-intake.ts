@@ -52,17 +52,18 @@ export function registerTaskTools(server:McpServer):void{
 
  server.registerTool("are_request_authorization",{
   title:"Request a tester's explicit human authorization for protected MCP tests",
-  description:"When ANY target tool or endpoint requires OAuth, bearer token or API key, stop protected calls and ask the tester through the ARE task portal. This scoped request is written to Neon, appears on their own tester dashboard, and NEVER sends credentials or initiates third-party login. Required before treating credentialed tool tests as legitimately blocked. Call are_get_authorization_status and wait for GRANTED or DECLINED; neither state proves provider sign-in.",
+  description:"When ANY target tool or endpoint requires OAuth, bearer token or API key, register the challenge in ARE. If the tester already checked allow_oauth on task claim, their decision is preauthorized and you MUST immediately open the provider's official OAuth URL in the human user's browser through your host's native MCP OAuth connect/reconnect flow. Otherwise wait for their ARE page decision, then launch the browser. Never ask for secrets in chat. This scoped request is written to Neon, appears on their own tester dashboard, and NEVER sends credentials or initiates third-party login. Required before treating credentialed tool tests as legitimately blocked. Call are_get_authorization_status and wait for GRANTED or DECLINED; neither state proves provider sign-in.",
   inputSchema:z.object({task_token:token,
    reason:z.string().min(12).max(500).describe("User-visible authorization requirement, scoped to the screened project; never credentials"),
-   requested_scopes:z.array(z.string().min(1).max(100)).max(20).default([])}),
+   requested_scopes:z.array(z.string().min(1).max(100)).max(20).default([]),
+   auth_scheme:z.enum(["OAUTH","API_KEY","UNKNOWN"]).default("UNKNOWN").describe("Actual observed authorization mechanism. Assignment's allow_oauth only preapproves OAUTH, never API keys.")}),
   annotations:TASK_SUBMISSION
- },async ({task_token,reason,requested_scopes})=>
-   request("/v3/task/auth/request",task_token,{reason,requested_scopes}));
+ },async ({task_token,reason,requested_scopes,auth_scheme})=>
+   request("/v3/task/auth/request",task_token,{reason,requested_scopes,auth_scheme}));
 
  server.registerTool("are_get_authorization_status",{
   title:"Read the human authorization decision for this private evaluation task",
-  description:"Read whether the tester has approved, declined or not yet decided the request from their own ARE page. GRANTED permits prompting the tester to sign in on the third party's official OAuth site; it is NOT an OAuth token or proof of authenticated tool calls. Continue using original native MCP traces and the proper per-tool coverage statuses.",
+  description:"Read whether the tester approved during task assignment or subsequently on the ARE page, declined, or has not yet decided. If GRANTED immediately launch host/browser official OAuth connect/reconnect; do not only say it could be done. GRANTED permits prompting the tester to sign in on the third party's official OAuth site; it is NOT an OAuth token or proof of authenticated tool calls. Continue using original native MCP traces and the proper per-tool coverage statuses.",
   inputSchema:z.object({task_token:token}),annotations:TASK_READONLY
  },async ({task_token})=>request("/v3/task/auth/status",task_token));
 
@@ -104,14 +105,14 @@ export function registerTaskTools(server:McpServer):void{
 
  server.registerTool("are_submit_assessment",{
   title:"Submit my complete private independent assessment to ARE Neon",
-  description:"Write a private evidence-backed product report; partial results are permitted after an actual human authorization request, but incomplete tests cannot be marked COMPLETE or reviewer-VERIFIED. Never invent time spent, human consent, independent source or per-tool execution. Write an evidence-backed, version-pinned, private ARE_INDEPENDENT product report for exactly the project assigned to this Task Token. Start from the evidence_package_template provided by are_get_task and replace placeholders with real source SHA, actual version and evidence. Package needs cohort_id, repository_key, report (32 pilot findings), tool_coverage for every discovered tool, test_blockers, test_metadata with discovered_tool_count/minutes_used, agent_tasks, summary and recommendations. First call are_get_evidence_contract, use are_capture_readonly for safe unauthenticated tools, then call are_validate_assessment until valid=true; rejected drafts never enter Neon. Include evidence_artifacts (content, SHA-256, provenance, type and stable references), independently checked agent_tasks, source_binding evidence, and a complete 32-check result. Use the canonical_report returned here and by are_get_submission, not invented prose. A validated final report is saved privately and idempotently. This tool NEVER publishes third-party reviews, emails a maintainer or certifies maturity.",
+  description:"Write a private evidence-backed product report; partial results are permitted after an actual human authorization request, but incomplete tests cannot be marked COMPLETE or reviewer-VERIFIED. Never invent time spent, human consent, independent source or per-tool execution. Write an evidence-backed, version-pinned, private ARE_INDEPENDENT product report for exactly the project assigned to this Task Token. Start from the evidence_package_template provided by are_get_task and replace placeholders with real source SHA, actual version and evidence. Package needs cohort_id, repository_key, report (32 pilot findings), tool_coverage for every discovered tool, test_blockers, test_metadata with discovered_tool_count/minutes_used, agent_tasks, summary and recommendations. First call are_get_evidence_contract, use are_capture_readonly for safe unauthenticated tools, then call are_validate_assessment until valid=true; rejected drafts never enter Neon. Include evidence_artifacts (content, SHA-256, provenance, type and stable references), independently checked agent_tasks, source_binding evidence, and a complete 32-check result. Use the canonical_report returned by this submission, not invented prose. Post-submission receipts are visible on the ARE tester webpage; the Task Token is no longer usable. ONLY ONE formal submission is permitted per Task ID. Perform all authorized testing, checkpointing and repeated read-only validation before submitting. A successful submission is immutable, saves one private Neon report and immediately REVOKES this Task Token atomically; the canonical report and submission_id are in this tool's response. A network retry after token revocation cannot submit again. If human review requests retesting, a NEW Task ID is issued and the old report is preserved. This tool NEVER publishes third-party reviews, emails a maintainer or certifies maturity.",
   inputSchema:z.object({task_token:token,evidence_package:z.record(z.string(),z.unknown()).describe("Full independently gathered evidence package; not a PDF, fabricated tests, or a published review")}),
   annotations:TASK_SUBMISSION
  },async ({task_token,evidence_package})=>request("/v3/task/submit",task_token,evidence_package));
 
  server.registerTool("are_get_submission",{
   title:"Check private ARE task submission receipt",
-  description:"Check latest submission status, exact 32-check canonical report/metrics and a submission UUID for this task. The Task Token cannot access other projects, owner inbox or public publishing actions.",
+  description:"Before a task's final one-time submission, retrieve any existing task receipt; after formal submission the Token automatically expires and this tool will reject it. The original tester can permanently inspect Neon-confirmed receipts in their own ARE task webpage. No access to other projects or owner inbox.",
   inputSchema:z.object({task_token:token,submission_id:z.string().uuid().optional()}),annotations:TASK_READONLY
  },async ({task_token,submission_id})=>request("/v3/task/receipt",task_token,submission_id?{submission_id}:{}));
 }
