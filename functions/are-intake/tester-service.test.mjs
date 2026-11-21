@@ -159,6 +159,11 @@ test("Claimed-task prompt recovery explicitly rotates only the signed-in tester\
  assert.equal(got[0].args[1],task.id);
  assert.equal(got[0].args[2],createHash("sha256").update(data.task_token).digest("hex"));
  assert.ok(!JSON.stringify(data.task).includes(data.task_token));
+ // Actual /tasks/ redirects into the trusted Neon-hosted browser origin.
+ const redirectedOrigin="https://br-raspy-hat-b96bluqn-areintake.compute.c-7.eu-central-1.aws.neon.tech";
+ const redirected=await api(rotate("are_tester="+session,redirectedOrigin));
+ assert.equal(redirected.status,200);
+ assert.equal((await redirected.json()).old_token_invalidated,true);
 });
 test("Rotation fails closed for inactive, mismatched or recently rotated tasks",async()=>{
  const api=makeHandler({env:{ARE_INTAKE_OWNER_HASH:hash},
