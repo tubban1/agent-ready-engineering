@@ -5,6 +5,11 @@ import {TASK_CRITERIA} from "./criteria-compact.mjs";
 
 export const EVIDENCE_PROTOCOL="are.evidence.v5.1";
 export const RAW_OBSERVATION_PROTOCOL="mcp.raw-observation.v1";
+// Byte limits, not character counts: preserve full original wire frames without
+// duplicating huge catalogues in the Agent context. Server capture_id rehydrates
+// an immutable trace during assessment preflight.
+export const MAX_CAPTURE_WIRE_BYTES=512*1024;
+export const MAX_TRACE_CONTENT_BYTES=1500000;
 export const CRITERIA_BY_ID=new Map(TASK_CRITERIA.map(c=>[c.id,c]));
 export const FACT_NAMES=[...new Set(TASK_CRITERIA.flatMap(c=>c.applies_when.map(w=>w.fact)))].sort();
 const method=(x)=>x==="external_source"||x==="known_fixture"||x==="state_readback"||x==="independent_calculation";
@@ -26,7 +31,8 @@ function isRawCapture(a,{method:expectedMethod,toolName}={}){
  if(q.jsonrpc!=="2.0"||s.jsonrpc!=="2.0"||!Number.isInteger(q.id)&&!nonblank(q.id)||
   q.id!==s.id||!nonblank(q.method))return false;
  if(!(record(s.result)||record(s.error)))return false;
- if(!nonblank(c.wire_request,8,5000)||!nonblank(c.wire_response,8,64000))return false;
+ if(!nonblank(c.wire_request,8,5000)||!nonblank(c.wire_response,8,MAX_CAPTURE_WIRE_BYTES)||
+  Buffer.byteLength(c.wire_response,"utf8")>MAX_CAPTURE_WIRE_BYTES)return false;
  try{
   if(JSON.stringify(JSON.parse(c.wire_request))!==JSON.stringify(q))return false;
   const lines=c.wire_response.split(/\r?\n/).filter(x=>x.startsWith("data:"));
@@ -495,7 +501,7 @@ export function v5EvidenceGuide(){
    source_binding:"Set verified=false and record the provider's published endpoint/source association plus uncertainty. Do not claim verified=true from README, STDIO forwarding, or self-asserted signatures; only a separate trusted deployment-verifier can establish it.",
    accepted_oracle_methods:["external_source","known_fixture","state_readback","independent_calculation"],
    cannot_prove:"Raw field assertions can be recomputed, but ARE cannot automatically determine if a chosen case covers every semantic requirement or verify external expected truth. Agent-authored JSON plus SHA-256 is not an independent network trace. ARE-assisted capture can independently attest no-auth read-only observations. OAuth/STDIO and source build provenance require human adjudication.",
-   server_captures:"For server-origin trace artifacts, send {id,kind:\"trace\",capture_id} instead of repeating content; the service resolves immutable content/hash/provenance within the assigned task. Client captures require full content and SHA-256. Single raw capture maximum 70 KB; keep entire submission below 1.8 MB.",
+   server_captures:"For server-origin trace artifacts, send {id,kind:\"trace\",capture_id} instead of repeating content; the service resolves immutable content/hash/provenance within the assigned task. Client captures require full content and SHA-256. Trace payloads are measured in UTF-8 bytes: single complete native trace up to 1.5 MB, original wire response up to 512 KiB. Prefer capture_id for large server-origin tool inventories so the submitted Agent JSON stays below 1.8 MB.",
    review:"Valid=true means structurally reproducible. READY_FOR_REVIEW is private, not independent certification or authorization for outreach. An Owner must inspect and approve evidence.",
    safety:"Never embed bearer/OAuth token, cookie, credentials, personal data, authorization headers or secrets in artifacts; redact before attaching."};
 }

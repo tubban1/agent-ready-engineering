@@ -1,7 +1,7 @@
 // ARE assessment preflight: deterministic, read-only and free of database writes.
 // Evidence here is assessor supplied, NOT externally attested by ARE.
 import {createHash} from "node:crypto";
-import {validateV5,EVIDENCE_PROTOCOL} from "./evaluation-contract-v51.mjs";
+import {validateV5,EVIDENCE_PROTOCOL,MAX_TRACE_CONTENT_BYTES} from "./evaluation-contract-v51.mjs";
 import {validateAuth} from "./authorization-service.mjs";
 import {CRITERIA_BY_ID} from "./evaluation-contract-v51.mjs";
 const HEX=/^[a-f0-9]{64}$/;
@@ -71,7 +71,9 @@ export function preflightAssessment(data,{assigneeId,organization,repositoryKey,
   const a=traces[i],path="evidence_artifacts["+i+"]";
   if(!text(a?.id,3,240)||refs.has(a.id))issue(path+".id","bad_artifact_id","Use unique stable reference IDs");
   if(!["trace","oracle","source_binding","agent_task","authorization","duration"].includes(a?.kind))issue(path+".kind","bad_artifact_kind","Specify evidence type");
-  if(!text(a?.content,20,a?.kind==="trace"?70000:12000))issue(path+".content","missing_primary_material","Attach exact trace content up to 70 KB or smaller supporting evidence (12 KB); use capture_id-only references for server captures");
+  if(!text(a?.content,20,a?.kind==="trace"?MAX_TRACE_CONTENT_BYTES:12000)||
+    a?.kind==="trace"&&Buffer.byteLength(a.content||"","utf8")>MAX_TRACE_CONTENT_BYTES)
+   issue(path+".content","missing_primary_material","Attach original trace within the 1.5 MB byte limit, or use a server-issued capture_id-only reference; supporting evidence remains limited to 12 KB");
   if(!HEX.test(a?.sha256||"")||a.sha256!==sha(a?.content||""))issue(path+".sha256","content_hash_mismatch","Use SHA-256 of actual attached content");
   if(!text(a?.provenance,12,500))issue(path+".provenance","provenance_missing","Identify how observation/oracle was independently gathered");
   if(a?.kind==="oracle"&&!["external_source","known_fixture","state_readback","independent_calculation"].includes(a?.oracle_method))

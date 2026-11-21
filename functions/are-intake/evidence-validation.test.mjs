@@ -471,3 +471,52 @@ test("V5.1 preserves measurable experimental data without scoring calibration hy
  assert.ok(result.report_preview.includes("Non-scored calibration"));
  assert.equal(result.metrics.criteria.PASS,1);
 });
+
+test("V5.1 evidence gate accepts complete tools/list original wire and hash above 122 KB",()=>{
+ const x=samplePackage(),d=x.evidence_artifacts.find(a=>a.id==="raw-discovery");
+ const raw=JSON.parse(d.content);
+ raw.response.result.tools[0].description="Large genuine native schema: "+"Q".repeat(135000);
+ raw.wire_response=JSON.stringify(raw.response);
+ d.content=JSON.stringify(raw);d.sha256=sha(d.content);
+ assert.ok(Buffer.byteLength(d.content)>122279);
+ assert.ok(Buffer.byteLength(raw.wire_response)>70000);
+ const out=preflightAssessment(x,config);
+ assert.equal(out.valid,true,JSON.stringify(out.errors).slice(0,1600));
+});
+test("V5.1 rejects a single host-side trace beyond explicit bounded total size",()=>{
+ const x=samplePackage(),d=x.evidence_artifacts.find(a=>a.id==="raw-discovery");
+ const raw=JSON.parse(d.content);
+ raw.response.result.tools[0].description="Q".repeat(790000);
+ raw.wire_response=JSON.stringify(raw.response);
+ d.content=JSON.stringify(raw);d.sha256=sha(d.content);
+ assert.ok(Buffer.byteLength(d.content)>1500000);
+ const out=preflightAssessment(x,config);
+ assert.equal(out.valid,false);
+ assert.ok(out.errors.some(e=>e.code==="missing_primary_material"||e.code==="synthetic_trace_rejected"),
+   JSON.stringify(out.errors).slice(0,2100));
+});
+
+test("large server-origin tools/list uses capture_id only through private task preflight, preserving exact original trace bytes",async()=>{
+ const x=samplePackage(),a=x.evidence_artifacts.find(t=>t.id==="raw-discovery");
+ const raw=JSON.parse(a.content);
+ raw.response.result.tools[0].description="Native full tool contract "+("R".repeat(135000));
+ raw.wire_response=JSON.stringify(raw.response);
+ a.content=JSON.stringify(raw);a.sha256=sha(a.content);
+ const receipt={id:"44444444-4444-4444-8444-444444444444",task_id:taskId,
+  method:"tools/list",tool_name:null,content:a.content,sha256:a.sha256};
+ a.capture_id=receipt.id;delete a.content;delete a.sha256;delete a.provenance;
+ const calls=[],sql=async(q,args)=>{
+  calls.push({q,args});
+  if(q===TASK_READ_SQL)return fakeTask;
+  if(q===CAPTURE_READ_SQL)return {rows:[receipt]};
+  throw Error("Unexpected DB operation during read-only validation");
+ };
+ const result=await taskAgentAction("/v3/task/validate",request("/v3/task/validate",x),sql,
+   {validateSubmission,githubVerify:async()=>true,criteria:TASK_CRITERIA});
+ assert.equal(result.data.valid,true,JSON.stringify(result.data.errors).slice(0,2000));
+ assert.equal(result.data.metrics.semantic.server_attested_traces,1);
+ assert.equal(result.data.metrics.semantic.self_reported_raw_traces,1);
+ assert.ok(Buffer.byteLength(receipt.content)>122279);
+ assert.ok(calls.some(c=>c.q===CAPTURE_READ_SQL&&c.args[2].includes(receipt.id)));
+ assert.equal(calls.some(c=>c.q===TASK_SUBMIT_SQL),false);
+});
