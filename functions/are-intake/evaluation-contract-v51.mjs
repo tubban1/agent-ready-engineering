@@ -222,9 +222,34 @@ function measuredCriterion(rule,observation,samples,refs,discovery,issue,path){
  if(!valid||measured.length!==samples.length||!measured.length)return null;
  return {value:numerical?Math.max(...measured):measured.every(Boolean)};
 }
+function authorizationError(capture){
+ if(!capture)return false;
+ const raw=parsed(capture.content);
+ if(!isRawCapture(capture)||raw.request?.method!=="tools/call")return false;
+ const obj=raw.response?.error||{};
+ const body=JSON.stringify(obj).slice(0,2000);
+ const text=(raw.response?.result?.content||[]).map(x=>x?.text||"").join(" ").slice(0,2000);
+ return /unauthori[sz]ed|missing[_ -]?(bearer[_ -]?)?token|oauth|bearer|authentication.required|http.?401|api.key.required|credential.required/i.test(body+" "+text);
+}
 function checkToolRow(row,i,refs,issue,raw){
  const path="tool_coverage["+i+"]";
  if(!row?.status||!toolStatus.has(row.status))issue(path+".status","invalid_tool_status","Invalid coverage status");
+ if(row?.status==="BLOCKED_AUTH"){
+  const t=refs.get(row.trace_ref);
+  if(!["ENDPOINT","TOOL"].includes(row.blocking_scope))
+   issue(path+".blocking_scope","auth_scope_required",
+    "Explicitly classify gateway-wide auth denial versus this individual tool call.");
+  if(!authorizationError(t))
+   issue(path+".trace_ref","auth_denial_not_observed",
+    "BLOCKED_AUTH requires a native tools/call authorization error, not an unrelated trace.");
+  else if(parsed(t.content).endpoint!==raw.endpoint)
+   issue(path+".trace_ref","auth_denial_endpoint_mismatch","Authentication denial must be on the evaluated endpoint.");
+  else if(row.blocking_scope==="TOOL"&&parsed(t.content).request?.params?.name!==row.name)
+   issue(path+".trace_ref","tool_auth_trace_name_mismatch",
+    "For per-tool auth blocking the trace must call that exact native tool; a different tool's 401 is not evidence.");
+  // ENDPOINT means the gateway rejected a representative call. No claim that
+  // each listed tool was individually invoked; review coverage remains PARTIAL.
+ }
  if(["PASS","FAIL"].includes(row?.status)){
   const trace=refs.get(row.trace_ref);
   if(!isRawCapture(trace,{method:"tools/call",toolName:row.name})){
@@ -448,6 +473,10 @@ export function v5EvidenceGuide(){
    failure_attribution:"For each FAIL supply attribution:{surface:'NATIVE_MCP'|'VERIFIED_VENDOR_SOURCE',failure_mode:'reproducible cause',evidence_ref:'original trace id'}; host adapter-only evidence cannot become a vendor FAIL.",
    research_measurement:"MEASURE_ONLY criteria may carry research_observation:{metric,value,evidence_ref} plus research_samples, with original traces and machine-recomputed values; they stay UNKNOWN/NOT_TESTED or NOT_APPLICABLE and cannot score PASS/FAIL.",
    required_scenarios:"When rule.required_scenarios is present, every PASS sample must declare one matching scenario tag and all required tags must be covered; partial failure-mode coverage must not be called PASS.",
+   authorization:"Whenever the assigned endpoint, discovered response, or any tool is OAuth/API key blocked, call are_request_authorization with reason and scopes. Stop credentialed calls until a human accepts or declines on their own ARE task page; poll are_get_authorization_status. The DB row is the only accepted human consent evidence. GRANTED allows official provider sign-in, but does NOT prove provider OAuth succeeded. Partial reports are valid after an actual request; silently skipping the request is rejected.",
+   auth_blocking:"For each BLOCKED_AUTH tool include blocking_scope:ENDPOINT or TOOL. TOOL requires a native auth failure when that exact tool was called. ENDPOINT may cite a single genuine gateway-wide credential rejection but does NOT count as separate individual tool tests; all such tools remain unexecuted.",
+   duration:"test_metadata.duration:{kind:MEASURED,source:AGENT_HOST_TIMER|USER_INTERFACE_TIMER|EXTERNAL_TIMER,active_minutes:int,evidence_ref:duration_artifact_id} or {kind:UNMEASURED,source:UNKNOWN,active_minutes:null} with minutes_used=0. A duration artifact JSON must contain matching source, active_minutes, instrument and recorded_at. Host/agent-supplied timing is not automatically independently attested. Never use task age or budget as measured active work.",
+   completion:"test_completion.status is machine-derived PARTIAL or COMPLETE, not authored by the Agent. PARTIAL reports may be submitted privately but cannot become VERIFIED as a complete assessment. READY_FOR_REVIEW is solely a private evidence handoff, not completion.",
    findings:"For PASS/FAIL, supply exact pass_if.metric and observation.value plus raw trace samples. MCP-L1-V4 is recomputed from complete, unique, schema-valid tools/list pages (including nextCursor). Other boolean metrics require samples [{trace_ref,criterion_id,case_label,expected_source,assertions:[{pointer,operator,expected}]}] where pointer extracts an actual response field and computed all-assertion truth equals observation.value. Numeric metrics use samples [{trace_ref,criterion_id,case_label,expected_source,numeric_pointer,tokenizer_id}] with observed.value equal to maximum raw extracted number; output-token count must point to an actual token_count/output_tokens/tokens field, never a generic total. For N/A supply reason + known false applies_when fact with trace. Each sample must be distinct; expected_source must be separately defensible in review.",
    trace:{id:"raw-t1",kind:"trace",sha256:"SHA256_OF_EXACT_UTF8_CONTENT",
      provenance:"Agent host captured native MCP frames; verification pending",

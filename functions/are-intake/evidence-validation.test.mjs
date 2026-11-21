@@ -60,7 +60,8 @@ export function samplePackage(){
   evidence_artifacts:[discovery,tool,oracle,task],
   tool_coverage:[{name:"list_supported_models",status:"PASS",annotations:attr,trace_ref:tool.id,oracle_ref:oracle.id}],
   test_blockers:[],
-  test_metadata:{discovered_tool_count:1,minutes_used:12,auth_mode:"NONE",applicability_facts:facts},
+  test_metadata:{discovered_tool_count:1,minutes_used:0,auth_mode:"NONE",
+   duration:{kind:"UNMEASURED",source:"UNKNOWN",active_minutes:null},applicability_facts:facts},
   agent_tasks:[{goal:"Compare returned models against independent test fixture",
    trace_ref:task.id,oracle_ref:oracle.id,authorized:true,status:"PASS",oracle_verified:true,agent:"test-agent"}],
   report:{schema:"are.assessment.result.v3",mode:"ARE_INDEPENDENT",track:"product",
@@ -182,7 +183,8 @@ test("V5 valid private submit persists semantic integrity and consistent canonic
 });
 test("OAuth denied is recordable as private NEEDS_EVIDENCE without pretending to pass any criteria",()=>{
  const p=samplePackage();
- p.tool_coverage=[];p.test_metadata={auth_mode:"OAUTH",discovered_tool_count:0,minutes_used:7,
+ p.tool_coverage=[];p.test_metadata={auth_mode:"OAUTH",discovered_tool_count:0,minutes_used:0,
+  duration:{kind:"UNMEASURED",source:"UNKNOWN",active_minutes:null},
   authorization_events:[{status:"CONSENT_REQUIRED",evidence_ref:"auth-challenge"}],applicability_facts:{}};
  p.evidence_artifacts=[artifact("auth-challenge","authorization","HTTP 401 WWW-Authenticate resource metadata response; user has not consented"),
   artifact("agent-block","agent_task",{goal:"Try to initialize MCP",steps:[],status:"BLOCKED_AUTH"})];
@@ -191,7 +193,8 @@ test("OAuth denied is recordable as private NEEDS_EVIDENCE without pretending to
   status:"BLOCKED_AUTH",authorized:false,agent:"test-agent",oracle_verified:false}];
  p.test_blockers=[{cause:"OAUTH",reason:"Human authorization required",trace_ref:"auth-challenge"}];
  p.report.findings=p.report.findings.map(f=>({...f,status:"NOT_TESTED",reason:"MCP OAuth consent has not been granted"}));
- const r=preflightAssessment(p,{...config,authMode:"OAUTH"});
+ const r=preflightAssessment(p,{...config,authMode:"OAUTH",
+  authorization:{decision:"DECLINED",reason:"User explicitly refused an interactive provider login"}});
  assert.equal(r.valid,true,JSON.stringify(r.errors));
  assert.equal(r.readiness,"NEEDS_EVIDENCE");
  assert.equal(r.metrics.criteria.PASS,0);

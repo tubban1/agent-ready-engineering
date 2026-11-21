@@ -2,6 +2,8 @@
 // Evidence here is assessor supplied, NOT externally attested by ARE.
 import {createHash} from "node:crypto";
 import {validateV5,EVIDENCE_PROTOCOL} from "./evaluation-contract-v51.mjs";
+import {validateAuth} from "./authorization-service.mjs";
+import {CRITERIA_BY_ID} from "./evaluation-contract-v51.mjs";
 const HEX=/^[a-f0-9]{64}$/;
 const CHECKS=new Set("MCP-L1-V4 MCP-L1-C1 MCP-L2-C1 MCP-L2-C2 MCP-L2-X1 MCP-L2-X2 MCP-L2-X3 MCP-L2-X4 MCP-L2-A1 MCP-L2-A2 MCP-L2-I1 MCP-L2-O1 MCP-L2-O2 MCP-L3-C1 MCP-L3-C2 MCP-L3-C3 MCP-L3-C4 MCP-L3-S1 MCP-L3-S2 MCP-L3-S3 MCP-L3-S4 MCP-L3-A2 MCP-L3-A3 MCP-L3-A4 MCP-L3-O1 MCP-L3-O2 MCP-L4-O1 MCP-L4-O2 MCP-L4-I1 MCP-L4-I2 MCP-L4-R1 MCP-L4-R4".split(" "));
 const TERMINAL=new Set(["PASS","FAIL","NOT_APPLICABLE","BLOCKED_AUTH","UNKNOWN","NOT_TESTED","NOT_ASSESSED"]);
@@ -35,12 +37,13 @@ export function renderStructuredReport(data,metrics){
  "|---|---|---|"
  ];
  for(const row of data.report?.findings||[])lines.push("| "+safeInline(row.check_id)+" | "+safeInline(row.status)+" | "+safeInline(row.evidence_ref||row.evidence_id||"—")+" |");
+ lines.push("","**Completion:** "+(data.report?.test_completion?.status||metrics.completion?.status||"UNDETERMINED")+"; private submission is not proof of full testing.");
  lines.push("","## Tool inventory","","| Tool | Result | Oracle / Trace |","|---|---|---|");
  for(const row of data.tool_coverage||[])lines.push("| "+safeInline(row.name)+" | "+safeInline(row.status)+" | "+safeInline(row.oracle_ref||row.trace_ref||"—")+" |");
  lines.push("","**Evidence integrity:** attached references are checked for consistency; independent provenance and business truth require human inspection.");
  return lines.join("\n");
 }
-export function preflightAssessment(data,{assigneeId,organization,repositoryKey,expectedEndpoint="",authMode="UNKNOWN",taskId="",captures=[],baseValidate=null}={}){
+export function preflightAssessment(data,{assigneeId,organization,repositoryKey,expectedEndpoint="",authMode="UNKNOWN",taskId="",captures=[],authorization=null,baseValidate=null}={}){
  const errors=[],warnings=[];const issue=(path,code,message,severity="error")=>(severity==="error"?errors:warnings).push({path,code,message});
  if(!data||typeof data!=="object"||Array.isArray(data))return {valid:false,errors:[{path:"$",code:"invalid_package",message:"Expected a JSON object"}],warnings:[],metrics:null,report_preview:null};
  if(data.repository_key!==repositoryKey)issue("repository_key","wrong_project","Assessment must use the assigned repository");
@@ -67,7 +70,7 @@ export function preflightAssessment(data,{assigneeId,organization,repositoryKey,
  for(let i=0;i<traces.length;i++){
   const a=traces[i],path="evidence_artifacts["+i+"]";
   if(!text(a?.id,3,240)||refs.has(a.id))issue(path+".id","bad_artifact_id","Use unique stable reference IDs");
-  if(!["trace","oracle","source_binding","agent_task","authorization"].includes(a?.kind))issue(path+".kind","bad_artifact_kind","Specify evidence type");
+  if(!["trace","oracle","source_binding","agent_task","authorization","duration"].includes(a?.kind))issue(path+".kind","bad_artifact_kind","Specify evidence type");
   if(!text(a?.content,20,a?.kind==="trace"?70000:12000))issue(path+".content","missing_primary_material","Attach exact trace content up to 70 KB or smaller supporting evidence (12 KB); use capture_id-only references for server captures");
   if(!HEX.test(a?.sha256||"")||a.sha256!==sha(a?.content||""))issue(path+".sha256","content_hash_mismatch","Use SHA-256 of actual attached content");
   if(!text(a?.provenance,12,500))issue(path+".provenance","provenance_missing","Identify how observation/oracle was independently gathered");
@@ -103,16 +106,37 @@ export function preflightAssessment(data,{assigneeId,organization,repositoryKey,
     issue("source_binding.reason","source_binding_reason_required","Explain why endpoint-to-source link cannot yet be verified");
    else issue("source_binding.verified","source_binding_unverified","Private incomplete report permitted; independent publication forbidden until binding proof is reviewed","warning");
  }else need(data.source_binding?.evidence_ref,"source_binding","source_binding.evidence_ref");
- if(authMode==="OAUTH"){
-   const events=data.test_metadata?.authorization_events;
-   if(!Array.isArray(events)||events.length===0)
-     issue("test_metadata.authorization_events","oauth_events_missing","Record authorization challenge, human consent/denial and outcome without sharing any credentials");
-   else for(let i=0;i<events.length;i++){
-     const e=events[i],path="test_metadata.authorization_events["+i+"]";
-     if(!["CONSENT_REQUIRED","GRANTED","DECLINED","FAILED","EXPIRED"].includes(e?.status))
-       issue(path+".status","invalid_oauth_event","Use observed OAuth event status");
-     need(e?.evidence_ref,"authorization",path+".evidence_ref");
-   }
+ const auth=validateAuth(data,authMode,authorization,issue);
+ // Duration is either measured and traceable to a separately supplied timer
+ // artifact, or explicitly UNKNOWN. Wall clock since task creation is separate.
+ const d=data.test_metadata?.duration;
+ if(!d||!["MEASURED","UNMEASURED"].includes(d.kind)){
+  issue("test_metadata.duration","duration_provenance_required",
+   "Provide {kind:MEASURED,source,active_minutes,evidence_ref} or {kind:UNMEASURED,source:UNKNOWN,active_minutes:null}.");
+ }else if(d.kind==="UNMEASURED"){
+  if(d.source!=="UNKNOWN"||d.active_minutes!==null||data.test_metadata.minutes_used!==0)
+   issue("test_metadata.duration","unknown_duration_must_not_be_guessed",
+    "Uninstrumented duration must have minutes_used=0, source UNKNOWN and active_minutes=null, never a budget estimate.");
+  else issue("test_metadata.duration","active_time_not_measured",
+   "Active work time is unknown; elapsed wall-clock age is not active time.","warning");
+ }else{
+  if(!["AGENT_HOST_TIMER","USER_INTERFACE_TIMER","EXTERNAL_TIMER"].includes(d.source)||
+     !Number.isInteger(d.active_minutes)||d.active_minutes<0||
+     d.active_minutes>1440||data.test_metadata.minutes_used!==d.active_minutes)
+   issue("test_metadata.duration","active_duration_mismatch",
+    "Measured minutes must be a nonnegative integer equal to minutes_used, with a named instrument.");
+  const a=refs.get(d.evidence_ref);
+  if(a?.kind!=="duration")issue("test_metadata.duration.evidence_ref","duration_source_artifact_missing",
+   "Include duration primary evidence, never a subjective estimate.");
+  else{
+   let raw;
+   try{raw=JSON.parse(a.content)}catch{}
+   if(!raw||raw.source!==d.source||raw.active_minutes!==d.active_minutes||
+      !text(raw.instrument,8,240)||!text(raw.recorded_at,19,40)||
+      Number.isNaN(Date.parse(raw.recorded_at)))
+    issue("test_metadata.duration.evidence_ref","duration_instrument_unverifiable",
+     "Duration artifact must record matching source/minutes, named timer and timestamp.");
+  }
  }
  if(!text(data.test_metadata?.minutes_used?.toString(),1,10)||!Number.isInteger(data.test_metadata?.minutes_used))issue("test_metadata.minutes_used","elapsed_minutes_missing","Provide elapsed time and separate server observed duration");
  if(baseValidate){
@@ -144,8 +168,29 @@ export function preflightAssessment(data,{assigneeId,organization,repositoryKey,
     safeInline(r.metric)+" | "+String(r.value)+" | "+safeInline(r.evidence_ref)+" |").join("\n")+
    "\n\nThese measurements are research-only, not MCP protocol violations or product FAIL.";
  }
+ const blockers=(data.tool_coverage||[]).filter(t=>!["PASS","FAIL"].includes(t.status));
+ const unevaluated=(data.report?.findings||[]).filter(f=>!["PASS","FAIL","NOT_APPLICABLE"].includes(f.status)&&
+   !(f.status==="NOT_TESTED"&&f.check_id&&
+     CRITERIA_BY_ID.get(f.check_id)?.evidence_basis?.verdict_policy==="MEASURE_ONLY"));
+ const completionReasons=[];
+ if(blockers.length)completionReasons.push("TOOLS_INCOMPLETE");
+ if(unevaluated.length)completionReasons.push("CRITERIA_INCOMPLETE");
+ if(auth.required&&auth.state!=="USER_ALLOWED_PROVIDER_LOGIN")completionReasons.push("AUTH_NOT_GRANTED");
+ if(auth.required&&auth.state==="USER_ALLOWED_PROVIDER_LOGIN"&&blockers.some(x=>x.status==="BLOCKED_AUTH"))
+  completionReasons.push("PROVIDER_AUTH_OR_EXECUTION_NOT_COMPLETED");
+ if(d?.kind!=="MEASURED")completionReasons.push("ACTIVE_TIME_UNMEASURED");
+ const completion={status:completionReasons.length?"PARTIAL":"COMPLETE",
+   reasons:[...new Set(completionReasons)],tools_executed:metrics.tools.PASS+metrics.tools.FAIL,
+   total_tools:count||0,authorization:auth.state,
+   active_minutes:d?.kind==="MEASURED"?d.active_minutes:null,
+   time_source:d?.kind==="MEASURED"?d.source:"UNKNOWN",
+   wall_clock_minutes:null};
+ metrics.completion=completion;
+ report_preview+="\\n\\n**Testing completion:** "+completion.status+
+  " ("+(completion.reasons.join(", ")||"all scoreable applicable checks complete")+")."+
+  " This is separate from private submission or human review.";
  const package_sha256=sha(canonical(data));
- return {valid:errors.length===0,errors,warnings,metrics,readiness:verified.readiness,
+ return {valid:errors.length===0,errors,warnings,metrics,completion,readiness:verified.readiness,
    evidence_protocol:EVIDENCE_PROTOCOL,normalized_summary,report_preview,package_sha256,
   private:true,public_release_authorized:false,provenance:"ASSESSOR_DECLARED_REQUIRES_HUMAN_INSPECTION"};
 }

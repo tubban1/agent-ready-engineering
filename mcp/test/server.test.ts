@@ -29,6 +29,7 @@ test("exposes framework tools, local self-audit guidance and explicit opt-in rem
     "are_capture_readonly",
     "are_checkpoint",
     "are_evidence_request",
+    "are_get_authorization_status",
     "are_get_check",
     "are_get_criteria",
     "are_get_document",
@@ -39,13 +40,14 @@ test("exposes framework tools, local self-audit guidance and explicit opt-in rem
     "are_list_checks",
     "are_list_documents",
     "are_local_mcp_audit_guide",
+    "are_request_authorization",
     "are_score_mcp",
     "are_search",
     "are_submit_assessment",
     "are_validate_assessment"
   ]);
   for (const t of tools) {
-    assert.equal(t.annotations?.readOnlyHint, !["are_capture_readonly","are_checkpoint","are_score_mcp","are_submit_assessment"].includes(t.name), t.name);
+    assert.equal(t.annotations?.readOnlyHint, !["are_capture_readonly","are_checkpoint","are_request_authorization","are_score_mcp","are_submit_assessment"].includes(t.name), t.name);
     assert.equal(t.annotations?.destructiveHint, false, t.name);
     if (t.name === "are_score_mcp") assert.equal(t.annotations?.openWorldHint, true);
     assert.ok((t.description ?? "").length > 40, `${t.name} has a description`);

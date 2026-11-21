@@ -2,6 +2,7 @@ import {randomBytes,createHash} from "node:crypto";
 import {preflightAssessment,renderStructuredReport} from "./evidence-validation.mjs";
 import {EVIDENCE_PROTOCOL,v5EvidenceGuide} from "./evaluation-contract-v51.mjs";
 import {CAPTURE_READ_SQL,captureReadOnly,validCaptureId} from "./capture-v5.mjs";
+import {AUTH_REQUEST_SQL,AUTH_STATUS_SQL,authRequired,authorizationRequestData} from "./authorization-service.mjs";
 
 const cohort="ARE100-VALUE-20261115";
 const repository=/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/;
@@ -90,13 +91,16 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
       "No public release of a third-party independent report without owner approval"],
    evidence_schema:"are.assessment.result.v3",evidence_protocol:EVIDENCE_PROTOCOL,
    evidence_contract_tool:"are_get_evidence_contract",capture_tool:"are_capture_readonly",private:true,
+   authorization_request_tool:"are_request_authorization",
+   authorization_status_tool:"are_get_authorization_status",
    test_plan:(await import("./pipeline-service.mjs")).estimatePlan(Number(task.plan?.declared_tool_count||0),task.plan?.auth_mode||"UNKNOWN",task.plan?.risk_level||"LOW"),
    required_additional_fields:["tool_coverage","test_blockers","test_metadata","evidence_artifacts","source_binding","agent_tasks"],
    submission_guidance:"Read are_get_evidence_contract for exact facts/metrics/traces; use are_capture_readonly on unauthenticated explicitly read-only target calls. Each PASS or N/A must match official applies_when + pass_if, and traces must preserve raw MCP request/response. Do not invent the source binding. Validate, then submit privately; only human reviewer may approve contact or publication.",
    evidence_package_template:{
      evidence_protocol:EVIDENCE_PROTOCOL,cohort_id:task.cohort_id,repository_key:task.repository_key,summary:"",
      recommendations:[],agent_tasks:[],evidence_artifacts:[],tool_coverage:[],test_blockers:[],
-     test_metadata:{discovered_tool_count:0,minutes_used:0,auth_mode:task.auth_mode,applicability_facts:{}},
+     test_metadata:{discovered_tool_count:0,minutes_used:0,auth_mode:task.auth_mode,
+       duration:{kind:"UNMEASURED",source:"UNKNOWN",active_minutes:null},applicability_facts:{}},
      source_binding:{verified:false,evidence_ref:"",reason:"Not yet verified by independent source-to-deployment observations"},
      contact_route:{url:"https://github.com/"+task.repository_key},
      report:{schema:"are.assessment.result.v3",mode:"ARE_INDEPENDENT",track:"product",
@@ -111,6 +115,26 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
          evidence_class:"ASSESSOR_DECLARED_PROVENANCE_NOT_EXTERNALLY_ATTESTED"}))}
     }
  }};
+ if(path==="/v3/task/auth/request"&&req.method==="POST"){
+   const input=authorizationRequestData(await jsonBody(req));
+   const state=await sql(AUTH_REQUEST_SQL,[digest,task.id,input.reason,JSON.stringify(input.scopes)]);
+   if(!state)return {status:409,data:{error:"authorization_request_not_saved"}};
+   return {status:200,data:{ok:true,authorization:state,
+     instruction:state.decision==="PENDING"?
+      "STOP credentialed tool tests. Tell the human to review and decide in their ARE tester task page; poll are_get_authorization_status.":
+      "Human decision recorded. Initiate provider login only if GRANTED, never ask for tokens in chat.",
+     privacy:"This approves attempting official provider authorization, not proof that third-party sign-in succeeded.",
+     private:true}};
+ }
+ if(path==="/v3/task/auth/status"&&req.method==="POST"){
+   const state=await sql(AUTH_STATUS_SQL,[digest,task.id]);
+   return {status:200,data:{ok:true,authorization:state,
+     credential_granted_by_provider:false,
+     guidance:!state?"No ARE authorization request yet":
+      state.decision==="PENDING"?"Await tester's decision; do not run credentialed tools":
+      state.decision==="GRANTED"?"Human allows official provider login; obtain a real authorized session outside ARE and verify with native MCP traces":
+      "Human declined; keep credentialed tools BLOCKED_AUTH and submit an explicitly partial report.",private:true}};
+ }
  if(path==="/v3/task/contract"&&req.method==="POST")
    return {status:200,data:{ok:true,contract:v5EvidenceGuide(),
      criteria_machine_contract:criteria.map(c=>({id:c.id,applies_when:c.applies_when,
@@ -144,8 +168,10 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
        return {...a,content:a.content??receipt.content,sha256:a.sha256??receipt.sha256,
          provenance:a.provenance??"ARE server-origin immutable observation"};
      }):payload?.evidence_artifacts};
+   const authState=authRequired(hydrated,task.auth_mode)?
+     await sql(AUTH_STATUS_SQL,[digest,task.id]):null;
    const result=preflightAssessment(hydrated,{
-     taskId:task.id,captures:captureRows,
+     taskId:task.id,captures:captureRows,authorization:authState,
      assigneeId:task.assignee_id,organization:task.assessor_organization,
      repositoryKey:task.repository_key,expectedEndpoint:task.endpoint.url,
      authMode:payload?.test_metadata?.auth_mode==="OAUTH"?"OAUTH":task.auth_mode,
@@ -184,7 +210,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   const cleanReceipt={...receipt};
   delete cleanReceipt.report;delete cleanReceipt.agent_tasks;delete cleanReceipt.source_binding;
   return {status:200,data:{ok:true,receipt:cleanReceipt,canonical_metrics:metrics,
-    canonical_report:renderStructuredReport(stored,metrics),private:true,public_release_authorized:false}};
+    canonical_report:renderStructuredReport(stored,metrics),test_completion:stored.report?.test_completion||null,private:true,public_release_authorized:false}};
 
  }
  if(path==="/v3/task/submit"&&req.method==="POST"){
@@ -207,6 +233,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   const elapsed=Math.max(0,Math.round((Date.now()-new Date(task.created_at).getTime())/60000));
   const extended={...hydrated,summary:preflight.normalized_summary,report:{...hydrated.report,
     integrity_readiness:preflight.readiness,integrity_metrics:preflight.metrics.semantic,
+    test_completion:{...preflight.completion,wall_clock_minutes:elapsed},
     evidence_artifacts:hydrated.evidence_artifacts,
     test_metadata:{...hydrated.test_metadata,server_observed_minutes:elapsed},tool_coverage:hydrated.tool_coverage,
     test_blockers:hydrated.test_blockers}};
@@ -225,6 +252,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   if(!submitted)return {status:409,data:{error:"submission_capacity_or_task_state_changed"}};
   return {status:200,data:{ok:true,submission_id:submitted.id,task_id:task.id,
     canonical_metrics:preflight.metrics,canonical_report:preflight.report_preview,
+    test_completion:{...preflight.completion,wall_clock_minutes:elapsed},
     server_elapsed_minutes:elapsed,reported_minutes:input.test_metadata.minutes_used,
     repository_key:submitted.repository_key,stage:submitted.state,
     content_sha256:taskScopedDigest,private:true,public_release_authorized:false}};
