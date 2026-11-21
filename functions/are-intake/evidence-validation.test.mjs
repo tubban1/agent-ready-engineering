@@ -180,6 +180,9 @@ test("V5 valid private submit persists semantic integrity and consistent canonic
  assert.equal(report.integrity_metrics.raw_agent_tasks,1);
  assert.equal(report.evidence_artifacts.length,4);
  assert.equal(r.data.public_release_authorized,false);
+ assert.equal(r.data.cleanup_eligibility.permitted,false);
+ assert.equal(r.data.cleanup_eligibility.reason,"PARTIAL_OR_UNFINISHED_TEST");
+ assert.equal(r.data.cleanup_eligibility.retain_evidence,true);
 });
 test("OAuth denied is recordable as private NEEDS_EVIDENCE without pretending to pass any criteria",()=>{
  const p=samplePackage();

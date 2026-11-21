@@ -1,6 +1,6 @@
 import {randomBytes,createHash} from "node:crypto";
 import {preflightAssessment,renderStructuredReport} from "./evidence-validation.mjs";
-import {EVIDENCE_PROTOCOL,v5EvidenceGuide} from "./evaluation-contract-v51.mjs";
+import {EVIDENCE_PROTOCOL,v5EvidenceGuide,mcpEvaluationLifecycle,cleanupEligibility} from "./evaluation-contract-v51.mjs";
 import {CAPTURE_READ_SQL,captureReadOnly,validCaptureId} from "./capture-v5.mjs";
 import {AUTH_REQUEST_SQL,AUTH_STATUS_SQL,authRequired,authorizationRequestData} from "./authorization-service.mjs";
 
@@ -95,12 +95,13 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
    constraints:["Only authorized non-destructive operations","Record UNKNOWN/NOT_TESTED rather than fabricate results",
       "No public release of a third-party independent report without owner approval"],
    evidence_schema:"are.assessment.result.v3",evidence_protocol:EVIDENCE_PROTOCOL,
+   evaluation_lifecycle:mcpEvaluationLifecycle(),
    evidence_contract_tool:"are_get_evidence_contract",capture_tool:"are_capture_readonly",private:true,
    authorization_request_tool:"are_request_authorization",
    authorization_status_tool:"are_get_authorization_status",
    test_plan:(await import("./pipeline-service.mjs")).estimatePlan(Number(task.plan?.declared_tool_count||0),task.plan?.auth_mode||"UNKNOWN",task.plan?.risk_level||"LOW"),
    required_additional_fields:["tool_coverage","test_blockers","test_metadata","evidence_artifacts","source_binding","agent_tasks"],
-   submission_guidance:"Read are_get_evidence_contract for exact facts/metrics/traces; use are_capture_readonly for anonymous public tools/list and approved safe read-only tools even when screening auth_mode is UNKNOWN/OAUTH/API_KEY; never send provider credentials. A provider 401/403 requires official host authorization and host-side trace, not a false PASS. For large capture receipts use capture_id without pasting the original trace. Each PASS or N/A must match official applies_when + pass_if, and traces must preserve raw MCP request/response. Do not invent the source binding. Validate, then submit privately; only human reviewer may approve contact or publication.",
+   submission_guidance:"Follow evaluation_lifecycle in order: DISCOVER, task-owned SETUP/CONNECT if needed, provider AUTH, native SMOKE_TEST, evidence-backed EVALUATE, VALIDATE, SUBMIT, confirm Neon receipt, then scoped CLEANUP only if COMPLETE. Record baseline/setup_manifest before changing host MCP config, install only isolated trusted dependencies, never modify preexisting MCP connections.  use are_capture_readonly for anonymous public tools/list and approved safe read-only tools even when screening auth_mode is UNKNOWN/OAUTH/API_KEY; never send provider credentials. A provider 401/403 requires official host authorization and host-side trace, not a false PASS. For large capture receipts use capture_id without pasting the original trace. Each PASS or N/A must match official applies_when + pass_if, and traces must preserve raw MCP request/response. Do not invent the source binding. Validate, then submit privately; only human reviewer may approve contact or publication.",
    evidence_package_template:{
      evidence_protocol:EVIDENCE_PROTOCOL,cohort_id:task.cohort_id,repository_key:task.repository_key,summary:"",
      recommendations:[],agent_tasks:[],evidence_artifacts:[],tool_coverage:[],test_blockers:[],
@@ -268,6 +269,8 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
     server_elapsed_minutes:elapsed,reported_minutes:input.test_metadata.minutes_used,
     repository_key:submitted.repository_key,stage:submitted.state,
     content_sha256:taskScopedDigest,task_token_closed:true,final_submission:true,
+    cleanup_eligibility:cleanupEligibility({submission_id:submitted.id,task_token_closed:true,
+      test_completion:preflight.completion}),
     receipt_hint:"Read the submission in the ARE tester page. The task token has automatically expired.",
     private:true,public_release_authorized:false}};
  }
