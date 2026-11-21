@@ -199,6 +199,24 @@ export const TESTER_MY_TASKS=q(
  "WHERE s.session_sha256=$1 AND s.expires_at>now()",
  "ORDER BY t.created_at DESC LIMIT 50) x"
 );
+// The existing task ID, expiry, checkpoints, captures and submissions remain unchanged.
+// Only an explicitly initiated and session-owned credential rotation is allowed.
+export const TESTER_ROTATE_TASK=q(
+ "WITH owned AS MATERIALIZED (SELECT t.id FROM are_eval.private_assessment_tasks t",
+ "JOIN are_eval.private_tester_sessions s ON s.id::text=t.plan_snapshot->>'tester_session_id'",
+ "WHERE s.session_sha256=$1 AND s.expires_at>now() AND t.id=$2::uuid",
+ "AND t.revoked_at IS NULL AND t.expires_at>now()",
+ "AND t.plan_snapshot->>'version'='are.test-plan.v3'",
+ "AND (NOT (t.plan_snapshot ? 'token_rotated_at') OR",
+ "NULLIF(t.plan_snapshot->>'token_rotated_at','')::timestamptz<now()-interval '1 minute')",
+ "FOR UPDATE OF t),",
+ "rotated AS (UPDATE are_eval.private_assessment_tasks t SET token_sha256=$3,",
+ "plan_snapshot=jsonb_set(t.plan_snapshot,'{token_rotated_at}',to_jsonb(now()::text),true)",
+ "FROM owned WHERE t.id=owned.id RETURNING t.id,t.repository_key,t.assignee_id,",
+ "t.assessor_organization,t.created_at,t.expires_at,t.plan_snapshot)",
+ "SELECT COALESCE((SELECT row_to_json(rotated) FROM rotated),'null'::json)::text"
+);
+
 export const PUBLIC_CLAIM=q(
  "WITH session AS MATERIALIZED (SELECT id,tester_id,organization FROM are_eval.private_tester_sessions",
  "WHERE session_sha256=$1 AND expires_at>now() FOR UPDATE),",
