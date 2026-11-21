@@ -1,3 +1,4 @@
+import {readFileSync} from "node:fs";
 import vm from "node:vm";
 import {pipelinePage} from "./pipeline-page.mjs";
 import test from "node:test";
@@ -194,4 +195,12 @@ test("backend stop rules do not force every failure into a tool design finding",
  assert.ok(plan.stop_rules.some(x=>x.includes("trace")));
  assert.ok(plan.stop_rules.some(x=>x.includes("Retry only if safe")));
  assert.ok(plan.stop_rules.every(x=>!x.includes("Planner5D")));
+});
+
+test("Production DB state constraint admits V5.1 READY_FOR_REVIEW while preserving prior report rows",()=>{
+ const migration=readFileSync(new URL("../../migrations/011_private_review_ready_state.sql",import.meta.url),"utf8");
+ assert.match(migration,/ADD CONSTRAINT private_evaluation_runs_state_check/);
+ for(const state of ["NEEDS_EVIDENCE","READY_FOR_REVIEW","READY_FOR_OUTREACH"])
+  assert.ok(migration.includes("'"+state+"'"),state);
+ assert.match(migration,/DROP CONSTRAINT IF EXISTS/);
 });
