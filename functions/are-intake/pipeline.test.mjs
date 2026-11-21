@@ -104,7 +104,8 @@ test("task-only credential cannot read owner verification, release or other task
 });
 test("owner verified review requires actual complete tool inventory; draft remains private",async()=>{
  const calls=[],report={runs:[{id:uid,state:"READY_FOR_REVIEW",decisive_count:1,verified_task_count:1,
-  integrity_readiness:"READY_FOR_REVIEW",integrity_metrics:{raw_agent_tasks:1,raw_tool_traces:1},
+  integrity_readiness:"READY_FOR_REVIEW",test_completion:{status:"COMPLETE",reasons:[]},
+  integrity_metrics:{raw_agent_tasks:1,raw_tool_traces:1},
   tool_coverage:[{name:"get",status:"PASS",oracle_ref:"source-oracle"}],
   blockers:[],test_metadata:{discovered_tool_count:1},
   findings:PRODUCT_CHECKS.map(check_id=>({check_id,status:"NOT_APPLICABLE"})),
@@ -122,6 +123,11 @@ test("owner verified review requires actual complete tool inventory; draft remai
  const api=makeHandler({env,sql});
  const verify=await api(request("/v3/review/decision",owner,{id:uid,decision:"VERIFIED",explanation:"all source and tool evidence inspected"}));
  assert.equal(verify.status,200);
+ report.runs[0].test_completion={status:"PARTIAL",reasons:["TOOLS_INCOMPLETE"]};
+ const cannotVerifyPartial=await api(request("/v3/review/decision",owner,
+  {id:uid,decision:"VERIFIED",explanation:"Attempted early approval"}));
+ assert.equal(cannotVerifyPartial.status,400);
+ report.runs[0].test_completion={status:"COMPLETE",reasons:[]};
  const draft=await unpack(await api(request("/v3/release/draft",owner,{id:uid,summary:"Private evidence-only draft"})));
  assert.equal(draft.published,false);
  const denied=await api(request("/v3/release/approve",owner,{id:uid,confirm:"YES"}));
