@@ -4,9 +4,10 @@ export const POOL=q(
  "SELECT json_build_object('projects',COALESCE(json_agg(row_to_json(s)),'[]'::json))::text FROM (",
  "SELECT c.repository_key,c.display_name,COALESCE(p.decision,'UNFILTERED') decision,p.reason,p.tool_count,p.auth_mode,p.risk_level,p.priority,p.claimed_task_id,p.runtime_endpoint,",
  "p.quality_score,p.quality_breakdown,p.quality_evidence,c.repository_match_verified,c.creator_contact_verified,",
+ "c.stage,c.registry_name,c.observed_tool_count,c.source_probe_checked_at,",
  "c.repository_match_evidence,c.creator_contact_evidence",
  "FROM are_eval.benchmark_study_candidates c LEFT JOIN are_eval.private_project_pool p ON p.cohort_id=c.cohort_id AND p.repository_key=c.repository_key",
- "WHERE c.cohort_id='ARE100-VALUE-20261115' ORDER BY c.repository_key LIMIT 150) s"
+ "WHERE c.cohort_id='ARE100-VALUE-20261115' ORDER BY c.repository_key LIMIT 1500) s"
 );
 export const FILTER=q(
  "WITH x AS (INSERT INTO are_eval.private_project_pool",
