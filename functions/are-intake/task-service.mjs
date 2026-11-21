@@ -100,7 +100,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
    authorization_status_tool:"are_get_authorization_status",
    test_plan:(await import("./pipeline-service.mjs")).estimatePlan(Number(task.plan?.declared_tool_count||0),task.plan?.auth_mode||"UNKNOWN",task.plan?.risk_level||"LOW"),
    required_additional_fields:["tool_coverage","test_blockers","test_metadata","evidence_artifacts","source_binding","agent_tasks"],
-   submission_guidance:"Read are_get_evidence_contract for exact facts/metrics/traces; use are_capture_readonly on unauthenticated explicitly read-only target calls. Each PASS or N/A must match official applies_when + pass_if, and traces must preserve raw MCP request/response. Do not invent the source binding. Validate, then submit privately; only human reviewer may approve contact or publication.",
+   submission_guidance:"Read are_get_evidence_contract for exact facts/metrics/traces; use are_capture_readonly for anonymous public tools/list and approved safe read-only tools even when screening auth_mode is UNKNOWN/OAUTH/API_KEY; never send provider credentials. A provider 401/403 requires official host authorization and host-side trace, not a false PASS. For large capture receipts use capture_id without pasting the original trace. Each PASS or N/A must match official applies_when + pass_if, and traces must preserve raw MCP request/response. Do not invent the source binding. Validate, then submit privately; only human reviewer may approve contact or publication.",
    evidence_package_template:{
      evidence_protocol:EVIDENCE_PROTOCOL,cohort_id:task.cohort_id,repository_key:task.repository_key,summary:"",
      recommendations:[],agent_tasks:[],evidence_artifacts:[],tool_coverage:[],test_blockers:[],

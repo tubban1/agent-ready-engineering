@@ -1,12 +1,12 @@
 import {createHash} from "node:crypto";
 import {isIP} from "node:net";
 import {lookup} from "node:dns/promises";
-import {RAW_OBSERVATION_PROTOCOL} from "./evaluation-contract-v51.mjs";
+import {RAW_OBSERVATION_PROTOCOL,MAX_CAPTURE_WIRE_BYTES,MAX_TRACE_CONTENT_BYTES} from "./evaluation-contract-v51.mjs";
 
 // Each SQL expression returns a single JSON cell, matching the Neon Function SQL adapter.
 export const CAPTURE_RESERVE_SQL=[
 "WITH permitted AS (SELECT id FROM are_eval.private_assessment_tasks WHERE token_sha256=$1 AND id=$2::uuid",
-"AND revoked_at IS NULL AND expires_at>now() AND plan_snapshot->>'auth_mode'='NONE'),",
+"AND revoked_at IS NULL AND expires_at>now() AND plan_snapshot->>'version'='are.test-plan.v3'),",
 "saved AS (INSERT INTO are_eval.private_mcp_capture_usage(task_id,used_count,window_used,window_started_at)",
 "SELECT id,1,1,now() FROM permitted ON CONFLICT(task_id) DO UPDATE SET",
 "used_count=are_eval.private_mcp_capture_usage.used_count+1,",
@@ -95,8 +95,8 @@ async function fetchRaw(endpoint,method,params,fetcher){
    "MCP-Protocol-Version":"2025-06-18","User-Agent":"ARE-independent-readonly-capture/5.0"},
   body:wire,redirect:"error",cache:"no-store",signal:AbortSignal.timeout(12000)});
  if(res.status!==200)fail(res.status===401||res.status===403?"target_requires_user_auth":"target_capture_http_failure");
- if(Number(res.headers.get("content-length")||0)>64000)fail("target_response_too_large");
- let body=await limitedText(res,64000);
+ if(Number(res.headers.get("content-length")||0)>MAX_CAPTURE_WIRE_BYTES)fail("target_response_too_large");
+ let body=await limitedText(res,MAX_CAPTURE_WIRE_BYTES);
  const rawWire=body;
  if(res.headers.get("content-type")?.includes("text/event-stream")){
   const events=body.split(/\r?\n/).filter(line=>line.startsWith("data:"));
@@ -111,14 +111,19 @@ async function fetchRaw(endpoint,method,params,fetcher){
  const content=JSON.stringify({protocol:RAW_OBSERVATION_PROTOCOL,observed_at:new Date().toISOString(),
   transport:res.headers.get("content-type")?.includes("event-stream")?"sse":"http",
   endpoint,request,response:parsed,wire_request:wire,wire_response:rawWire});
- if(content.length>70000)fail("capture_content_oversize");
+ if(Buffer.byteLength(content,"utf8")>MAX_TRACE_CONTENT_BYTES)fail("capture_content_oversize");
  return {request,response:parsed,content,sha256:sha(content)};
 }
 export async function captureReadOnly(input,{assignment,tokenDigest,sql,fetcher=fetch,dnsCheck=publicDnsOnly}){
  const endpoint=assignment?.plan_snapshot?.runtime_endpoint||assignment?.screened_endpoint||"";
  if(!allowedEndpoint(endpoint))fail("screened_https_endpoint_required");
- if(assignment?.plan_snapshot?.auth_mode!=="NONE")
-  fail("oauth_or_api_key_targets_require_human_host_capture");
+ // Screening auth mode is a hypothesis about protected capabilities, not a
+ // blanket ban on safely probing *anonymous* tools/list and read-only tools.
+ // We never forward provider credentials or bearer tokens; a real HTTP 401/403
+ // still stops the capture. OAUTH/API_KEY tasks remain protected for writes.
+ const declaredAuth=assignment?.plan_snapshot?.auth_mode||"UNKNOWN";
+ if(!["NONE","UNKNOWN","OAUTH","API_KEY"].includes(declaredAuth))
+  fail("invalid_screened_auth_mode");
  if(input?.method!=="tools/list"&&input?.method!=="tools/call")
   fail("capture_method_not_allowed");
  if(input.cursor!==undefined&&(input.method!=="tools/list"||typeof input.cursor!=="string"||
@@ -150,8 +155,19 @@ export async function captureReadOnly(input,{assignment,tokenDigest,sql,fetcher=
  return {ok:true,capture_id:row.id,
   artifact:{id:"are-capture-"+row.id,kind:"trace",capture_id:row.id,sha256:raw.sha256,
    provenance:"ARE server-origin observation; fetched from screened endpoint, no user credentials",
-   content:raw.content},
+   // Large traces are never emitted into the Agent context. On validate/submit
+   // the server rehydrates exact bytes and SHA from private_mcp_observations.
+   ...(Buffer.byteLength(raw.content,"utf8")<=24000?{content:raw.content}:{})},
+  capture_bytes:Buffer.byteLength(raw.content,"utf8"),
+  capture_format:Buffer.byteLength(raw.content,"utf8")<=24000?"INLINE":"CAPTURE_ID_ONLY",
+  discovery:input.method==="tools/list"?{
+   tool_count:raw.response?.result?.tools?.length??null,
+   tool_names:raw.response?.result?.tools?.map(x=>x.name)??[],
+   next_cursor:raw.response?.result?.nextCursor??null
+  }:undefined,
+  auth_observation:"ANONYMOUS_REQUEST_SUCCEEDED_NO_PROVIDER_CREDENTIALS",
+  declared_auth_mode:declaredAuth,
   tool_name:name,method:input.method,endpoint,read_only:true,
-  warning:"This confirms raw target bytes, not independent business correctness or source-to-deployment identity."};
+  warning:"Anonymous capture is not proof all provider operations are unauthenticated. It proves only original uncredentialed bytes, not business truth or deployment identity."};
 }
 export function validCaptureId(x){return id.test(x||"")}
