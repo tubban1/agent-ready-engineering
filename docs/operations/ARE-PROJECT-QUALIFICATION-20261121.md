@@ -27,3 +27,10 @@ Use the owner portal under **项目过滤**:
 - Business value and engineering ratings are a recorded owner judgment with cited URLs, not an automated third-party certification.
 - GitHub API failures fail closed without replacing previously saved evidence or marking an unverified candidate verified.
 - No auto outreach, no auto publish, no full backward compatibility layer.
+
+## Recover a lost already-claimed Agent prompt
+- A Task Token is generated once and only its SHA-256 is stored; the original cannot be redisplayed after a refresh. A task remains owned by the browser session that claimed it.
+- The tester dashboard shows **重新生成并复制完整提示词** for an active, unverified, session-owned task when there is no prompt visible in memory. Confirming this action rotates only that task's Token; any Agent still using the prior token must receive the new complete prompt.
+- The rotation uses the same session cookie, requires an explicit user confirmation string and same-origin POST, checks the original task belongs to the session and has not expired or been revoked, locks the task row, and enforces a one-minute rotation cooldown.
+- The existing task ID, expiry, progress checkpoints, captured evidence and previous submissions are preserved. Neither the developer nor staff should rotate a user's live Token for them without their explicit action.
+- The replacement secret appears only in the current page after confirmed rotation; **copy it immediately**. The browser never stores it persistently, and it is not logged, published, or accessible through read-only task APIs.

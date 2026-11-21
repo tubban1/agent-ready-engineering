@@ -11,9 +11,10 @@ const tester={id:"11111111-2222-4333-8444-555555555555",tester_id:"tester_abcdef
 const task={id:"22222222-2222-4222-8222-222222222222",cohort_id:"ARE100-VALUE-20261115",
   repository_key:"gribstream/gribstream-mcp",assignee_id:tester.tester_id,assessor_organization:tester.organization,
   plan_snapshot:{declared_tool_count:12,auth_mode:"NONE",risk_level:"LOW",runtime_endpoint:"https://gribstream.com/mcp"}};
-function rq(path,{method="GET",data,cookie,bearer}={}){
+function rq(path,{method="GET",data,cookie,bearer,origin}={}){
  return new Request("https://example.org"+path,{method,headers:{"Content-Type":"application/json",
-  ...(cookie?{"Cookie":cookie}:{}),...(bearer?{"Authorization":"Bearer "+bearer}:{})},
+  ...(cookie?{"Cookie":cookie}:{}),...(bearer?{"Authorization":"Bearer "+bearer}:{}),
+  ...(origin?{"Origin":origin}:{})},
   ...(data===undefined?{}:{body:JSON.stringify(data)})});
 }
 test("Public page and project pool work without Owner login, but private owner endpoints remain secured",async()=>{
@@ -118,6 +119,65 @@ test("Tester can claim independently without Owner Token, with per-project one-t
  assert.equal(got[0].args[1],task.repository_key);
  assert.notEqual(got[0].args[2],response.task_token);
  assert.ok(!JSON.stringify(response.task).includes(response.task_token));
+});
+test("Claimed-task prompt recovery explicitly rotates only the signed-in tester\'s active Task Token",async()=>{
+ const got=[];
+ const sql=async(query,args)=>{
+  got.push({query,args});
+  if(query===Q.TESTER_ROTATE_TASK)return {...task,expires_at:"2026-11-23T00:05:18Z",
+   plan_snapshot:{...task.plan_snapshot,estimated_minutes:150,token_rotated_at:"2026-11-21T11:00:00Z"}};
+  throw Error("unexpected SQL");
+ };
+ const api=makeHandler({env:{ARE_INTAKE_OWNER_HASH:hash},sql});
+ const body={task_id:task.id,confirmation:"ROTATE MY TASK TOKEN"};
+ const origin="https://are.world2.co";
+ const rotate=(cookie,originValue,data=body)=>rq("/v3/tester/rotate",{
+  method:"POST",cookie,data,origin:originValue});
+ const before=await api(rotate("are_tester="+session,"https://evil.example"));
+ assert.equal(before.status,403);
+ const noCookie=await api(rotate(undefined,origin));
+ assert.equal(noCookie.status,401);
+ const forged=await api(rotate("are_tester="+session,origin,{...body,repository_key:"another/repo"}));
+ assert.equal(forged.status,400);
+ const noConfirm=await api(rotate("are_tester="+session,origin,{task_id:task.id,confirmation:"YES"}));
+ assert.equal(noConfirm.status,400);
+ assert.equal(got.length,0,"unauthorized/unclear actions must not touch database");
+ const issued=await api(rotate("are_tester="+session,origin));
+ assert.equal(issued.status,200);
+ const data=await issued.json();
+ assert.equal(data.task.id,task.id);
+ assert.equal(data.task.repository_key,task.repository_key);
+ assert.equal(data.task.assignee_id,task.assignee_id);
+ assert.equal(data.task.expires_at,"2026-11-23T00:05:18Z");
+ assert.equal(data.rotated,true);
+ assert.equal(data.old_token_invalidated,true);
+ assert.equal(data.task_progress_preserved,true);
+ assert.equal(data.visible_once,true);
+ assert.match(data.task_token,/^aret_[A-Za-z0-9_-]{43}$/);
+ assert.equal(got[0].query,Q.TESTER_ROTATE_TASK);
+ assert.equal(got[0].args[0],sessionHash);
+ assert.equal(got[0].args[1],task.id);
+ assert.equal(got[0].args[2],createHash("sha256").update(data.task_token).digest("hex"));
+ assert.ok(!JSON.stringify(data.task).includes(data.task_token));
+});
+test("Rotation fails closed for inactive, mismatched or recently rotated tasks",async()=>{
+ const api=makeHandler({env:{ARE_INTAKE_OWNER_HASH:hash},
+  sql:async query=>query===Q.TESTER_ROTATE_TASK?null:null});
+ const r=await api(rq("/v3/tester/rotate",{method:"POST",
+  cookie:"are_tester="+session,origin:"https://are.world2.co",
+  data:{task_id:task.id,confirmation:"ROTATE MY TASK TOKEN"}}));
+ assert.equal(r.status,409);
+ assert.equal((await r.json()).error,"task_unavailable_or_rotation_cooldown");
+ assert.match(Q.TESTER_ROTATE_TASK,/s.session_sha256=\$1/);
+ assert.match(Q.TESTER_ROTATE_TASK,/t.id=\$2::uuid/);
+ assert.match(Q.TESTER_ROTATE_TASK,/t.revoked_at IS NULL AND t.expires_at>now\(\)/);
+ assert.match(Q.TESTER_ROTATE_TASK,/FOR UPDATE OF t/);
+ assert.match(Q.TESTER_ROTATE_TASK,/token_rotated_at/);
+ assert.match(Q.TESTER_ROTATE_TASK,/UPDATE are_eval.private_assessment_tasks/);
+ assert.doesNotMatch(Q.TESTER_ROTATE_TASK,/INSERT INTO are_eval.private_assessment_tasks|DELETE FROM/);
+ const html=await (await api(rq("/v3/board"))).text();
+ for(const snippet of ["重新生成并复制完整提示词","旧 Task Token 将立即失效","/v3/tester/rotate",
+  "完整评测提示词（新领取或重新生成后显示）"])assert.ok(html.includes(snippet),snippet);
 });
 test("No eligible match, quota or concurrent race must deny a new claim",async()=>{
  const sql=async(q)=>q===Q.PUBLIC_CLAIM?null:null;

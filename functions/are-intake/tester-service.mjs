@@ -45,6 +45,26 @@ export async function publicTesterAction(path,req,sql){
   return {status:200,data:{ok:true,tester:session,created:true},
    setCookie:"are_tester="+secret+"; HttpOnly; Secure; SameSite=Lax; Path=/v3; Max-Age=1209600"};
  }
+ if(path==="/v3/tester/rotate"&&req.method==="POST"){
+  // A changing, cookie-authenticated action is never exposed to cross-site forms.
+  if(req.headers.get("origin")!=="https://are.world2.co")
+   return {status:403,data:{error:"same_origin_required"}};
+  const sessionHash=getCookie(req);
+  if(!sessionHash)return {status:401,data:{error:"tester_session_required"}};
+  const data=await parseJson(req);
+  if(!data||Object.keys(data).sort().join(",")!=="confirmation,task_id"||
+     !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.task_id||"")||
+     data.confirmation!=="ROTATE MY TASK TOKEN")fail("explicit_rotation_confirmation_required");
+  const secret="aret_"+randomBytes(32).toString("base64url");
+  const task=await sql(Q.TESTER_ROTATE_TASK,[sessionHash,data.task_id,sha(secret)]);
+  if(!task)return {status:409,data:{error:"task_unavailable_or_rotation_cooldown",
+   hint:"Only an active, session-owned task can be rotated; retry after one minute if just rotated."}};
+  return {status:200,data:{ok:true,task,task_token:secret,visible_once:true,
+   rotated:true,old_token_invalidated:true,task_progress_preserved:true,
+   plan:estimatePlan(Number(task.plan_snapshot?.declared_tool_count??0),
+    task.plan_snapshot?.auth_mode||"UNKNOWN",task.plan_snapshot?.risk_level||"LOW"),
+   private:true,published:false}};
+ }
  if(path==="/v3/tester/claim"&&req.method==="POST"){
   const sessionHash=getCookie(req);
   if(!sessionHash)return {status:401,data:{error:"tester_session_required"}};
