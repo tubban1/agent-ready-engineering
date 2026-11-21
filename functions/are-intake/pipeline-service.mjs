@@ -1,5 +1,6 @@
 import {randomBytes,createHash} from "node:crypto";
 import * as Q from "./pipeline-queries.mjs";
+import {qualityAssessment} from "./quality-screening.mjs";
 const sha=x=>createHash("sha256").update(x).digest("hex");
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const repo=/^[a-z\d_.-]+\/[a-z\d_.-]+$/i;
@@ -58,7 +59,29 @@ export function validateCoverage(rows,blockers=[],count){
   executed:pass+failed,
   executed_pass_rate:pass+failed?pass/(pass+failed):null};
 }
-export async function ownerAction(path,req,sql){
+export async function ownerAction(path,req,sql,{repoVerify}={}){
+ if(path==="/v3/pool/verify"&&req.method==="POST"){
+  const data=await input(req);
+  if(!repo.test(data?.repository_key||"")||Object.keys(data).join(",")!=="repository_key")fail("invalid_screening_request");
+  const target=await sql(Q.SCREEN_TARGET,[data.repository_key]);
+  if(!target||!target.runtime_endpoint)fail("screened_endpoint_required");
+  if(typeof repoVerify!=="function")fail("repository_verifier_unavailable");
+  const evidence=await repoVerify(target.repository_key,target.runtime_endpoint);
+  const saved=await sql(Q.SCREEN_SAVE,[target.repository_key,target.runtime_endpoint,
+   evidence.repository_match_verified,evidence.creator_contact_verified,
+   JSON.stringify(evidence.repository_match_evidence),JSON.stringify(evidence.creator_contact_evidence)]);
+  return {status:saved?200:409,data:saved?{ok:true,screening:saved}:
+   {ok:false,error:"screened_endpoint_changed_retry"}};
+ }
+ if(path==="/v3/pool/quality"&&req.method==="POST"){
+  const data=await input(req);
+  if(!repo.test(data?.repository_key||"")||data.repository_key.length>160)fail("invalid_screening_request");
+  const assessed=qualityAssessment(data);
+  const saved=await sql(Q.QUALITY_SAVE,[data.repository_key,assessed.score,
+   JSON.stringify(assessed.breakdown),JSON.stringify(assessed.evidence)]);
+  return {status:saved?200:404,data:saved?{ok:true,project:saved}:
+   {ok:false,error:"project_not_screened"}};
+ }
  if(path==="/v3/pool"&&req.method==="GET")return {status:200,data:{ok:true,...await sql(Q.POOL)}};
  if(path==="/v3/pool/filter"&&req.method==="POST"){
   const d=await input(req);
@@ -92,7 +115,7 @@ export async function ownerAction(path,req,sql){
       plan:estimatePlan(Number(task.plan_snapshot?.declared_tool_count??0),
         task.plan_snapshot?.auth_mode||"UNKNOWN",task.plan_snapshot?.risk_level||"LOW"),
       private:true,published:false,mcp_url:"https://are.world2.co/mcp"}:
-    {error:"project_not_eligible_already_issued_or_exceeds_test_budget"}};
+    {error:"project_not_eligible_or_quality_source_unverified_or_exceeds_test_budget"}};
  }
  if(path==="/v3/tasks"&&req.method==="GET")return {status:200,data:{ok:true,...await sql(Q.TASK_LIST)}};
  if(path==="/v3/tasks/revoke"&&req.method==="POST"){

@@ -74,6 +74,31 @@ test("Tester session and owned tasks are isolated by cookie hash",async()=>{
  assert.equal(got[0].args[0],sessionHash);
  assert.equal(got[1].args[0],sessionHash);
 });
+test("Tester-owned receipts come from scoped SQL and show review without exposing evidence",async()=>{
+ const receipt={submission_id:"33333333-3333-4333-8333-333333333333",
+ submitted_at:"2026-11-21T09:00:00Z",evidence_state:"READY_FOR_REVIEW",
+ review_decision:"NEEDS_RETEST",review_reason:"Need additional independent oracle",
+ criteria_counts:{PASS:5,FAIL:1,UNKNOWN:26},tool_counts:{PASS:3,FAIL:1},total_tools:4};
+ const sql=async(q,args)=>{
+  if(q===Q.TESTER_SESSION_READ)return tester;
+  if(q===Q.TESTER_MY_TASKS){
+   assert.equal(args[0],sessionHash);
+   return {tasks:[{id:task.id,repository_key:task.repository_key,submissions:1,receipts:[receipt]}]};
+  }
+  throw Error("unexpected SQL");
+ };
+ const api=makeHandler({env:{ARE_INTAKE_OWNER_HASH:hash},sql});
+ const r=await api(rq("/v3/tester/me",{cookie:"are_tester="+session}));
+ assert.equal(r.status,200);
+ assert.deepEqual((await r.json()).tasks[0].receipts[0],receipt);
+ assert.equal((await api(rq("/v3/tester/me"))).status,401);
+ assert.match(Q.TESTER_MY_TASKS,/private_task_submissions/);
+ assert.match(Q.TESTER_MY_TASKS,/private_review_verdicts/);
+ assert.match(Q.TESTER_MY_TASKS,/s.session_sha256=\$1/);
+ assert.doesNotMatch(Q.TESTER_MY_TASKS,/r.report(?!->)/);
+ const html=await (await api(rq("/v3/board"))).text();
+ for(const word of ["刷新任务状态","复制提交编号","已成功入库","退回补测","预检不会写入数据库"])assert.ok(html.includes(word),word);
+});
 test("Tester can claim independently without Owner Token, with per-project one-time Task Token",async()=>{
  const got=[];
  const sql=async(q,args)=>{
