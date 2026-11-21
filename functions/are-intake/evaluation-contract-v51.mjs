@@ -466,6 +466,49 @@ export function validateV5(data,{expectedEndpoint="",taskId="",captures=[]}={}){
   "Assessment can be privately submitted but must not assert exact pinned source is live deployment","warning");
  return {valid:errors.length===0,errors,warnings,metrics,readiness,attested_capture_ids:attested,protocol:EVIDENCE_PROTOCOL};
 }
+export function mcpEvaluationLifecycle(){
+ // Host actions are instructions, not server-side shell commands. The ARE
+ // intake service must never install, authenticate or uninstall a provider.
+ return {
+  lifecycle_version:"are.mcp-evaluation-lifecycle.v1",
+  phases:["READ_TASK","DISCOVER","SETUP","AUTH","SMOKE_TEST","EVALUATE","VALIDATE","SUBMIT","CONFIRM_RECEIPT","CLEANUP"],
+  discover:"Read the official publisher's installation, transport and authentication instructions, the pinned repository revision, and the screened endpoint. Check whether the MCP is ALREADY installed in this Agent host before making any change. Preserve baseline settings and do not equate an anonymous tools/list with host readiness.",
+  setup:{
+   action:"Install or connect the TARGET MCP in the Agent host when needed, not merely write installation instructions.",
+   remote:"For remote HTTPS MCP, register its verified endpoint using the Agent host's native MCP manager and verify initialize plus tools/list. Prefer the host's native transport and OAuth handler; do not build a custom local callback/proxy if native OAuth works.",
+   stdio:"For STDIO, follow inspected official install/run instructions in a dedicated isolated workspace using version-pinned trusted packages/commands; verify the local server launches and handles tools/list. No curl-to-shell, global package overwrite, shared configuration replacement, new Git worktree or unreviewed executable. Never install privileged or destructive dependencies without specific user authorization.",
+   baseline:"Before modifications record a private setup_manifest with host name, original installed/configured state, owned path(s), exact new server config entry, package names/versions, install commands, ownership and preexisting shared dependencies. Treat installed=true from a prior user as PROTECTED_PREEXISTING, not owned by this task.",
+   environment:"If the host lacks supported MCP connection/install capability, permission, space or trusted instructions, use a safe alternate authorized Agent host if available; otherwise record HOST_UNSUPPORTED or SETUP_FAILED as an ENVIRONMENT blocker, keep the remaining tests and submit an honest PARTIAL report. Never blame the vendor for host setup failure."
+  },
+  authorization:"If protected tools require OAuth, record are_request_authorization then trigger native Agent-host connect/reconnect and let the user decide on the official provider consent page. GRANTED in ARE does not mean provider login succeeded. Use existing securely configured API keys only; never paste secrets into ARE, chat, evidence or setup_manifest.",
+  smoke_test:"After setup or reconnect, check native initialize, exhaustive tools/list (follow cursors), and at least one explicitly authorized safe real tools/call with original wire request/response and result readback. Prove OAuth via a real authorized tool call. No fabricated PASS based on installation, a configuration file, an HTTP 200 or OAuth GRANTED.",
+  evaluate:"Run authorized safe tool scenarios and at least one real Agent task with an independent Oracle. Track all discovered tools and the V5.1 product criteria, preserve native captures with SHA-256 and checkpoint while in progress. Distinguish vendor defects from setup, auth, host and environmental blockers.",
+  submit:"Call are_validate_assessment and repair genuine validation failures; submit exactly once via are_submit_assessment. This step may record an honestly PARTIAL report, which is NOT a completed test.",
+  cleanup:{
+   permission:"The task owner permits the Agent to remove ONLY MCP installs and connection entries newly created exclusively for this evaluation, using the recorded setup_manifest, after a completed private submission. This is NOT authority to delete any preexisting installation, user/shared config, packages, worktrees, source files, evidence or other agents' sessions.",
+   eligibility:"Require the successful ARE Neon submission response with submission_id, task_token_closed=true AND test_completion.status=COMPLETE. If response was lost, obtain independent confirmation from the task's authenticated tester dashboard before cleanup; an HTTP timeout or attempted submission alone is insufficient.",
+   actions:"After verifying baseline against the setup_manifest and absence of other users/sessions, disconnect only this task-created remote MCP server entry OR uninstall its task-owned isolated STDIO package/workspace using its documented reversible uninstaller. Never delete a shared/global dependency or alter a preexisting MCP. Keep all report, raw traces, Oracle, setup_manifest, submission receipt and task artifacts in the approved durable evidence store (NAS when mounted). Clean local secrets using host-supported credential management only when task-exclusive; do not revoke a shared provider token or account.",
+   not_eligible:"On PARTIAL, failed/unconfirmed submission, missing setup_manifest, changed/shared files, uncertain ownership, active users or inability to verify safe deletion: do NOT remove anything automatically; report CLEANUP_SKIPPED with the exact reason and minimally scoped manual steps. Never use force removal, recursive broad deletion, git clean or branch removal.",
+   receipt:"Report cleanup as REMOVED_TASK_OWNED, NOT_NEEDED_PREEXISTING, or CLEANUP_SKIPPED; list affected paths/config keys without printing secrets. Cleanup cannot change an already submitted ARE verdict or silently erase evidence."
+  }
+ };
+}
+
+export function cleanupEligibility(submission){
+ const hasReceipt=typeof submission?.submission_id==="string"&&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(submission.submission_id)&&
+  submission?.task_token_closed===true;
+ const completed=submission?.test_completion?.status==="COMPLETE";
+ return {
+  permitted:hasReceipt&&completed,
+  reason:!hasReceipt?"SUBMISSION_NOT_CONFIRMED":
+   !completed?"PARTIAL_OR_UNFINISHED_TEST":"NEON_SUBMISSION_CONFIRMED_COMPLETE",
+  scope:"ONLY_TASK_OWNED_MCP_INSTALL_OR_CONNECTION_WITH_VERIFIED_BASELINE",
+  requires_setup_manifest:true,retain_evidence:true,
+  guide:mcpEvaluationLifecycle().cleanup
+ };
+}
+
 export function v5EvidenceGuide(){
  const request={jsonrpc:"2.0",id:1,method:"tools/call",params:{name:"read_info",arguments:{}}};
  const response={jsonrpc:"2.0",id:1,result:{content:[{type:"text",text:JSON.stringify({count:2})}]}};
@@ -473,6 +516,7 @@ export function v5EvidenceGuide(){
    endpoint:"https://EXAMPLE.COM/mcp",transport:"http",request,response,
    wire_request:JSON.stringify(request),wire_response:JSON.stringify(response)});
  return {protocol:EVIDENCE_PROTOCOL,report_schema:"are.assessment.result.v3",
+   evaluation_lifecycle:mcpEvaluationLifecycle(),
    statuses:[...status],tool_statuses:[...toolStatus],applicability_facts:FACT_NAMES,
    default_finding_status:"NOT_TESTED",
    task_scope:"Task Token is supplied only to the ARE MCP, never to the evaluated project.",
