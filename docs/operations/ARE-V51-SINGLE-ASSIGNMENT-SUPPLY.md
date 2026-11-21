@@ -8,10 +8,12 @@
 - To fix an incomplete report after an explicit human NEEDS_RETEST verdict, a new linked-by-repository task is issued for an immutable new assessment. The previous report is not overwritten; nothing is automatically published.
 - Human review of a PARTIAL submission remains reviewable, but cannot be marked VERIFIED as complete; it can be returned for retesting.
 
-## OAuth and API keys
-- When a service needs OAuth or API key, Agent invokes are_request_authorization. If the task's human creator had already selected allow_oauth on the assignment form AND the Agent explicitly reports auth_scheme=OAUTH, the request is GRANTED with a server-owned timestamp. API_KEY or UNKNOWN requests remain PENDING, requiring a human decision. Otherwise it stays PENDING for a human decision on the ARE page.
-- If GRANTED and OAuth is needed, the Agent must proactively use its *own host's OAuth-aware MCP connect/reconnect* to **open the provider's verified official authorization page in the human's browser**. The human logs in and consents at the provider. The Agent must then retry the native tools and capture real authenticated protocol traces. ARE has no ability to force the host browser open and NEVER receives provider passwords/API keys/OAuth tokens.
-- If the host lacks native browser/OAuth support, present a vetted official login URL for the human to open (no inferred arbitrary URLs) and record the environment limitation. Do not silently skip the protected tools or ask for secrets in chat. GRANTED is not proof that third-party OAuth succeeded.
+## OAuth and API keys: no ARE approval UI
+- Agent records discovered authentication with are_request_authorization(auth_scheme=OAUTH|API_KEY|UNKNOWN). ARE saves a task-scoped *challenge/handoff record*, not user consent.
+- For OAuth, the Agent MUST actively use the host's native MCP OAuth connect/reconnect to open the provider's official login/consent page in the user's browser. **The user only decides on the provider page**, not on ARE. No ARE approval/rejection buttons or OAuth opt-in checkbox.
+- If the host lacks browser/OAuth integration, report the environment limitation and show only a verified official link. ARE itself cannot operate another Agent host's browser; never request passwords, tokens or API keys via chat.
+- API_KEY connections may only use already authorized credentials configured in the host; otherwise record BLOCKED_AUTH. The handoff never authorizes destructive actions, payments or third-party messages.
+- Existing historical records are not rewritten. In new requests, GRANTED means only that a provider-auth handoff may start, not that any third-party consent took place.
 
 ## Continuous quality-gated supply
 - When a tester clicks **领取下一任务** and the current qualified pool cannot produce a task, the service checks a durable 20-minute DB lease and scans a bounded batch of pending candidates. Requests are made **only to api.github.com**. Published HTTPS endpoint references are parsed as text from official GitHub README; the replenisher NEVER fetches an arbitrary link found there.

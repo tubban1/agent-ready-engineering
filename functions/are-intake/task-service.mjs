@@ -125,22 +125,26 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
    const state=await sql(AUTH_REQUEST_SQL,[digest,task.id,input.reason,JSON.stringify(input.scopes),input.scheme]);
    if(!state)return {status:409,data:{error:"authorization_request_not_saved"}};
    return {status:200,data:{ok:true,authorization:state,
-     next_action:state.decision==="GRANTED"?"OPEN_OFFICIAL_OAUTH_IN_AGENT_HOST_BROWSER":"AWAIT_USER_AUTHORIZATION",
-     preauthorized_by_task_choice:task.plan?.oauth_allowed===true&&input.scheme==="OAUTH",
-     instruction:state.decision==="PENDING"?
-      "Ask for human approval on the ARE task page; do not run protected tools until approved. Prepare your host's OAuth browser connection.":
-      "Act now: initiate your host's native MCP OAuth connect/reconnect flow and OPEN the provider's official authorization page in the human user's browser. Let the user sign in/consent there. If your host cannot open it, show a verified provider login link and explain the limitation. Never request keys in chat.",
-     privacy:"This approves attempting official provider authorization, not proof that third-party sign-in succeeded.",
+     next_action:input.scheme==="OAUTH"?"OPEN_PROVIDER_OAUTH_IN_AGENT_HOST_BROWSER":
+       "CHECK_HOST_CONFIGURED_CREDENTIALS_OR_REPORT_BLOCKED",
+     are_approval_required:false,
+     instruction:input.scheme==="OAUTH"?
+      "Immediately initiate the target MCP service's native OAuth connect/reconnect in your Agent host; OPEN the verified official provider consent page in the user's browser. The user decides on that provider page. Do not send the user back to ARE or ask them to paste credentials. If your host cannot open it, explain the host limitation and provide only a verified official provider link; never fabricate one.":
+      "No ARE approval button. For API keys, use only credentials already securely configured in the user's authorized host; never solicit or transmit keys in chat or ARE. Otherwise record BLOCKED_AUTH and continue safe tests.",
+     privacy:"ARE records the authentication handoff, never grants provider OAuth consent or certifies login.",
      private:true}};
  }
  if(path==="/v3/task/auth/status"&&req.method==="POST"){
    const state=await sql(AUTH_STATUS_SQL,[digest,task.id]);
    return {status:200,data:{ok:true,authorization:state,
      credential_granted_by_provider:false,
-     guidance:!state?"No ARE authorization request yet":
-      state.decision==="PENDING"?"Await tester's decision; do not run credentialed tools":
-      state.decision==="GRANTED"?"Immediately open the provider's official OAuth consent flow in the agent host browser using its native MCP OAuth client/reconnect capability. Ask the user to complete third-party sign-in there. If browser opening is unavailable provide the verified official link, record the blocker, then verify native authorized MCP traces":
-      "Human declined; keep credentialed tools BLOCKED_AUTH and submit an explicitly partial report.",private:true}};
+     are_approval_required:false,
+     guidance:!state?"Register observed OAuth/API key challenge through are_request_authorization":
+      state.auth_scheme==="OAUTH"&&state.decision!=="DECLINED"?
+      "Immediately launch the provider's official OAuth consent page with host-native MCP connect/reconnect. The human decides ONLY on the provider page; no ARE button. Verify actual authenticated calls afterward.":
+      state.auth_scheme==="API_KEY"?
+      "Use only an already authorized securely configured host API key; if unavailable, record BLOCKED_AUTH. No ARE approval and never paste credentials into chat.":
+      "Do not claim provider authentication without real native authorized traces; record blockers and an honestly partial report.",private:true}};
  }
  if(path==="/v3/task/contract"&&req.method==="POST")
    return {status:200,data:{ok:true,contract:v5EvidenceGuide(),

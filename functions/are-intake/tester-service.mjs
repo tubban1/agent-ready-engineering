@@ -1,7 +1,6 @@
 import {randomBytes,createHash} from "node:crypto";
 import * as Q from "./pipeline-queries.mjs";
 import {estimatePlan} from "./pipeline-service.mjs";
-import {AUTH_DECIDE_SQL,mustBeHumanConsent} from "./authorization-service.mjs";
 import {replenishQualifiedPool} from "./candidate-supply.mjs";
 const sha=x=>createHash("sha256").update(x).digest("hex");
 const fail=code=>{const e=new Error(code);e.code=code;throw e};
@@ -46,23 +45,6 @@ export async function publicTesterAction(path,req,sql,{refill=replenishQualified
   if(!session)return {status:429,data:{error:"tester_sessions_rate_limited"}};
   return {status:200,data:{ok:true,tester:session,created:true},
    setCookie:"are_tester="+secret+"; HttpOnly; Secure; SameSite=Lax; Path=/v3; Max-Age=1209600"};
- }
- if(path==="/v3/tester/auth/decide"&&req.method==="POST"){
-   const origin=req.headers.get("origin");
-   if(!new Set(["https://are.world2.co",
-     "https://br-raspy-hat-b96bluqn-areintake.compute.c-7.eu-central-1.aws.neon.tech"]).has(origin))
-    return {status:403,data:{error:"same_origin_required"}};
-   const sessionHash=getCookie(req);
-   if(!sessionHash)return {status:401,data:{error:"tester_session_required"}};
-   const input=await parseJson(req);
-   if(!input||Object.keys(input).sort().join(",")!=="decision,task_id"||
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.task_id||""))
-      fail("invalid_authorization_decision_request");
-   const decision=mustBeHumanConsent(input.decision);
-   const result=await sql(AUTH_DECIDE_SQL,[sessionHash,input.task_id,decision]);
-   return {status:result?200:409,data:result?{ok:true,authorization:result,
-    provider_oauth_completed:false,private:true}:
-    {error:"authorization_request_not_pending_or_not_owned"}};
  }
  if(path==="/v3/tester/rotate"&&req.method==="POST"){
   // A changing, cookie-authenticated action is never exposed to cross-site forms.

@@ -175,8 +175,8 @@ export function preflightAssessment(data,{assigneeId,organization,repositoryKey,
  const completionReasons=[];
  if(blockers.length)completionReasons.push("TOOLS_INCOMPLETE");
  if(unevaluated.length)completionReasons.push("CRITERIA_INCOMPLETE");
- if(auth.required&&auth.state!=="USER_ALLOWED_PROVIDER_LOGIN")completionReasons.push("AUTH_NOT_GRANTED");
- if(auth.required&&auth.state==="USER_ALLOWED_PROVIDER_LOGIN"&&blockers.some(x=>x.status==="BLOCKED_AUTH"))
+ if(auth.required&&auth.state!=="PROVIDER_AUTH_HANDOFF_READY")completionReasons.push("AUTH_NOT_GRANTED");
+ if(auth.required&&auth.state==="PROVIDER_AUTH_HANDOFF_READY"&&blockers.some(x=>x.status==="BLOCKED_AUTH"))
   completionReasons.push("PROVIDER_AUTH_OR_EXECUTION_NOT_COMPLETED");
  if(d?.kind!=="MEASURED")completionReasons.push("ACTIVE_TIME_UNMEASURED");
  const completion={status:completionReasons.length?"PARTIAL":"COMPLETE",
