@@ -1,6 +1,6 @@
 import {randomBytes,createHash} from "node:crypto";
 import {preflightAssessment,renderStructuredReport} from "./evidence-validation.mjs";
-import {EVIDENCE_PROTOCOL,v5EvidenceGuide,mcpEvaluationLifecycle,cleanupEligibility} from "./evaluation-contract-v51.mjs";
+import {EVIDENCE_PROTOCOL,v52EvidenceGuide,mcpEvaluationLifecycle,cleanupEligibility} from "./evaluation-contract-v52.mjs";
 import {CAPTURE_READ_SQL,captureReadOnly,validCaptureId} from "./capture-v5.mjs";
 import {AUTH_REQUEST_SQL,AUTH_STATUS_SQL,authRequired,authorizationRequestData} from "./authorization-service.mjs";
 import {HANDOFF_START_SQL,HANDOFF_FINISH_SQL,HANDOFF_STATUS_SQL,
@@ -91,7 +91,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
    assessor_organization:assignment.assessor_organization,created_at:assignment.created_at,expires_at:assignment.expires_at,plan:assignment.plan_snapshot,
    endpoint:{url:assignment.plan_snapshot?.runtime_endpoint||assignment.screened_endpoint||"",status:"SCREENED_NOT_INDEPENDENTLY_ATTESTED",screened_at:assignment.screened_at||null},
    auth_mode:assignment.plan_snapshot?.auth_mode||assignment.screened_auth_mode||"UNKNOWN"};
- if(path==="/v3/task/read"&&req.method==="POST")return {status:200,data:{ok:true,task,criteria_version:"pilot-2026-11-21",
+ if(path==="/v3/task/read"&&req.method==="POST")return {status:200,data:{ok:true,task,criteria_version:"are.criteria.v5.2",
    assessment_mode:"ARE_INDEPENDENT",track:"product",task_token_echoed:false,
    workflow:["are_get_task","are_get_criteria","are_request_authorization_if_needed","are_record_provider_handoff_START_FINISH_if_needed","are_checkpoint","are_validate_assessment","are_submit_assessment"],
    constraints:["Only authorized non-destructive operations","Record UNKNOWN/NOT_TESTED rather than fabricate results",
@@ -112,7 +112,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
      source_binding:{verified:false,evidence_ref:"",reason:"Not yet verified by independent source-to-deployment observations"},
      contact_route:{url:"https://github.com/"+task.repository_key},
      report:{schema:"are.assessment.result.v3",mode:"ARE_INDEPENDENT",track:"product",
-       criteria_version:"pilot-2026-11-21",maturity_level:null,certification:false,
+       criteria_version:"are.criteria.v5.2",maturity_level:null,certification:false,
        public_release_authorized:false,
        target:{id:task.repository_key,source_revision:"REPLACE_WITH_ACTUAL_40_HEX_GIT_SHA",
           observed_version:"REPLACE_WITH_ACTUALLY_OBSERVED_VERSION",
@@ -184,7 +184,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   error("invalid_provider_handoff_phase");
  }
  if(path==="/v3/task/contract"&&req.method==="POST")
-   return {status:200,data:{ok:true,contract:v5EvidenceGuide(),
+   return {status:200,data:{ok:true,contract:v52EvidenceGuide(),
      criteria_machine_contract:criteria.map(c=>({id:c.id,applies_when:c.applies_when,
        pass_if:c.pass_if,minimum_samples:c.minimum_samples,obligation:c.obligation})),
      private:true,public_release_authorized:false}};
@@ -198,7 +198,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   if(!Number.isInteger(offset)||offset<0||offset>criteria.length||Object.keys(input||{}).some(k=>k!=="offset"))
     error("invalid_criteria_cursor");
   const page=criteria.slice(offset,offset+8);
-  return {status:200,data:{ok:true,criteria_version:"pilot-2026-11-21",total:criteria.length,offset,
+  return {status:200,data:{ok:true,criteria_version:"are.criteria.v5.2",total:criteria.length,offset,
      criteria:page,next:offset+page.length<criteria.length?offset+page.length:null}};
  }
  const runPreflight=async(payload)=>{

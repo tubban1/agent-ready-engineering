@@ -99,8 +99,8 @@ export function registerTaskTools(server:McpServer):void{
  },async ({task_token,...fields})=>request("/v3/task/checkpoint",task_token,fields));
 
  server.registerTool("are_get_evidence_contract",{
-  title:"Get ARE V5 assessment contract, required MCP setup and safe teardown lifecycle",
-  description:"Includes required target-MCP discovery, host-specific setup/connection, provider OAuth, real smoke test and bounded task-owned teardown after confirmed COMPLETE Neon submission. Read EXACT machine-readable requirements for all 32 ARE criteria (applicability conditions, evidence metrics, minimum samples), stable raw MCP observation grammar, independent oracle proof, agent goals and deployment binding; use this instead of trial/error or cloning the source repo. This tool does not submit or alter anything.",
+  title:"Get ARE V5.2 strict assessment contract, required MCP setup and safe teardown lifecycle",
+  description:"Breaking V5.2: tool PASS requires independent domain/semantic oracle, not text-only success; BLOCKED must match actual native error, criterion PASS must reference relevant tests/docs. Old V5.1 payloads are rejected. Includes required target-MCP discovery, host-specific setup/connection, provider OAuth, real smoke test and bounded task-owned teardown after confirmed COMPLETE Neon submission. Read EXACT machine-readable requirements for all 32 ARE criteria (applicability conditions, evidence metrics, minimum samples), stable raw MCP observation grammar, independent oracle proof, agent goals and deployment binding; use this instead of trial/error or cloning the source repo. This tool does not submit or alter anything.",
   inputSchema:z.object({task_token:token}),annotations:TASK_READONLY
  },async ({task_token})=>request("/v3/task/contract",task_token));
 
