@@ -1,5 +1,5 @@
-// Auth decision is a real task owner's browser action, not an Agent-authored assertion.
-// GRANTED allows initiating the provider's official login; it never means OAuth succeeded.
+// Legacy database decision=GRANTED records an auth challenge, not user consent.
+// Public API must not expose it as a successful provider authorization.
 export const AUTH_REQUEST_SQL=[
  "WITH permitted AS (SELECT t.id,t.plan_snapshot FROM are_eval.private_assessment_tasks t",
  "WHERE t.token_sha256=$1 AND t.id=$2::uuid AND t.revoked_at IS NULL AND t.expires_at>now()",
@@ -48,7 +48,7 @@ export function authRequired(payload,taskMode="UNKNOWN"){
  });
 }
 export function authorizationCompletion(auth){
- return !auth?"NOT_REQUESTED":auth.decision==="GRANTED"?"PROVIDER_AUTH_HANDOFF_READY":
+ return !auth?"NOT_REQUESTED":auth.decision==="GRANTED"?"CHALLENGE_RECORDED":
   auth.decision==="DECLINED"?"LEGACY_USER_DECLINED":"LEGACY_PENDING";
 }
 export function validateAuth(payload,mode,auth,issue){

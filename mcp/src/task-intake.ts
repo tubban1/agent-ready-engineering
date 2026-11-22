@@ -11,7 +11,7 @@ const token=z.string().regex(TOKEN_PATTERN).describe("Task-specific scoped token
 function ok(data:TaskData){return {content:[{type:"text" as const,text:JSON.stringify(data,null,2)}],structuredContent:data};}
 function fail(code:string){return {isError:true,content:[{type:"text" as const,text:JSON.stringify({error:code})}]};}
 export async function callTaskApi(
-  path:"/v3/task/read"|"/v3/task/criteria"|"/v3/task/contract"|"/v3/task/capture"|"/v3/task/submit"|"/v3/task/receipt"|"/v3/task/validate"|"/v3/task/checkpoint"|"/v3/task/progress"|"/v3/task/auth/request"|"/v3/task/auth/status",
+  path:"/v3/task/read"|"/v3/task/criteria"|"/v3/task/contract"|"/v3/task/capture"|"/v3/task/submit"|"/v3/task/receipt"|"/v3/task/validate"|"/v3/task/checkpoint"|"/v3/task/progress"|"/v3/task/auth/request"|"/v3/task/auth/status"|"/v3/task/auth/handoff",
   taskToken:string, payload:TaskData={},requestFetch:typeof fetch=fetch
 ):Promise<{ok:boolean;data:TaskData}>{
  if(!TOKEN_PATTERN.test(taskToken))return {ok:false,data:{error:"invalid_task_token"}};
@@ -52,7 +52,7 @@ export function registerTaskTools(server:McpServer):void{
 
  server.registerTool("are_request_authorization",{
   title:"Record target MCP authentication challenge and initiate provider-native login",
-  description:"On OAuth, call this with auth_scheme=OAUTH, then IMMEDIATELY use the Agent host's native MCP OAuth connect/reconnect to OPEN the provider's official login page in the user's browser. NO ARE approval, button or checkbox. The user decides whether to consent ONLY on the provider page. This tool records the challenge, it does not open the browser or grant third-party consent. For API_KEY use only securely preconfigured host credentials; never solicit secrets in chat. If the host cannot open OAuth, record that limitation and provide only a verified official provider URL. Actual authorized native MCP traces must prove successful tool execution.",
+  description:"When the target MCP needs OAuth OR API_KEY, register its actual scheme then ACT. OAuth: proactively open official provider consent in host browser. API_KEY: proactively open official account/signup/key setup page and offer the user secure host key configuration. Never just record BLOCKED_AUTH and submit without giving the user a provider-side choice. No ARE approval. Then record are_record_provider_handoff START/FINISH with real navigation/outcome. Never paste secrets in chat/ARE, silently register user accounts or perform destructive writes.",
   inputSchema:z.object({task_token:token,
    reason:z.string().min(12).max(500).describe("User-visible authorization requirement, scoped to the screened project; never credentials"),
    requested_scopes:z.array(z.string().min(1).max(100)).max(20).default([]),
@@ -61,9 +61,26 @@ export function registerTaskTools(server:McpServer):void{
  },async ({task_token,reason,requested_scopes,auth_scheme})=>
    request("/v3/task/auth/request",task_token,{reason,requested_scopes,auth_scheme}));
 
+ server.registerTool("are_record_provider_handoff",{
+  title:"Log actual provider browser handoff for OAuth or API key, then user/host outcome",
+  description:"REQUIRED for a partial assessment containing BLOCKED_AUTH. START only after opening the official provider login/account/API-key page or presenting a verified official link in the user-visible host; record the official source URL and actual host navigation reference. For a preconfigured credential, use PRECONFIGURED_CREDENTIAL and a source URL instead. FINISH only after actual outcome AUTHENTICATED, USER_DECLINED, PROVIDER_FAILED, HOST_UNSUPPORTED or CREDENTIAL_UNAVAILABLE; include host/user event reference and meaningful explanation. WAITING_FOR_USER cannot be submitted. Evidence is Agent-reported and must be independently reviewed. Never include secrets, callback codes, API keys or passwords. Third-party account creation requires user consent.",
+  inputSchema:z.object({task_token:token,phase:z.enum(["START","FINISH"]),
+    auth_scheme:z.enum(["OAUTH","API_KEY"]).optional(),
+    host_action:z.enum(["BROWSER_OPENED","VERIFIED_LINK_SHOWN","HOST_UNSUPPORTED","PRECONFIGURED_CREDENTIAL"]).optional(),
+    host_action_ref:z.string().min(8).max(240).optional(),
+    provider_url:z.string().nullable().optional(),source_url:z.string().nullable().optional(),
+    note:z.string().min(20).max(600),
+    outcome:z.enum(["AUTHENTICATED","USER_DECLINED","PROVIDER_FAILED","HOST_UNSUPPORTED","CREDENTIAL_UNAVAILABLE"]).optional(),
+    outcome_ref:z.string().min(8).max(240).optional()}),
+  annotations:TASK_SUBMISSION
+ },async ({task_token,phase,auth_scheme,host_action,host_action_ref,provider_url,source_url,note,outcome,outcome_ref})=>
+   request("/v3/task/auth/handoff",task_token,phase==="START"?
+    {phase,auth_scheme,host_action,host_action_ref,provider_url:provider_url??null,source_url:source_url??null,note}:
+    {phase,outcome,outcome_ref,note}));
+
  server.registerTool("are_get_authorization_status",{
   title:"Read task-scoped authentication handoff status, not third-party consent",
-  description:"Reads the authentication challenge, never ARE user approval. GRANTED means the Agent may start provider-native OAuth; the real consent decision is on the provider page. For OAuth immediately launch the host's native MCP OAuth browser flow without ARE UI interaction. This receipt does not prove provider login, a granted token or successful protected tool execution. Save original native MCP traces.",
+  description:"Shows the task-scoped AUTH CHALLENGE, not third-party consent. Historical database field GRANTED means challenge registered, NOT provider approval. For OAuth or API_KEY proactively open the official provider's login/key page and log are_record_provider_handoff START/FINISH. Real successful native MCP tool traces are the only evidence of authenticated execution.",
   inputSchema:z.object({task_token:token}),annotations:TASK_READONLY
  },async ({task_token})=>request("/v3/task/auth/status",task_token));
 
