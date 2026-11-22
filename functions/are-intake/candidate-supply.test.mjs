@@ -23,6 +23,13 @@ test("Source extraction rejects registry, badge, localhost, credential-bearing U
   "bad https://example.org:8443/mcp";
  assert.deepEqual(documentedEndpoints(text),["https://public-service.example/mcp"]);
 });
+test("README fenced or inline code URLs are parsed as exact public MCP endpoints, not as URLs ending in a backtick",()=>{
+ const text="Hosted: \`https://mcp.open-example.org/mcp\`\n"+
+  "Fenced:\n\`\`\`\nhttps://mcp.bare-example.org/mcp\n\`\`\`";
+ assert.deepEqual(documentedEndpoints(text),[
+  "https://mcp.open-example.org/mcp","https://mcp.bare-example.org/mcp"
+ ]);
+});
 test("Quality requires real public repository, source binding, freshness and actual observed inventory",()=>{
  const best=objectiveScreen({repo:active,readme,endpoint:"https://public-service.example/mcp",
   observedTools:18,verified:true,contact:true});
