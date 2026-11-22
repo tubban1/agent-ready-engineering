@@ -28,7 +28,7 @@ export function validateSubmission(data, reviewerId) {
  const {cohort_id,repository_key,report,agent_tasks=[],recommendations=[],summary="",contact_route={},source_binding={}}=data;
  if(cohort_id!=="ARE100-VALUE-20261115"||!REPO.test(repository_key||"")||repository_key.length>160)fail("not_catalog_target");
  if(!report||report.schema!=="are.assessment.result.v3"||report.mode!=="ARE_INDEPENDENT"||
-    report.track!=="product"||report.criteria_version!=="are.criteria.v5.2"||
+    report.track!=="product"||report.criteria_version!=="are.criteria.v5.3"||
     report.certification!==false||report.public_release_authorized!==false||
     report.maturity_level!==null)fail("unsupported_assessment");
  const target=report.target,assessor=report.assessor;

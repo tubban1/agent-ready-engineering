@@ -178,7 +178,7 @@ test("Formal submit refuses unrecorded auth challenge; recorded legacy partial r
  assert.equal(writes.length,0);
  handoff={auth_scheme:"OAUTH",host_action:"BROWSER_OPENED",provider_url:"https://provider.example.com/login",
   source_url:"https://github.com/real/provider/blob/main/README.md",host_action_ref:"host-browser-log-42",
-  outcome:"USER_DECLINED",outcome_ref:"user-declined-event-42",
+  outcome:"HOST_UNSUPPORTED",outcome_ref:"host-no-oauth-ui-event-42",
   started_at:"2026-11-21T12:28:00Z",finished_at:"2026-11-21T12:29:00Z"};
  const withPending=await taskAgentAction("/v3/task/submit",post("/v3/task/submit",p,{bearer:secret}),sql,deps);
  assert.equal(withPending.status,200,JSON.stringify(withPending.data).slice(0,2400));
@@ -188,7 +188,7 @@ test("Formal submit refuses unrecorded auth challenge; recorded legacy partial r
  const stored=JSON.parse(writes[0][10]);
  assert.equal(stored.test_completion.status,"PARTIAL");
  assert.equal(stored.test_completion.authorization,"CHALLENGE_RECORDED");
- assert.equal(stored.provider_auth_handoff?.status,"USER_DECLINED");
+ assert.equal(stored.provider_auth_handoff?.status,"HOST_UNSUPPORTED");
  assert.equal(stored.test_completion.tools_executed,0);
  assert.equal(stored.test_completion.total_tools,1);
  assert.equal(stored.test_metadata.duration.kind,"UNMEASURED");

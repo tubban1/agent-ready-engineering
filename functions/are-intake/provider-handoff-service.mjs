@@ -1,7 +1,7 @@
 // An Agent-host action receipt, never a claim that ARE saw the actual browser UI.
 const bad=code=>{throw Object.assign(new Error(code),{code})};
 const isText=(s,min,max)=>typeof s==="string"&&s.trim().length>=min&&s.length<=max;
-export function safeOfficialUrl(value){
+export function safeOfficialUrl(value,{allowMetadata=false}={}){
  if(value===null||value===undefined)return null;
  if(!isText(value,14,450))bad("unsafe_provider_url");
  let u;
@@ -13,6 +13,10 @@ export function safeOfficialUrl(value){
     /^[0-9.]+$/.test(host)||host.includes(":")||
     /(?:oauth|api|auth|access)[_-]?(?:token|key)=/i.test(value))
    bad("unsafe_provider_url");
+ // RFC 9728 protected-resource metadata describes where authorization can be
+ // discovered; it is NOT a user-visible OAuth authorization/consent page.
+ if(!allowMetadata&&/\/\.well-known\/(?:oauth-protected-resource|oauth-authorization-server)(?:\/|$)/i.test(u.pathname))
+   bad("provider_metadata_not_consent_page");
  return u.toString();
 }
 export function handoffStartData(raw){
@@ -21,7 +25,7 @@ export function handoffStartData(raw){
     !["BROWSER_OPENED","VERIFIED_LINK_SHOWN","HOST_UNSUPPORTED","PRECONFIGURED_CREDENTIAL"].includes(raw.host_action)||
     !isText(raw.host_action_ref,8,240)||!isText(raw.note,20,600)||
     /(ow_live_|Bearer\s+\S+|api[_-]?key\s*[:=]\s*\S+)/i.test(raw.note+" "+raw.host_action_ref))bad("invalid_provider_handoff_start");
- const provider=safeOfficialUrl(raw.provider_url),source=safeOfficialUrl(raw.source_url);
+ const provider=safeOfficialUrl(raw.provider_url),source=safeOfficialUrl(raw.source_url,{allowMetadata:true});
  if(raw.host_action!=="PRECONFIGURED_CREDENTIAL"&&(!provider||!source))
     bad("verified_provider_link_required");
  if(raw.host_action==="PRECONFIGURED_CREDENTIAL"&&(!source||provider))bad("preconfigured_credential_provenance_required");
@@ -33,6 +37,10 @@ export function handoffFinishData(raw){
     !["AUTHENTICATED","USER_DECLINED","PROVIDER_FAILED","HOST_UNSUPPORTED","CREDENTIAL_UNAVAILABLE"].includes(raw.outcome)||
     !isText(raw.outcome_ref,8,240)||!isText(raw.note,20,600)||
     /(ow_live_|Bearer\s+\S+|api[_-]?key\s*[:=]\s*\S+)/i.test(raw.note+" "+raw.outcome_ref))bad("invalid_provider_handoff_finish");
+ // Any text passed through this Agent tool is authored by the assessor.
+ // Without a cryptographically verified user/provider/host callback,
+ // accepting USER_DECLINED would invent a real human's decision.
+ if(raw.outcome==="USER_DECLINED")bad("user_decision_requires_trusted_attestation");
  return {outcome:raw.outcome,ref:raw.outcome_ref,note:raw.note};
 }
 export const HANDOFF_START_SQL=[
@@ -75,6 +83,7 @@ const FINISHED=new Set(["AUTHENTICATED","USER_DECLINED","PROVIDER_FAILED","HOST_
 export function handoffBlockingError(h,scheme){
  if(!h)return "provider_handoff_not_started";
  if(scheme&&["OAUTH","API_KEY"].includes(scheme)&&h.auth_scheme!==scheme)return "provider_auth_scheme_mismatch";
+ if(h.outcome==="USER_DECLINED")return "user_decision_not_independently_attested";
  if(!FINISHED.has(h.outcome))return "provider_handoff_waiting_for_user";
  if(!h.finished_at||!h.outcome_ref)return "provider_handoff_evidence_missing";
  if(!h.source_url)return "provider_official_source_missing";

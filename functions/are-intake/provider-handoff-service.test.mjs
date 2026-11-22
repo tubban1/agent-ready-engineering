@@ -16,8 +16,8 @@ const started={phase:"START",auth_scheme:"API_KEY",
  source_url:"https://github.com/vendor/public-provider/blob/main/README.md",
  host_action:"BROWSER_OPENED",host_action_ref:"browser-navigation-event-1234",
  note:"Actually opened official login page in authorized Agent host browser"};
-const finished={phase:"FINISH",outcome:"USER_DECLINED",outcome_ref:"human-user-decline-event-1234",
- note:"The user explicitly declined to create a provider API key account"};
+const finished={phase:"FINISH",outcome:"HOST_UNSUPPORTED",outcome_ref:"host-cannot-open-provider-page-1234",
+ note:"Authorized host has no browser OAuth capability; provenance requires reviewer verification"};
 test("Provider handoff rejects secrets, unsafe URL, missing browser/source references",()=>{
  assert.equal(handoffStartData(Object.fromEntries(Object.entries(started).filter(([k])=>k!=="phase"))).scheme,"API_KEY"); // direct parser only accepts server stripped body
  assert.throws(()=>handoffStartData({...Object.fromEntries(Object.entries(started).filter(([k])=>k!=="phase")),provider_url:"http://127.0.0.1/mcp"}),/unsafe_provider_url/);
@@ -31,12 +31,12 @@ test("Partial submission cannot be authorized by mere challenge, START or WAITIN
  assert.equal(handoffBlockingError({auth_scheme:"API_KEY",outcome:"WAITING_FOR_USER"},"API_KEY"),"provider_handoff_waiting_for_user");
  assert.equal(handoffBlockingError({auth_scheme:"OAUTH",outcome:"USER_DECLINED",finished_at:"x",outcome_ref:"ref",source_url:"https://example.com",provider_url:"https://example.com"},"API_KEY"),"provider_auth_scheme_mismatch");
  assert.equal(handoffBlockingError({auth_scheme:"API_KEY",outcome:"USER_DECLINED",finished_at:"2026-11-22",outcome_ref:"host-action-ref",
- source_url:"https://github.com/example/docs",provider_url:"https://provider.example.com/login"},"API_KEY"),null);
+ source_url:"https://github.com/example/docs",provider_url:"https://provider.example.com/login"},"API_KEY"),"user_decision_not_independently_attested");
 });
 test("API_KEY request leads to active browser page action and documented provider outcome (never credentials)",async()=>{
  const startRecord={task_id:tid,auth_scheme:"API_KEY",outcome:"WAITING_FOR_USER",host_action:"BROWSER_OPENED",
   started_at:"2026-11-21T12:25:00Z",provider_url:started.provider_url,source_url:started.source_url,host_action_ref:started.host_action_ref};
- const finishRecord={...startRecord,outcome:"USER_DECLINED",outcome_ref:finished.outcome_ref,finished_at:"2026-11-21T12:30:00Z"};
+ const finishRecord={...startRecord,outcome:"HOST_UNSUPPORTED",outcome_ref:finished.outcome_ref,finished_at:"2026-11-21T12:30:00Z"};
  const calls=[];
  const sql=async(q,params)=>{
   if(q===TASK_READ_SQL)return assignment;
@@ -52,7 +52,7 @@ test("API_KEY request leads to active browser page action and documented provide
  assert.equal(calls[0][1][2],"API_KEY");
  const fin=await taskAgentAction("/v3/task/auth/handoff",req("/v3/task/auth/handoff",finished),sql,deps);
  assert.equal(fin.status,200);
- assert.equal(fin.data.provider_handoff.outcome,"USER_DECLINED");
+ assert.equal(fin.data.provider_handoff.outcome,"HOST_UNSUPPORTED");
  assert.equal(fin.data.provider_authenticated_inferred,false);
  assert.equal(calls.length,2);
 });
@@ -61,4 +61,15 @@ test("Only after authentic host outcome and raw protected-tool success can COMPL
  assert.match(HANDOFF_FINISH_SQL,/WAITING_FOR_USER/);
  assert.match(HANDOFF_STATUS_SQL,/token_sha256/);
  assert.match(HANDOFF_FINISH_SQL,/UPDATE are_eval.private_task_provider_auth_handoffs/);
+});
+
+test("Keelen regression: no agent-created USER_DECLINED or metadata masquerading as login URL",()=>{
+ const f={...finished,outcome:"USER_DECLINED",outcome_ref:"ref-outcome-user_declined",
+  note:"Testing outcome USER_DECLINED for host browser handoff recording."};
+ const raw=Object.fromEntries(Object.entries(f).filter(([k])=>k!=="phase"));
+ assert.throws(()=>handoffFinishData(raw),/user_decision_requires_trusted_attestation/);
+ const start=Object.fromEntries(Object.entries(started).filter(([k])=>k!=="phase"));
+ assert.throws(()=>handoffStartData({...start,
+  provider_url:"https://some-provider.example.com/.well-known/oauth-protected-resource/mcp"}),
+  /provider_metadata_not_consent_page/);
 });

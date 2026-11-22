@@ -1,0 +1,7 @@
+{
+  "scope": "Open-source MCP servers: anonymous HTTPS, OAuth, API key, local stdio; external side effects require consent",
+  "frozen_contract_sha": "",
+  "holdout_frozen_at": null,
+  "independent_batches": [],
+  "cases": []
+}

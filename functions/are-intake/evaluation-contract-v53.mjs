@@ -1,9 +1,9 @@
-// ARE V5.2: semantics and evidence grammar are derived from the canonical 32 product criteria.
+// ARE V5.3: semantics and evidence grammar are derived from the canonical 32 product criteria.
 // This is a structural and reproducibility gate, NOT a claim that assessor-authored
 // evidence proves an external service's truth. Only server-issued captures are attested.
 import {TASK_CRITERIA} from "./criteria-compact.mjs";
 
-export const EVIDENCE_PROTOCOL="are.evidence.v5.2";
+export const EVIDENCE_PROTOCOL="are.evidence.v5.3";
 export const RAW_OBSERVATION_PROTOCOL="mcp.raw-observation.v1";
 // Byte limits, not character counts: preserve full original wire frames without
 // duplicating huge catalogues in the Agent context. Server capture_id rehydrates
@@ -57,7 +57,7 @@ function fromPointer(obj,pointer){
   return {valid:value!==undefined,value};
  }catch{return {valid:false}}
 }
-// V5.2: text/HTTP status/JSON-RPC envelope is transport smoke, NOT a
+// V5.3: text/HTTP status/JSON-RPC envelope is transport smoke, NOT a
 // meaningful independent oracle for a tool's semantic result.
 function substantivePointer(pointer){
  if(!nonblank(pointer,2,240))return false;
@@ -75,7 +75,10 @@ function semanticOracle(a,refs,endpoint){
  const o=parsed(a.content);
  if(!substantivePointer(o.actual_pointer))return false;
  // A provider's own output is not an independent oracle for that same output.
- if(o.source===endpoint||o.source===parsed(refs.get(o.trace_ref)?.content)?.endpoint)return false;
+ const observedEndpoint=parsed(refs.get(o.trace_ref)?.content)?.endpoint||endpoint;
+ if(o.source===endpoint||o.source===observedEndpoint||
+    (typeof o.source==="string"&&[endpoint,observedEndpoint].some(url=>
+      typeof url==="string"&&url.length>8&&o.source.includes(url))))return false;
  if(/^(?:text|json|success|true|false|ok|valid|non-error)$/i.test(String(o.expected).trim()))return false;
  if(o.comparison.operator==="contains"&&
    (typeof o.expected!=="string"||o.expected.trim().length<8))return false;
@@ -88,6 +91,14 @@ function resultResponse(trace){
 function rawError(r){
  return !!(r?.response?.error||r?.response?.result?.isError===true);
 }
+function identityOrOutreachSideEffect(toolName){
+ // Explicitly limit the strict consent gate to actions which can create an
+ // account, contact a person, issue credentials or initiate a payment.
+ // This is NOT a general classifier of every writable MCP tool.
+ return typeof toolName==="string"&&
+  /^(?:sign[_-]?up|register(?:[_-].*)?|create[_-]?account|verify[_-]?(?:email|phone)|send[_-]?(?:email|mail|message|sms|invite|notification)|invite(?:[_-].*)?|create[_-]?(?:payment|checkout)|pay(?:ment)?|purchase|charge|subscribe)(?:$|[_-])/i.test(toolName);
+}
+
 function toolErrorDiagnostic(r){
  const error=r?.response?.error,items=r?.response?.result?.content||[];
  return JSON.stringify(error||"")+" "+items.map(c=>c?.text||"").join(" ").slice(0,5000);
@@ -185,10 +196,26 @@ function factValue(name,data,refs,issue){
   if(item.evidence_ref!==discovery.artifact.id)
    issue("test_metadata.applicability_facts."+name,"fact_must_use_raw_discovery","Read/write applicability must cite original tools/list; tool annotations or prose alone are not proof");
   const flags=discovery.tools.map(t=>t.annotations?.readOnlyHint);
-  if(flags.every(v=>typeof v==="boolean")){
-   const expected=name==="has_read_tools"?flags.some(v=>v===true):flags.some(v=>v===false);
+  if(name==="has_read_tools"){
+   const declaredReadonly=flags.some(x=>x===true);
+   // readOnlyHint=false only says do not ASSUME safe read-only operation.
+   // It does not prove the service has no read/query capability.
+   const plausibleReads=discovery.tools.filter(t=>/^(?:get|list|read|fetch|search|query|lookup|inspect|retrieve|describe)(?:_|[A-Z]|$)/i.test(t.name));
+   if(item.value===false){
+    issue("test_metadata.applicability_facts.has_read_tools",
+      plausibleReads.length?"read_capability_contradicts_catalog":"read_only_hint_false_not_absence",
+      "readOnlyHint=false does NOT establish that no read/query operation exists. Do not use has_read_tools=false to mark criteria N/A. Investigate real tool semantics or leave applicability UNKNOWN.");
+    return {known:false};
+   }
+   if(item.value===true&&!declaredReadonly){
+    issue("test_metadata.applicability_facts.has_read_tools","read_capability_needs_semantic_proof",
+      "A read-like tool name alone does not prove semantic safety; cite a real operation or trusted vendor documentation rather than asserting readOnlyHint=true.");
+    return {known:false};
+   }
+  }else if(flags.every(v=>typeof v==="boolean")){
+   const expected=flags.some(v=>v===false);
    if(item.value!==expected)issue("test_metadata.applicability_facts."+name,
-     "fact_contradicts_raw_tool_annotations","Declared read/write facts contradict the actual tools/list annotations");
+     "fact_contradicts_raw_tool_annotations","Declared write-related fact contradicts the actual tools/list annotations");
   }else issue("test_metadata.applicability_facts."+name,"read_write_annotations_incomplete",
    "Unannotated tools cannot be assumed safe or read-only; use UNKNOWN applicability when appropriate");
  }
@@ -346,7 +373,7 @@ export function validateV52(data,{expectedEndpoint="",taskId="",captures=[]}={})
  const errors=[],warnings=[];
  const issue=(path,code,message,severity="error")=>(severity==="warning"?warnings:errors).push({path,code,message});
  if(data?.evidence_protocol!==EVIDENCE_PROTOCOL)
-  issue("evidence_protocol","evidence_v5_required","Use only the current V5.2 evidence package; call are_get_task to obtain the contract");
+  issue("evidence_protocol","evidence_v5_required","Use only the current V5.3 evidence package; call are_get_task to obtain the contract");
  if(data?.report?.schema!=="are.assessment.result.v3")
   issue("report.schema","assessment_v2_required","Use current assessment result schema v3 with the ARE criteria.v5.2 version");
  const refs=indexEvidence(data?.evidence_artifacts);
@@ -373,6 +400,19 @@ export function validateV52(data,{expectedEndpoint="",taskId="",captures=[]}={})
   }
   if(a.kind==="oracle"&&!semanticOracle(a,refs,endpoint))
    issue("evidence_artifacts."+a.id,"oracle_not_reproducible","Oracle needs a reproducible method, independent source, expected/actual and machine-confirmed comparison");
+ }
+ // A native host trace can establish that a call occurred, but an assessor
+ // cannot manufacture a trusted HUMAN authorization from the same channel.
+ // Strictly prohibit successful irreversible identity, outreach and payment
+ // actions from gaining a formally accepted report until a trusted host/user
+ // consent integration exists. Keep safe negative validation calls testable.
+ for(const a of refs.values()){
+  const call=resultResponse(a);
+  if(!call||rawError(call))continue;
+  const name=call.request?.params?.name;
+  if(identityOrOutreachSideEffect(name))
+   issue("evidence_artifacts."+a.id,"externally_authorized_side_effect_not_attested",
+    "A successful account/verification/message/payment action was observed, but this Agent-supplied trace is NOT trusted proof that the human authorized its external effects. Do not invent consent or treat an example.com address as a permission. Keep this task for explicit trusted host/user attestation and human safety review.");
  }
  const raw={endpoint},discovery=discoveryTools(refs,endpoint);
  if((metadata.discovered_tool_count||0)>0&&!discovery)
@@ -544,14 +584,31 @@ export function validateV52(data,{expectedEndpoint="",taskId="",captures=[]}={})
  let rawTaskCount=0;
  for(const [i,t] of (data?.agent_tasks||[]).entries()){
   if(t?.status!=="PASS")continue;
-  const a=refs.get(t.trace_ref),c=a&&parsed(a.content);
-  if(!a||a.kind!=="agent_task"||!record(c)||!Array.isArray(c.steps)||c.steps.length<1||
-     !c.steps.every(s=>isRawCapture(refs.get(s.trace_ref),{method:"tools/call"})))
-   issue("agent_tasks["+i+"].trace_ref","agent_task_raw_steps_missing","Agent task trace must link one or more actual MCP call observations, not hypothetical outputs");
-  else rawTaskCount++;
-  if(!semanticOracle(refs.get(t.oracle_ref),refs,endpoint))
+  const a=refs.get(t.trace_ref),c=a&&parsed(a.content),steps=c?.steps;
+  const rawSteps=Array.isArray(steps)?steps.map(x=>refs.get(x?.trace_ref)):[];
+  const distinct=new Set(Array.isArray(steps)?steps.map(x=>x?.trace_ref):[]);
+  const meaningfulSteps=rawSteps.length>=2&&distinct.size===rawSteps.length&&
+     rawSteps.every(x=>isRawCapture(x,{method:"tools/call"}));
+  if(a?.kind!=="agent_task"||!record(c)||!meaningfulSteps)
+   issue("agent_tasks["+i+"].trace_ref","agent_goal_steps_incomplete",
+    "An Agent workflow PASS requires at least two DISTINCT actual native MCP tool calls. Initiating registration is not verification or end-to-end completion.");
+  const oracle=refs.get(t.oracle_ref),proof=oracle&&parsed(oracle.content);
+  const last=Array.isArray(steps)?steps.at(-1)?.trace_ref:null;
+  if(!semanticOracle(oracle,refs,endpoint))
    issue("agent_tasks["+i+"].oracle_ref","agent_task_independent_oracle_missing",
     "The final Agent outcome needs a substantive independent oracle, not just result/content/0/type=text");
+  if(!last||proof?.trace_ref!==last)
+   issue("agent_tasks["+i+"].oracle_ref","agent_goal_final_step_not_verified",
+    "Final-goal Oracle must verify the LAST actual tool step, not a previous intermediate step.");
+  const lastRaw=last&&parsed(refs.get(last)?.content);
+  const goalOutcome=lastRaw?.response?.result?.structuredContent?.result?.next_action??
+    lastRaw?.response?.result?.structuredContent?.next_action;
+  if(typeof goalOutcome==="string"&&/^(?:wait|collect_code|answer_questions|call_tool|browser|approve_plan|save_key_and_reconn|save_key_and_reconnect|pending|needs_input|in_progress|continue|retry)$/i.test(goalOutcome))
+   issue("agent_tasks["+i+"].status","agent_goal_still_waiting_or_intermediate",
+    "The LAST tool response explicitly requests more steps (such as collect_code). It cannot prove an end-to-end Agent goal completed.");
+  if(meaningfulSteps&&proof?.trace_ref===last&&
+     !(typeof goalOutcome==="string"&&/^(?:wait|collect_code|answer_questions|call_tool|browser|approve_plan|save_key_and_reconn|save_key_and_reconnect|pending|needs_input|in_progress|continue|retry)$/i.test(goalOutcome)))
+    rawTaskCount++;
  }
  if(!Number.isInteger(metadata.minutes_used)||metadata.minutes_used<0)
   issue("test_metadata.minutes_used","invalid_measured_duration","Record measured duration");
@@ -562,7 +619,11 @@ export function validateV52(data,{expectedEndpoint="",taskId="",captures=[]}={})
   }).length,
   semantic_oracle_tools:toolRows.filter(t=>t.status==="PASS"&&
    semanticOracle(refs.get(t.oracle_ref),refs,endpoint)).length,
-  raw_tool_traces:(data.tool_coverage||[]).filter(t=>isRawCapture(refs.get(t.trace_ref))).length,
+  raw_tool_traces:[...refs.values()].filter(a=>isRawCapture(a,{method:"tools/call"})).length,
+  tool_coverage_trace_references:toolRows.filter(t=>isRawCapture(refs.get(t.trace_ref))).length,
+  endpoint_auth_inferred_tools:toolRows.filter(t=>t.status==="BLOCKED_AUTH"&&t.blocking_scope==="ENDPOINT").length,
+  unique_endpoint_auth_traces:new Set(toolRows.filter(t=>t.status==="BLOCKED_AUTH"&&t.blocking_scope==="ENDPOINT").map(t=>t.trace_ref)).size,
+  individually_called_tool_names:new Set([...refs.values()].filter(a=>isRawCapture(a,{method:"tools/call"})).map(a=>parsed(a.content)?.request?.params?.name).filter(Boolean)).size,
   server_attested_traces:attested.length,self_reported_raw_traces:selfReported.length,
   research_metrics,
   raw_agent_tasks:rawTaskCount,known_facts:FACT_NAMES.filter(x=>factValue(x,data,refs,()=>{}).known).length,
@@ -656,8 +717,8 @@ export function v52EvidenceGuide(){
    agent_task_artifact:"agent_task artifact content JSON must contain steps:[{trace_ref:'raw-t1'}] pointing to raw tool call evidence",
    source_binding:"Set verified=false and record the provider's published endpoint/source association plus uncertainty. Do not claim verified=true from README, STDIO forwarding, or self-asserted signatures; only a separate trusted deployment-verifier can establish it.",
    accepted_oracle_methods:["external_source","known_fixture","state_readback","independent_calculation"],
-   ingress_gate:"V5.2 requires exact native ingress scope: public remote, OAuth remote and local STDIO MUST be evaluated as separate assigned endpoints. A trace from another ingress cannot prove a PASS or BLOCKED status here.",
-   semantic_oracle_gate:"V5.2 breaking change: a tool PASS requires a substantive expected-vs-actual assertion on domain data from a source distinct from the service being evaluated. content/0/type=text, isError=false, HTTP 200 and other envelope values count ONLY as transport smoke. FAIL must have a real MCP error or a substantive wrong-result oracle.",
+   ingress_gate:"V5.3 requires exact native ingress scope: public remote, OAuth remote and local STDIO MUST be evaluated as separate assigned endpoints. A trace from another ingress cannot prove a PASS or BLOCKED status here.",
+   semantic_oracle_gate:"V5.3 breaking change: a tool PASS requires a substantive expected-vs-actual assertion on domain data from a source distinct from the service being evaluated. content/0/type=text, isError=false, HTTP 200 and other envelope values count ONLY as transport smoke. FAIL must have a real MCP error or a substantive wrong-result oracle.",
    blocked_status_gate:"BLOCKED_DESIGN and BLOCKED_ENVIRONMENT must cite a native tools/call to that very tool and an actual MCP error describing a blocker. Successful response + Agent narrative of missing browser/runtime is rejected.",
    decisive_criteria_gate:"MCP-L2-C1 needs valid_input and invalid_type; MCP-L3-S4 needs missing_field and corrected_retry; MCP-L2-I1 requires explicit before/after state-readback, MCP-L2-O2 multi-step Agent goal + substantive oracle, MCP-L4-R4 requires provider guide documentation beyond a tool call. All PASS need content-specific raw assertions.",
    cannot_prove:"Raw field assertions can be recomputed, but ARE cannot automatically determine if a chosen case covers every semantic requirement or verify external expected truth. Agent-authored JSON plus SHA-256 is not an independent network trace. ARE-assisted capture can independently attest no-auth read-only observations. OAuth/STDIO and source build provenance require human adjudication.",

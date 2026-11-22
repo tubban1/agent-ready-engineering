@@ -1,9 +1,9 @@
 // ARE assessment preflight: deterministic, read-only and free of database writes.
 // Evidence here is assessor supplied, NOT externally attested by ARE.
 import {createHash} from "node:crypto";
-import {validateV52,EVIDENCE_PROTOCOL,MAX_TRACE_CONTENT_BYTES} from "./evaluation-contract-v52.mjs";
+import {validateV52,EVIDENCE_PROTOCOL,MAX_TRACE_CONTENT_BYTES} from "./evaluation-contract-v53.mjs";
 import {validateAuth} from "./authorization-service.mjs";
-import {CRITERIA_BY_ID} from "./evaluation-contract-v52.mjs";
+import {CRITERIA_BY_ID} from "./evaluation-contract-v53.mjs";
 const HEX=/^[a-f0-9]{64}$/;
 const CHECKS=new Set("MCP-L1-V4 MCP-L1-C1 MCP-L2-C1 MCP-L2-C2 MCP-L2-X1 MCP-L2-X2 MCP-L2-X3 MCP-L2-X4 MCP-L2-A1 MCP-L2-A2 MCP-L2-I1 MCP-L2-O1 MCP-L2-O2 MCP-L3-C1 MCP-L3-C2 MCP-L3-C3 MCP-L3-C4 MCP-L3-S1 MCP-L3-S2 MCP-L3-S3 MCP-L3-S4 MCP-L3-A2 MCP-L3-A3 MCP-L3-A4 MCP-L3-O1 MCP-L3-O2 MCP-L4-O1 MCP-L4-O2 MCP-L4-I1 MCP-L4-I2 MCP-L4-R1 MCP-L4-R4".split(" "));
 const TERMINAL=new Set(["PASS","FAIL","NOT_APPLICABLE","BLOCKED_AUTH","UNKNOWN","NOT_TESTED","NOT_ASSESSED"]);

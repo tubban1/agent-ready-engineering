@@ -15,14 +15,14 @@ const rows=criteria.criteria.filter(c=>c.side==="product").map(c=>{
  return {id,legacy_id,obligation,applies_when,pass_if,evidence_basis,reference_details,...protocols.protocols[id]};
 });
 if(rows.length!==32)throw Error("Expected 32 product criteria");
-const out="// Generated from canonical ARE product criteria with strict V5.2 evidence policy; do not edit manually.\n"+
-  "export const CRITERIA_VERSION=\"are.criteria.v5.2\";\n"+
+const out="// Generated from canonical ARE product criteria with strict V5.3 evidence policy; do not edit manually.\n"+
+  "export const CRITERIA_VERSION=\"are.criteria.v5.3\";\n"+
   "export const TASK_CRITERIA = Object.freeze("+JSON.stringify(rows)+");\n";
 const target=resolve(root,"functions/are-intake/criteria-compact.mjs");
 if(process.argv.includes("--check")){
  if(readFileSync(target,"utf8")!==out)throw Error("Criteria drift; run node scripts/sync-are-criteria.mjs");
- console.log("V5.2 strict criteria synchronized:",rows.length);
+ console.log("V5.3 strict criteria synchronized:",rows.length);
 }else{
  writeFileSync(target,out);
- console.log("Generated V5.2 strict criteria:",rows.length);
+ console.log("Generated V5.3 strict criteria:",rows.length);
 }

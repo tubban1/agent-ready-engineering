@@ -4,7 +4,7 @@ import {createHash} from "node:crypto";
 import {preflightAssessment} from "./evidence-validation.mjs";
 import {PRODUCT_CHECKS,validateSubmission} from "./index.mjs";
 import {TASK_CRITERIA} from "./criteria-compact.mjs";
-import {FACT_NAMES,RAW_OBSERVATION_PROTOCOL} from "./evaluation-contract-v52.mjs";
+import {FACT_NAMES,RAW_OBSERVATION_PROTOCOL} from "./evaluation-contract-v53.mjs";
 import {taskAgentAction,TASK_READ_SQL,TASK_SUBMIT_SQL} from "./task-service.mjs";
 import {CAPTURE_READ_SQL} from "./capture-v5.mjs";
 const sha=x=>createHash("sha256").update(x).digest("hex");
@@ -30,8 +30,11 @@ export function samplePackage(){
    source:"https://example.org/independent-qa-fixture-v1",trace_ref:"raw-tool",
    actual_pointer:"/result/content/0/text#/total",expected:2,actual:2,
    comparison:{operator:"eq",passed:true}},{oracle_method:"known_fixture"});
+ const initialCheck=artifact("raw-prior-check","trace",traceData(3,"tools/call",
+   {name:"list_supported_models",arguments:{provider:"available"}},
+   {content:[{type:"text",text:JSON.stringify({total:2})}],isError:false}));
  const task=artifact("agent-task-1","agent_task",{goal:"Compare models returned against an external fixture",
-   steps:[{trace_ref:tool.id}],result:"2 verified model rows"});
+   steps:[{trace_ref:initialCheck.id},{trace_ref:tool.id}],result:"2 verified model rows"});
  const facts=Object.fromEntries(FACT_NAMES.filter(f=>!["tool_count","has_tools","has_callable_tools",
       "has_large_list_results","can_truncate_results","ingress_count"].includes(f))
    .map(f=>[f,{value:f==="ingress_count"?1:f==="has_read_tools",evidence_ref:discovery.id}]));
@@ -53,11 +56,11 @@ export function samplePackage(){
   if(!applicable)return {...base,status:"NOT_APPLICABLE",reason:"Observed project contract does not meet the required applies_when fact conditions."};
   return {...base,status:"NOT_TESTED",reason:"Fixture does not execute this applicable criterion; reviewer must not infer PASS."};
  });
- return {evidence_protocol:"are.evidence.v5.2",cohort_id:cohort,repository_key:repo,
+ return {evidence_protocol:"are.evidence.v5.3",cohort_id:cohort,repository_key:repo,
   summary:"Fixture-only assessment, not an external vendor verdict",
   source_binding:{verified:false,reason:"Vendor documentation associates endpoint with repo, but live binary source commit is not proven"},
   contact_route:{url:"https://github.com/"+repo},recommendations:[],
-  evidence_artifacts:[discovery,tool,oracle,task],
+  evidence_artifacts:[discovery,tool,oracle,task,initialCheck],
   tool_coverage:[{name:"list_supported_models",status:"PASS",annotations:attr,trace_ref:tool.id,oracle_ref:oracle.id}],
   test_blockers:[],
   test_metadata:{discovered_tool_count:1,minutes_used:0,auth_mode:"NONE",
@@ -65,7 +68,7 @@ export function samplePackage(){
   agent_tasks:[{goal:"Compare returned models against independent test fixture",
    trace_ref:task.id,oracle_ref:oracle.id,authorized:true,status:"PASS",oracle_verified:true,agent:"test-agent"}],
   report:{schema:"are.assessment.result.v3",mode:"ARE_INDEPENDENT",track:"product",
-   criteria_version:"are.criteria.v5.2",certification:false,maturity_level:null,public_release_authorized:false,
+   criteria_version:"are.criteria.v5.3",certification:false,maturity_level:null,public_release_authorized:false,
    target:{id:repo,source_revision:rev,observed_version:"1.0.2",owner_organization:"Etuki Gate Org",endpoint},
    assessor:{id:"colleague-01",organization:"ARE Research"},findings}};
 }
@@ -83,7 +86,7 @@ test("valid V5 independent assessor trace+fact+oracle packet is reviewer-ready, 
  assert.equal(r.readiness,"READY_FOR_REVIEW");
  assert.equal(r.metrics.criteria.PASS,1);
  assert.ok(r.metrics.criteria.NOT_TESTED>0);
- assert.equal(r.metrics.semantic.raw_tool_traces,1);
+ assert.equal(r.metrics.semantic.raw_tool_traces,2);
  assert.equal(r.metrics.semantic.raw_agent_tasks,1);
  assert.equal(r.public_release_authorized,false);
 });
@@ -178,7 +181,7 @@ test("V5 valid private submit persists semantic integrity and consistent canonic
  const report=JSON.parse(inserted.args[10]);
  assert.equal(report.integrity_readiness,"READY_FOR_REVIEW");
  assert.equal(report.integrity_metrics.raw_agent_tasks,1);
- assert.equal(report.evidence_artifacts.length,4);
+ assert.equal(report.evidence_artifacts.length,5);
  assert.equal(r.data.public_release_authorized,false);
  assert.equal(r.data.cleanup_eligibility.permitted,false);
  assert.equal(r.data.cleanup_eligibility.reason,"PARTIAL_OR_UNFINISHED_TEST");
@@ -402,7 +405,7 @@ test("V5.2 old evidence protocol and result schema are rejected without compatib
  const x=samplePackage();x.evidence_protocol="are.evidence.v5";
  let r=preflightAssessment(x,config);
  assert.equal(r.valid,false);
- x.evidence_protocol="are.evidence.v5.2";x.report.schema="are.assessment.result.v2";
+ x.evidence_protocol="are.evidence.v5.3";x.report.schema="are.assessment.result.v2";
  r=preflightAssessment(x,config);
  assert.equal(r.valid,false);
 });
@@ -483,7 +486,7 @@ test("V5.2 preserves measurable experimental data without scoring calibration hy
  assert.equal(result.metrics.criteria.PASS,1);
 });
 
-test("V5.2 evidence gate accepts complete tools/list original wire and hash above 122 KB",()=>{
+test("V5.3 evidence gate accepts complete tools/list original wire and hash above 122 KB",()=>{
  const x=samplePackage(),d=x.evidence_artifacts.find(a=>a.id==="raw-discovery");
  const raw=JSON.parse(d.content);
  raw.response.result.tools[0].description="Large genuine native schema: "+"Q".repeat(135000);
@@ -526,7 +529,7 @@ test("large server-origin tools/list uses capture_id only through private task p
    {validateSubmission,githubVerify:async()=>true,criteria:TASK_CRITERIA});
  assert.equal(result.data.valid,true,JSON.stringify(result.data.errors).slice(0,2000));
  assert.equal(result.data.metrics.semantic.server_attested_traces,1);
- assert.equal(result.data.metrics.semantic.self_reported_raw_traces,1);
+ assert.equal(result.data.metrics.semantic.self_reported_raw_traces,2);
  assert.ok(Buffer.byteLength(receipt.content)>122279);
  assert.ok(calls.some(c=>c.q===CAPTURE_READ_SQL&&c.args[2].includes(receipt.id)));
  assert.equal(calls.some(c=>c.q===TASK_SUBMIT_SQL),false);
@@ -618,4 +621,60 @@ test("V5.2 exact ingress: do not admit local STDIO evidence into a remote evalua
  const r=preflightAssessment(x,config);
  assert.equal(r.valid,false);
  assert.ok(r.errors.some(e=>e.code==="observation_endpoint_mismatch"),JSON.stringify(r.errors));
+});
+
+test("Keelen regression: readOnlyHint false cannot justify N/A of get/list read capabilities",()=>{
+ const p=samplePackage(),d=p.evidence_artifacts.find(a=>a.id==="raw-discovery"),raw=JSON.parse(d.content);
+ raw.response.result.tools[0].annotations.readOnlyHint=false;
+ raw.wire_response=JSON.stringify(raw.response);
+ d.content=JSON.stringify(raw);d.sha256=sha(d.content);
+ p.test_metadata.applicability_facts.has_read_tools={value:false,evidence_ref:d.id};
+ p.test_metadata.applicability_facts.has_writes={value:true,evidence_ref:d.id};
+ const finding=p.report.findings.find(f=>f.check_id==="MCP-L2-I1");
+ Object.assign(finding,{status:"NOT_APPLICABLE",reason:"readOnlyHint=false means no read tools"});
+ const result=preflightAssessment(p,config);
+ assert.equal(result.valid,false);
+ assert.ok(result.errors.some(e=>e.code==="read_capability_contradicts_catalog"),JSON.stringify(result.errors));
+ assert.ok(result.errors.some(e=>e.code==="na_applicability_unproven"),JSON.stringify(result.errors));
+});
+test("Keelen regression: completing only collect_code onboarding is NOT successful agent verification",()=>{
+ const p=samplePackage(),step=p.evidence_artifacts.find(a=>a.id==="raw-tool"),trace=JSON.parse(step.content);
+ trace.response.result.structuredContent={result:{next_action:"collect_code"}};
+ trace.wire_response=JSON.stringify(trace.response);
+ step.content=JSON.stringify(trace);step.sha256=sha(step.content);
+ const result=preflightAssessment(p,config);
+ assert.equal(result.valid,false);
+ assert.ok(result.errors.some(e=>e.code==="agent_goal_still_waiting_or_intermediate"),JSON.stringify(result.errors));
+});
+test("Keelen regression: sending account signup email without independently attested permission cannot be certified",()=>{
+ const p=samplePackage();
+ const external=artifact("trace-unconsented-signup","trace",traceData(66,"tools/call",
+  {name:"signup",arguments:{email:"unapproved@example.com"}},
+  {structuredContent:{result:{next_action:"collect_code"}},isError:false}));
+ p.evidence_artifacts.push(external);
+ const result=preflightAssessment(p,config);
+ assert.equal(result.valid,false);
+ assert.ok(result.errors.some(e=>e.code==="externally_authorized_side_effect_not_attested"),JSON.stringify(result.errors));
+});
+test("Keelen regression: 47 gateway-blocked references are ONE raw auth call, not 47 distinct tests",()=>{
+ const p=samplePackage(),d=p.evidence_artifacts.find(a=>a.id==="raw-discovery"),raw=JSON.parse(d.content);
+ raw.response.result.tools.push({name:"get_private_projects",inputSchema:{type:"object"},
+  annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false}});
+ d.content=JSON.stringify(raw);d.sha256=sha(d.content);
+ p.test_metadata.discovered_tool_count=2;
+ const auth=artifact("gateway-401","trace",{
+  ...traceData(88,"tools/call",{name:"list_supported_models",arguments:{}},
+   {content:[{type:"text",text:"missing bearer token"}],isError:true})});
+ p.evidence_artifacts.push(auth);
+ p.tool_coverage=[...p.tool_coverage,
+  {name:"get_private_projects",status:"BLOCKED_AUTH",blocking_scope:"ENDPOINT",
+  trace_ref:auth.id,reason:"Gateway rejects unauthenticated calls"},
+  ];
+ p.tool_coverage[0]={...p.tool_coverage[0],status:"BLOCKED_AUTH",
+  blocking_scope:"ENDPOINT",trace_ref:auth.id,reason:"Shared gateway challenge"};
+ const result=preflightAssessment(p,config);
+ assert.equal(result.metrics.semantic.endpoint_auth_inferred_tools,2);
+ assert.equal(result.metrics.semantic.unique_endpoint_auth_traces,1);
+ assert.equal(result.metrics.semantic.tool_coverage_trace_references,2);
+ assert.equal(result.metrics.semantic.raw_tool_traces,3);
 });
