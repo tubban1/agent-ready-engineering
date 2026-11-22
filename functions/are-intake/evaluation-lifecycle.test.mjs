@@ -89,3 +89,13 @@ test("copied tester page prompt is valid JS and explicitly includes install/conn
  assert.ok(js,"task page must have a real script");
  assert.doesNotThrow(()=>new Script(js));
 });
+
+test("V5.2 tester page must advertise only the active evidence protocol, never V5.1",async()=>{
+ const {pipelinePage}=await import("./pipeline-page.mjs");
+ const {EVIDENCE_PROTOCOL}=await import("./evaluation-contract-v52.mjs");
+ const page=pipelinePage();
+ assert.ok(page.includes(EVIDENCE_PROTOCOL));
+ assert.ok(page.includes("V5.2 严格证据"));
+ assert.ok(!page.includes("are.evidence.v5.1"));
+ assert.ok(!page.includes("V5.1 证据"));
+});
