@@ -1,7 +1,7 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {Script} from "node:vm";
-import {mcpEvaluationLifecycle,cleanupEligibility,v52EvidenceGuide} from "./evaluation-contract-v52.mjs";
+import {mcpEvaluationLifecycle,cleanupEligibility,v52EvidenceGuide} from "./evaluation-contract-v53.mjs";
 import {taskAgentAction,TASK_READ_SQL} from "./task-service.mjs";
 import {pipelinePage} from "./pipeline-page.mjs";
 import {TASK_CRITERIA} from "./criteria-compact.mjs";
@@ -39,7 +39,7 @@ test("the canonical lifecycle requires actual host setup, native OAuth smoke tes
  assert.match(flow.cleanup.receipt,/CLEANUP_SKIPPED/);
  const guide=v52EvidenceGuide();
  assert.deepEqual(guide.evaluation_lifecycle,flow);
- assert.equal(guide.protocol,"are.evidence.v5.2");
+ assert.equal(guide.protocol,"are.evidence.v5.3");
 });
 
 test("cleanup gate refuses PARTIAL, lost receipts and unconfirmed submission; only COMPLETE confirmed Neon receipt qualifies",()=>{
@@ -92,10 +92,10 @@ test("copied tester page prompt is valid JS and explicitly includes install/conn
 
 test("V5.2 tester page must advertise only the active evidence protocol, never V5.1",async()=>{
  const {pipelinePage}=await import("./pipeline-page.mjs");
- const {EVIDENCE_PROTOCOL}=await import("./evaluation-contract-v52.mjs");
+ const {EVIDENCE_PROTOCOL}=await import("./evaluation-contract-v53.mjs");
  const page=pipelinePage();
  assert.ok(page.includes(EVIDENCE_PROTOCOL));
- assert.ok(page.includes("V5.2 严格证据"));
+ assert.ok(page.includes("V5.3 严格证据"));
  assert.ok(!page.includes("are.evidence.v5.1"));
  assert.ok(!page.includes("V5.1 证据"));
 });

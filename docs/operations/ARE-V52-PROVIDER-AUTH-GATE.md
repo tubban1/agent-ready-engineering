@@ -1,3 +1,5 @@
+> Historical V5.2 document; superseded by ARE-V53-TRUST-BOUNDARIES.md. An Agent-authored USER_DECLINED outcome is no longer accepted for new assessments.
+
 # ARE V5.2 universal provider-auth handoff
 
 - Discovery: use are_request_authorization with auth_scheme=OAUTH|API_KEY|UNKNOWN. The existing DB decision GRANTED means only challenge registration; it does not mean user consent or successful protected MCP invocation.

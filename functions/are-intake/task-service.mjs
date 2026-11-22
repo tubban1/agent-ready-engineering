@@ -1,6 +1,6 @@
 import {randomBytes,createHash} from "node:crypto";
 import {preflightAssessment,renderStructuredReport} from "./evidence-validation.mjs";
-import {EVIDENCE_PROTOCOL,v52EvidenceGuide,mcpEvaluationLifecycle,cleanupEligibility} from "./evaluation-contract-v52.mjs";
+import {EVIDENCE_PROTOCOL,v52EvidenceGuide,mcpEvaluationLifecycle,cleanupEligibility} from "./evaluation-contract-v53.mjs";
 import {CAPTURE_READ_SQL,captureReadOnly,validCaptureId} from "./capture-v5.mjs";
 import {AUTH_REQUEST_SQL,AUTH_STATUS_SQL,authRequired,authorizationRequestData} from "./authorization-service.mjs";
 import {HANDOFF_START_SQL,HANDOFF_FINISH_SQL,HANDOFF_STATUS_SQL,
@@ -91,7 +91,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
    assessor_organization:assignment.assessor_organization,created_at:assignment.created_at,expires_at:assignment.expires_at,plan:assignment.plan_snapshot,
    endpoint:{url:assignment.plan_snapshot?.runtime_endpoint||assignment.screened_endpoint||"",status:"SCREENED_NOT_INDEPENDENTLY_ATTESTED",screened_at:assignment.screened_at||null},
    auth_mode:assignment.plan_snapshot?.auth_mode||assignment.screened_auth_mode||"UNKNOWN"};
- if(path==="/v3/task/read"&&req.method==="POST")return {status:200,data:{ok:true,task,criteria_version:"are.criteria.v5.2",
+ if(path==="/v3/task/read"&&req.method==="POST")return {status:200,data:{ok:true,task,criteria_version:"are.criteria.v5.3",
    assessment_mode:"ARE_INDEPENDENT",track:"product",task_token_echoed:false,
    workflow:["are_get_task","are_get_criteria","are_request_authorization_if_needed","are_record_provider_handoff_START_FINISH_if_needed","are_checkpoint","are_validate_assessment","are_submit_assessment"],
    constraints:["Only authorized non-destructive operations","Record UNKNOWN/NOT_TESTED rather than fabricate results",
@@ -112,7 +112,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
      source_binding:{verified:false,evidence_ref:"",reason:"Not yet verified by independent source-to-deployment observations"},
      contact_route:{url:"https://github.com/"+task.repository_key},
      report:{schema:"are.assessment.result.v3",mode:"ARE_INDEPENDENT",track:"product",
-       criteria_version:"are.criteria.v5.2",maturity_level:null,certification:false,
+       criteria_version:"are.criteria.v5.3",maturity_level:null,certification:false,
        public_release_authorized:false,
        target:{id:task.repository_key,source_revision:"REPLACE_WITH_ACTUAL_40_HEX_GIT_SHA",
           observed_version:"REPLACE_WITH_ACTUALLY_OBSERVED_VERSION",
@@ -178,7 +178,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
       provider_authenticated_inferred:false,
       next_action:data.outcome==="AUTHENTICATED"?
        "Now execute protected native MCP tools and capture successful authenticated traces":
-       "If user refused or host/provider blocked credential setup, record the actual blocker and submit a truthful PARTIAL report after preflight",
+        "Only independently supportable provider/host failures can be reported as partial, marked assessor-reported. User refusal cannot be asserted via Agent text; keep the task/checkpoint open until a trusted host/provider event is available.",
       private:true}};
   }
   error("invalid_provider_handoff_phase");
@@ -198,7 +198,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   if(!Number.isInteger(offset)||offset<0||offset>criteria.length||Object.keys(input||{}).some(k=>k!=="offset"))
     error("invalid_criteria_cursor");
   const page=criteria.slice(offset,offset+8);
-  return {status:200,data:{ok:true,criteria_version:"are.criteria.v5.2",total:criteria.length,offset,
+  return {status:200,data:{ok:true,criteria_version:"are.criteria.v5.3",total:criteria.length,offset,
      criteria:page,next:offset+page.length<criteria.length?offset+page.length:null}};
  }
  const runPreflight=async(payload)=>{
@@ -234,7 +234,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
      if(issue){
        result.valid=false;
        result.errors.push({path:"provider_auth_handoff",code:issue,
-        message:"Do not submit a partial report immediately after an auth challenge. First open/show an independently checked official provider OAuth/account/API-key page, offer the user a safe provider-side decision, and record a real terminal host/user outcome through are_record_provider_handoff START/FINISH. Never send credentials to ARE."});
+        message:"Authentication is not complete. A self-authored USER_DECLINED reference is not proof of a human choice. Open the actual provider consent/account page (metadata is not a login page); only host/provider failures supported by native evidence can finalize PARTIAL. Keep the task open when waiting for the user. Never send credentials to ARE."});
      }
      result.provider_auth_handoff=handoff?{
        status:handoff.outcome,auth_scheme:handoff.auth_scheme,host_action:handoff.host_action,
