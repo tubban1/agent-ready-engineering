@@ -54,8 +54,8 @@ export async function verifyRepositoryCandidate(repository_key,runtime_endpoint,
  // The GitHub repository itself must publish the EXACT endpoint for a true match.
  const endpoint=runtime_endpoint.replace(/\/+$/,"");
  const linked=text.split(endpoint).slice(1).some(tail=>
-   tail.length===0||/^[\s)\]}>#?!'",;]/.test(tail)||
-   /^\/(?:$|[\s)\]}>#?!'",;])/.test(tail));
+   tail.length===0||/^[\s)\]}>#?!'"\x60,;]/.test(tail)||
+   /^\/(?:$|[\s)\]}>#?!'"\x60,;])/.test(tail));
  const now=new Date().toISOString();
  const source={verified:linked,checked_at:now,method:"github_official_repo_readme_exact_endpoint_v1",
   github_repository:record.html_url,readme_url:readme?.html_url||null,

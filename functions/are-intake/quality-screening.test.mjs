@@ -43,6 +43,20 @@ test("GitHub published endpoint is verified with a fixed API hostname; issues al
  assert.match(value.repository_match_evidence.note,/deployed source remains unverified/);
  assert.equal(value.creator_contact_evidence.contact_type,"not_verified");
 });
+test("Markdown inline and fenced code delimiters preserve an exact official public MCP endpoint",async()=>{
+ const snippets=[
+  "Hosted at \`https://test.example/mcp\` for native clients",
+  "Official endpoint: \`\`\`\nhttps://test.example/mcp\n\`\`\`",
+  "Install: \`https://test.example/mcp\`\nUsage details"
+ ];
+ for(const text of snippets){
+  const response=async url=>({status:200,json:async()=>url.endsWith("/readme")?
+   {encoding:"base64",content:Buffer.from(text).toString("base64")}:
+   {full_name:repo,archived:false,private:false}});
+  const r=await verifyRepositoryCandidate(repo,endpoint,response);
+  assert.equal(r.repository_match_verified,true,text);
+ }
+});
 test("A prefix of a different MCP path cannot pass exact endpoint screening",async()=>{
  const response=async url=>({status:200,json:async()=>url.endsWith("/readme")?
   {encoding:"base64",content:Buffer.from("MCP URL: https://test.example/mcp-unrelated").toString("base64")}:

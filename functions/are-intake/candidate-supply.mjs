@@ -65,7 +65,7 @@ const excludedHosts=new Set(["github.com","raw.githubusercontent.com","img.shiel
  "insiders.vscode.dev","npmjs.com","www.npmjs.com","glama.ai","registry.modelcontextprotocol.io"]);
 export function documentedEndpoints(readme){
  if(typeof readme!=="string")return [];
- const raw=readme.match(/https:\/\/[^\s<>"'()\[\]{}]{8,350}/gi)||[];
+ const raw=readme.match(/https:\/\/[^\s<>"'\x60()\[\]{}]{8,350}/gi)||[];
  const urls=[];
  for(let part of raw){
   part=part.replace(/[,.;*]+$/g,"").replace(/\/+$/g,"");
