@@ -1,7 +1,7 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {Script} from "node:vm";
-import {mcpEvaluationLifecycle,cleanupEligibility,v5EvidenceGuide} from "./evaluation-contract-v51.mjs";
+import {mcpEvaluationLifecycle,cleanupEligibility,v52EvidenceGuide} from "./evaluation-contract-v52.mjs";
 import {taskAgentAction,TASK_READ_SQL} from "./task-service.mjs";
 import {pipelinePage} from "./pipeline-page.mjs";
 import {TASK_CRITERIA} from "./criteria-compact.mjs";
@@ -37,9 +37,9 @@ test("the canonical lifecycle requires actual host setup, native OAuth smoke tes
  assert.match(flow.cleanup.actions,/shared\/global dependency/i);
  assert.match(flow.cleanup.actions,/NAS when mounted/i);
  assert.match(flow.cleanup.receipt,/CLEANUP_SKIPPED/);
- const guide=v5EvidenceGuide();
+ const guide=v52EvidenceGuide();
  assert.deepEqual(guide.evaluation_lifecycle,flow);
- assert.equal(guide.protocol,"are.evidence.v5.1");
+ assert.equal(guide.protocol,"are.evidence.v5.2");
 });
 
 test("cleanup gate refuses PARTIAL, lost receipts and unconfirmed submission; only COMPLETE confirmed Neon receipt qualifies",()=>{

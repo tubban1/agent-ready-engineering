@@ -1,9 +1,9 @@
-// ARE V5: semantics and evidence grammar are derived from the canonical 32 product criteria.
+// ARE V5.2: semantics and evidence grammar are derived from the canonical 32 product criteria.
 // This is a structural and reproducibility gate, NOT a claim that assessor-authored
 // evidence proves an external service's truth. Only server-issued captures are attested.
 import {TASK_CRITERIA} from "./criteria-compact.mjs";
 
-export const EVIDENCE_PROTOCOL="are.evidence.v5.1";
+export const EVIDENCE_PROTOCOL="are.evidence.v5.2";
 export const RAW_OBSERVATION_PROTOCOL="mcp.raw-observation.v1";
 // Byte limits, not character counts: preserve full original wire frames without
 // duplicating huge catalogues in the Agent context. Server capture_id rehydrates
@@ -56,6 +56,49 @@ function fromPointer(obj,pointer){
   if(after!==undefined)value=lookup(JSON.parse(value),after);
   return {valid:value!==undefined,value};
  }catch{return {valid:false}}
+}
+// V5.2: text/HTTP status/JSON-RPC envelope is transport smoke, NOT a
+// meaningful independent oracle for a tool's semantic result.
+function substantivePointer(pointer){
+ if(!nonblank(pointer,2,240))return false;
+ const segments=pointer.split("#");
+ if(segments.length>2)return false;
+ const tail=segments.at(-1).replace(/~1/g,"/").replace(/~0/g,"~");
+ if(/\/(?:type|isError|jsonrpc|id|status|statusCode|http_status|success|ok)$/.test(pointer))return false;
+ if(/\/content\/\d+\/text$/.test(pointer))return true; // Plain text must be checked against a real domain expected substring.
+ return pointer.includes("#/")&&tail.split("/").filter(Boolean).length>=1||
+  /\/result\/(?:structuredContent|data|output|content)\//.test(pointer)&&
+  !/\/content\/\d+\/(?:type|annotations)$/.test(pointer);
+}
+function semanticOracle(a,refs,endpoint){
+ if(!checkIndependentOracle(a,refs))return false;
+ const o=parsed(a.content);
+ if(!substantivePointer(o.actual_pointer))return false;
+ // A provider's own output is not an independent oracle for that same output.
+ if(o.source===endpoint||o.source===parsed(refs.get(o.trace_ref)?.content)?.endpoint)return false;
+ if(/^(?:text|json|success|true|false|ok|valid|non-error)$/i.test(String(o.expected).trim()))return false;
+ if(o.comparison.operator==="contains"&&
+   (typeof o.expected!=="string"||o.expected.trim().length<8))return false;
+ return true;
+}
+function resultResponse(trace){
+ const r=trace&&parsed(trace.content);
+ return r&&isRawCapture(trace,{method:"tools/call"})?r:null;
+}
+function rawError(r){
+ return !!(r?.response?.error||r?.response?.result?.isError===true);
+}
+function toolErrorDiagnostic(r){
+ const error=r?.response?.error,items=r?.response?.result?.content||[];
+ return JSON.stringify(error||"")+" "+items.map(c=>c?.text||"").join(" ").slice(0,5000);
+}
+function actualDocument(refs,id){
+ const a=refs.get(id),doc=a&&parsed(a.content);
+ if(a?.kind!=="source_binding"||!record(doc)||!nonblank(doc.docs_url,12,450)||
+  !/^https:\/\//.test(doc.docs_url)||!Array.isArray(doc.tool_index)||!doc.tool_index.length||
+  !Array.isArray(doc.workflow_steps)||doc.workflow_steps.length<2||
+  !Array.isArray(doc.error_recovery)||!doc.error_recovery.length)return false;
+ return true;
 }
 function checkIndependentOracle(a,refs){
  if(!a||a.kind!=="oracle"||!method(a.oracle_method))return false;
@@ -222,6 +265,13 @@ function measuredCriterion(rule,observation,samples,refs,discovery,issue,path){
       operators[a.operator]?.(actual.value,a.expected)===true;
     passed=passed&&outcome;
    }
+   const meaningful=sample.assertions.some(a=>substantivePointer(a?.pointer)&&
+     (a?.operator!=="exists"||a?.expected!==undefined));
+   if(!meaningful&&rule.evidence_basis?.verdict_policy!=="MEASURE_ONLY"){
+    issue(p+".assertions","transport_only_criterion_assertion",
+     "Criterion-level PASS needs at least one substantive field/content assertion; type=text and non-error fields alone are only transport smoke.");
+    valid=false;
+   }
    measured.push(passed);
   }
  }
@@ -240,6 +290,18 @@ function authorizationError(capture){
 function checkToolRow(row,i,refs,issue,raw){
  const path="tool_coverage["+i+"]";
  if(!row?.status||!toolStatus.has(row.status))issue(path+".status","invalid_tool_status","Invalid coverage status");
+ if(["BLOCKED_DESIGN","BLOCKED_ENVIRONMENT"].includes(row?.status)){
+  const r=resultResponse(refs.get(row.trace_ref));
+  if(!r||r.request.params?.name!==row.name||r.endpoint!==raw.endpoint)
+   issue(path+".trace_ref","blocked_tool_trace_mismatch",
+    "A blocked result must cite an actual call of this exact tool at the evaluated ingress.");
+  else if(!rawError(r))
+   issue(path+".status","blocked_contradicts_successful_response",
+    "The native MCP call returned a successful result. A separately alleged browser/environment problem cannot be attached as BLOCKED to this successful trace.");
+  else if(!/(?:disabled|unsupported|unavailable|missing|required|timeout|not installed|not configured|not permitted|cannot|failed|error)/i.test(toolErrorDiagnostic(r)))
+   issue(path+".trace_ref","blocked_reason_not_in_native_error",
+    "A tool is BLOCKED only if the actual error diagnostic describes a concrete blocking reason.");
+ }
  if(row?.status==="BLOCKED_AUTH"){
   const t=refs.get(row.trace_ref);
   if(!["ENDPOINT","TOOL"].includes(row.blocking_scope))
@@ -248,8 +310,7 @@ function checkToolRow(row,i,refs,issue,raw){
   if(!authorizationError(t))
    issue(path+".trace_ref","auth_denial_not_observed",
     "BLOCKED_AUTH requires a native tools/call authorization error, not an unrelated trace.");
-  else if((row.blocking_scope==="ENDPOINT"&&parsed(t.content).endpoint!==raw.endpoint)||
-    (parsed(t.content).endpoint!==raw.endpoint&&parsed(t.content).transport!=="stdio"))
+  else if(parsed(t.content).endpoint!==raw.endpoint)
    issue(path+".trace_ref","auth_denial_endpoint_mismatch",
     "Gateway-wide denial must originate from the screened endpoint; per-tool STDIO auth denials are allowed only for the exact same native tool name.");
   else if(row.blocking_scope==="TOOL"&&parsed(t.content).request?.params?.name!==row.name)
@@ -262,26 +323,32 @@ function checkToolRow(row,i,refs,issue,raw){
   const trace=refs.get(row.trace_ref);
   if(!isRawCapture(trace,{method:"tools/call",toolName:row.name})){
    issue(path+".trace_ref","not_raw_mcp_tool_trace","Use the exact MCP JSON-RPC request AND response with observed_at, endpoint and transport; synthesized output is not a raw trace");
-  }else if(parsed(trace.content)?.endpoint!==raw.endpoint&&
-       parsed(trace.content)?.transport!=="stdio"){
+  }else if(parsed(trace.content)?.endpoint!==raw.endpoint){
    issue(path+".trace_ref","trace_endpoint_mismatch","The tool observation did not originate from the assigned endpoint");
   }else if(row.status==="PASS"&&
     (parsed(trace.content)?.response?.error||parsed(trace.content)?.response?.result?.isError===true)){
    issue(path+".status","failed_rpc_cannot_pass","A JSON-RPC error or tool isError=true cannot be counted as PASS");
   }
-  if(row.status==="PASS"&&!checkIndependentOracle(refs.get(row.oracle_ref),refs))
-   issue(path+".oracle_ref","not_independent_oracle","Provide independently calculated expected/actual values, source, reproducible method and a computed comparison");
+  if(row.status==="FAIL"){
+   const r=resultResponse(refs.get(row.trace_ref));
+   if(r&&!rawError(r)&&!semanticOracle(refs.get(row.oracle_ref),refs,raw.endpoint))
+    issue(path+".status","failure_not_observed",
+     "FAIL needs actual native MCP error OR a substantive external oracle showing the wrong business result; a successful call is not proof of failure.");
+  }
+  if(row.status==="PASS"&&!semanticOracle(refs.get(row.oracle_ref),refs,raw.endpoint))
+   issue(path+".oracle_ref","semantic_oracle_required",
+    "Type=text, isError=false, HTTP 200 or JSON-RPC envelope existence is transport smoke, not a semantic oracle. Compare a domain value or meaningful content against a separate trusted fixture, computation or source.");
  }
 }
 // Metric matches criterion, comparator and observed result. A reviewer must still verify
 // that the declared measurement reflects original evidence rather than a derived narrative.
-export function validateV5(data,{expectedEndpoint="",taskId="",captures=[]}={}){
+export function validateV52(data,{expectedEndpoint="",taskId="",captures=[]}={}){
  const errors=[],warnings=[];
  const issue=(path,code,message,severity="error")=>(severity==="warning"?warnings:errors).push({path,code,message});
  if(data?.evidence_protocol!==EVIDENCE_PROTOCOL)
-  issue("evidence_protocol","evidence_v5_required","Use the V5 evidence package; call are_get_task to obtain the contract");
+  issue("evidence_protocol","evidence_v5_required","Use only the current V5.2 evidence package; call are_get_task to obtain the contract");
  if(data?.report?.schema!=="are.assessment.result.v3")
-  issue("report.schema","assessment_v2_required","Use are.assessment.result.v3");
+  issue("report.schema","assessment_v2_required","Use current assessment result schema v3 with the ARE criteria.v5.2 version");
  const refs=indexEvidence(data?.evidence_artifacts);
  const metadata=data?.test_metadata||{},findings=data?.report?.findings||[];
   const endpoint=data?.report?.target?.endpoint||expectedEndpoint;
@@ -292,10 +359,9 @@ export function validateV5(data,{expectedEndpoint="",taskId="",captures=[]}={}){
     issue("evidence_artifacts."+a.id,"synthetic_trace_rejected","Trace must contain unmodified protocol request/response, not a summarized or reconstructed result");
    }else{
     const c=parsed(a.content);
-    if(expectedEndpoint&&c.endpoint!==expectedEndpoint&&
-       !(c.transport==="stdio"&&c.endpoint.startsWith("stdio://")))
+    if(expectedEndpoint&&c.endpoint!==expectedEndpoint)
       issue("evidence_artifacts."+a.id,"observation_endpoint_mismatch",
-       "Trace endpoint differs from screened remote endpoint; only separately declared STDIO ingress may vary");
+       "An assigned MCP endpoint is an exact ingress. Remote, OAuth-user and local STDIO traces belong in separately assigned assessments.");
     if(a.capture_id){
       const receipt=captures.find(x=>String(x.id)===String(a.capture_id));
       if(!receipt||receipt.sha256!==a.sha256||receipt.content!==a.content||
@@ -305,7 +371,7 @@ export function validateV5(data,{expectedEndpoint="",taskId="",captures=[]}={}){
     }else selfReported.push(a.id);
    }
   }
-  if(a.kind==="oracle"&&!checkIndependentOracle(a,refs))
+  if(a.kind==="oracle"&&!semanticOracle(a,refs,endpoint))
    issue("evidence_artifacts."+a.id,"oracle_not_reproducible","Oracle needs a reproducible method, independent source, expected/actual and machine-confirmed comparison");
  }
  const raw={endpoint},discovery=discoveryTools(refs,endpoint);
@@ -370,6 +436,44 @@ export function validateV5(data,{expectedEndpoint="",taskId="",captures=[]}={}){
      issue(path+".attribution","failed_vendor_attribution_unproven",
       "Vendor FAIL requires an original native/source-backed trace plus a reproducible attributable failure mode; host-adapter-only observations cannot become vendor FAIL");
     }
+   }
+   // Universal criterion obligations, not project-specific exceptions.
+   // These are predeclared in the 32-check protocol and must be evident in
+   // the same report; tagging a successful unrelated tool cannot satisfy them.
+   if(f.status==="PASS"&&rule.id==="MCP-L4-R4"&&!actualDocument(refs,f.documentation_ref))
+    issue(path+".documentation_ref","provider_guide_evidence_missing",
+     "Agent guidance PASS requires separately sourced vendor tool index, workflow steps and error-recovery documentation, not a successful audit_page or other unrelated MCP tool response.");
+   if(f.status==="PASS"&&rule.id==="MCP-L2-I1"){
+    const before=f.state_before,after=f.state_after;
+    const a=before&&resultResponse(refs.get(before.trace_ref));
+    const b=after&&resultResponse(refs.get(after.trace_ref));
+    const v1=a&&fromPointer(a.response,before.pointer),v2=b&&fromPointer(b.response,after.pointer);
+    if(!a||!b||a.request.params?.name!==b.request.params?.name||
+       before.trace_ref===after.trace_ref||!v1?.valid||!v2?.valid||
+       JSON.stringify(v1.value)!==JSON.stringify(v2.value))
+     issue(path+".state_before","read_only_state_readback_missing",
+      "Read-only/no-persistent-side-effect PASS needs independently observed comparable before/after state, with two actual native state-readback traces.");
+   }
+   if(f.status==="PASS"&&rule.id==="MCP-L2-O2"){
+    const agentTasks=(data.agent_tasks||[]).filter(t=>t.status==="PASS");
+    const hasWorkflow=agentTasks.some(t=>{
+      const artifact=refs.get(t.trace_ref),obj=artifact&&parsed(artifact.content);
+      return Array.isArray(obj?.steps)&&obj.steps.length>=2&&
+        new Set(obj.steps.map(x=>x.trace_ref)).size>=2&&
+        obj.steps.every(x=>isRawCapture(refs.get(x.trace_ref),{method:"tools/call"}))&&
+        semanticOracle(refs.get(t.oracle_ref),refs,endpoint);
+    });
+    if(!hasWorkflow)issue(path+".evidence_ref","agent_goal_not_semantically_verified",
+     "Multi-step Agent goal PASS requires multiple distinct raw tool calls and a substantive independent final-outcome oracle.");
+   }
+   if(f.status==="PASS"&&["MCP-L2-C1","MCP-L3-S4"].includes(rule.id)){
+    const required=rule.id==="MCP-L2-C1"?["valid_input","invalid_type"]:["missing_field","corrected_retry"];
+    const scenarioRows=(f.samples||[]).filter(s=>required.includes(s?.scenario));
+    if(required.some(x=>!scenarioRows.some(s=>s.scenario===x))||
+       !scenarioRows.some(s=>rawError(resultResponse(refs.get(s.trace_ref))))||
+       !scenarioRows.some(s=>{const r=resultResponse(refs.get(s.trace_ref));return r&&!rawError(r)}))
+     issue(path+".samples","required_positive_negative_scenarios_missing",
+      "PASS requires verified normal input and actual negative validation/recovery test, with native MCP error evidence and corrected successful call.");
    }
    if(!app.known)issue(path+".status","decisive_applicability_unproven","Cannot declare PASS/FAIL before applicable context is verified");
    if(app.known&&!app.applies)issue(path+".status","decisive_when_not_applicable","Finding is N/A under recorded target facts");
@@ -445,12 +549,20 @@ export function validateV5(data,{expectedEndpoint="",taskId="",captures=[]}={}){
      !c.steps.every(s=>isRawCapture(refs.get(s.trace_ref),{method:"tools/call"})))
    issue("agent_tasks["+i+"].trace_ref","agent_task_raw_steps_missing","Agent task trace must link one or more actual MCP call observations, not hypothetical outputs");
   else rawTaskCount++;
-  if(!checkIndependentOracle(refs.get(t.oracle_ref),refs))
-   issue("agent_tasks["+i+"].oracle_ref","agent_task_independent_oracle_missing","Agent result must be checked against independent reproducible expected truth");
+  if(!semanticOracle(refs.get(t.oracle_ref),refs,endpoint))
+   issue("agent_tasks["+i+"].oracle_ref","agent_task_independent_oracle_missing",
+    "The final Agent outcome needs a substantive independent oracle, not just result/content/0/type=text");
  }
  if(!Number.isInteger(metadata.minutes_used)||metadata.minutes_used<0)
   issue("test_metadata.minutes_used","invalid_measured_duration","Record measured duration");
- const metrics={criteria:verdicts,raw_tool_traces:(data.tool_coverage||[]).filter(t=>isRawCapture(refs.get(t.trace_ref))).length,
+ const toolRows=data.tool_coverage||[];
+ const metrics={criteria:verdicts,
+  transport_successful_tools:toolRows.filter(t=>{
+   const r=resultResponse(refs.get(t.trace_ref));return r&&!rawError(r);
+  }).length,
+  semantic_oracle_tools:toolRows.filter(t=>t.status==="PASS"&&
+   semanticOracle(refs.get(t.oracle_ref),refs,endpoint)).length,
+  raw_tool_traces:(data.tool_coverage||[]).filter(t=>isRawCapture(refs.get(t.trace_ref))).length,
   server_attested_traces:attested.length,self_reported_raw_traces:selfReported.length,
   research_metrics,
   raw_agent_tasks:rawTaskCount,known_facts:FACT_NAMES.filter(x=>factValue(x,data,refs,()=>{}).known).length,
@@ -509,7 +621,7 @@ export function cleanupEligibility(submission){
  };
 }
 
-export function v5EvidenceGuide(){
+export function v52EvidenceGuide(){
  const request={jsonrpc:"2.0",id:1,method:"tools/call",params:{name:"read_info",arguments:{}}};
  const response={jsonrpc:"2.0",id:1,result:{content:[{type:"text",text:JSON.stringify({count:2})}]}};
  const traceContent=JSON.stringify({protocol:RAW_OBSERVATION_PROTOCOL,observed_at:"2026-11-20T18:30:00Z",
@@ -544,6 +656,10 @@ export function v5EvidenceGuide(){
    agent_task_artifact:"agent_task artifact content JSON must contain steps:[{trace_ref:'raw-t1'}] pointing to raw tool call evidence",
    source_binding:"Set verified=false and record the provider's published endpoint/source association plus uncertainty. Do not claim verified=true from README, STDIO forwarding, or self-asserted signatures; only a separate trusted deployment-verifier can establish it.",
    accepted_oracle_methods:["external_source","known_fixture","state_readback","independent_calculation"],
+   ingress_gate:"V5.2 requires exact native ingress scope: public remote, OAuth remote and local STDIO MUST be evaluated as separate assigned endpoints. A trace from another ingress cannot prove a PASS or BLOCKED status here.",
+   semantic_oracle_gate:"V5.2 breaking change: a tool PASS requires a substantive expected-vs-actual assertion on domain data from a source distinct from the service being evaluated. content/0/type=text, isError=false, HTTP 200 and other envelope values count ONLY as transport smoke. FAIL must have a real MCP error or a substantive wrong-result oracle.",
+   blocked_status_gate:"BLOCKED_DESIGN and BLOCKED_ENVIRONMENT must cite a native tools/call to that very tool and an actual MCP error describing a blocker. Successful response + Agent narrative of missing browser/runtime is rejected.",
+   decisive_criteria_gate:"MCP-L2-C1 needs valid_input and invalid_type; MCP-L3-S4 needs missing_field and corrected_retry; MCP-L2-I1 requires explicit before/after state-readback, MCP-L2-O2 multi-step Agent goal + substantive oracle, MCP-L4-R4 requires provider guide documentation beyond a tool call. All PASS need content-specific raw assertions.",
    cannot_prove:"Raw field assertions can be recomputed, but ARE cannot automatically determine if a chosen case covers every semantic requirement or verify external expected truth. Agent-authored JSON plus SHA-256 is not an independent network trace. ARE-assisted capture can independently attest no-auth read-only observations. OAuth/STDIO and source build provenance require human adjudication.",
    server_captures:"For server-origin trace artifacts, send {id,kind:\"trace\",capture_id} instead of repeating content; the service resolves immutable content/hash/provenance within the assigned task. Client captures require full content and SHA-256. Trace payloads are measured in UTF-8 bytes: single complete native trace up to 1.5 MB, original wire response up to 512 KiB. Prefer capture_id for large server-origin tool inventories so the submitted Agent JSON stays below 1.8 MB.",
    review:"Valid=true means structurally reproducible. READY_FOR_REVIEW is private, not independent certification or authorization for outreach. An Owner must inspect and approve evidence.",

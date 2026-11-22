@@ -70,7 +70,7 @@ test("A permitted official sign-in attempt does not prove protected tool tests s
  assert.equal(r.completion.status,"PARTIAL");
  assert.ok(r.completion.reasons.includes("PROVIDER_AUTH_OR_EXECUTION_NOT_COMPLETED"));
 });
-test("Generic local STDIO API-key errors may block the exact tool, never the unrelated remote gateway",()=>{
+test("V5.2 does not accept local STDIO auth error as proof of a remote gateway/tool",()=>{
  const p=blockedPacket();
  const toolName="list_supported_models";
  const request={jsonrpc:"2.0",id:13,method:"tools/call",params:{name:toolName,arguments:{}}};
@@ -83,7 +83,9 @@ test("Generic local STDIO API-key errors may block the exact tool, never the unr
  p.tool_coverage[0].trace_ref="stdio-missing-api-key";
  p.tool_coverage[0].blocking_scope="TOOL";
  const allowed=preflightAssessment(p,{...cfg,authorization:{decision:"DECLINED"}});
- assert.equal(allowed.valid,true,JSON.stringify(allowed.errors));
+ assert.equal(allowed.valid,false);
+ assert.ok(allowed.errors.some(x=>x.code==="observation_endpoint_mismatch"));
+ assert.ok(allowed.errors.some(x=>x.code==="auth_denial_endpoint_mismatch"));
  p.tool_coverage[0].blocking_scope="ENDPOINT";
  const bad=preflightAssessment(p,{...cfg,authorization:{decision:"DECLINED"}});
  assert.ok(bad.errors.some(x=>x.code==="auth_denial_endpoint_mismatch"));

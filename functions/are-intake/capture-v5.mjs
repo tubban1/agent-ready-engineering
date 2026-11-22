@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import {isIP} from "node:net";
 import {lookup} from "node:dns/promises";
-import {RAW_OBSERVATION_PROTOCOL,MAX_CAPTURE_WIRE_BYTES,MAX_TRACE_CONTENT_BYTES} from "./evaluation-contract-v51.mjs";
+import {RAW_OBSERVATION_PROTOCOL,MAX_CAPTURE_WIRE_BYTES,MAX_TRACE_CONTENT_BYTES} from "./evaluation-contract-v52.mjs";
 
 // Each SQL expression returns a single JSON cell, matching the Neon Function SQL adapter.
 export const CAPTURE_RESERVE_SQL=[

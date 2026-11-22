@@ -1,9 +1,9 @@
 // ARE assessment preflight: deterministic, read-only and free of database writes.
 // Evidence here is assessor supplied, NOT externally attested by ARE.
 import {createHash} from "node:crypto";
-import {validateV5,EVIDENCE_PROTOCOL,MAX_TRACE_CONTENT_BYTES} from "./evaluation-contract-v51.mjs";
+import {validateV52,EVIDENCE_PROTOCOL,MAX_TRACE_CONTENT_BYTES} from "./evaluation-contract-v52.mjs";
 import {validateAuth} from "./authorization-service.mjs";
-import {CRITERIA_BY_ID} from "./evaluation-contract-v51.mjs";
+import {CRITERIA_BY_ID} from "./evaluation-contract-v52.mjs";
 const HEX=/^[a-f0-9]{64}$/;
 const CHECKS=new Set("MCP-L1-V4 MCP-L1-C1 MCP-L2-C1 MCP-L2-C2 MCP-L2-X1 MCP-L2-X2 MCP-L2-X3 MCP-L2-X4 MCP-L2-A1 MCP-L2-A2 MCP-L2-I1 MCP-L2-O1 MCP-L2-O2 MCP-L3-C1 MCP-L3-C2 MCP-L3-C3 MCP-L3-C4 MCP-L3-S1 MCP-L3-S2 MCP-L3-S3 MCP-L3-S4 MCP-L3-A2 MCP-L3-A3 MCP-L3-A4 MCP-L3-O1 MCP-L3-O2 MCP-L4-O1 MCP-L4-O2 MCP-L4-I1 MCP-L4-I2 MCP-L4-R1 MCP-L4-R4".split(" "));
 const TERMINAL=new Set(["PASS","FAIL","NOT_APPLICABLE","BLOCKED_AUTH","UNKNOWN","NOT_TESTED","NOT_ASSESSED"]);
@@ -160,9 +160,12 @@ export function preflightAssessment(data,{assigneeId,organization,repositoryKey,
  if(Number.isFinite(data.test_metadata?.server_observed_minutes)&&
    data.test_metadata.minutes_used>data.test_metadata.server_observed_minutes+10)
    issue("test_metadata.minutes_used","elapsed_time_discrepancy","Reported elapsed time exceeds server observed task duration; investigate before approval","warning");
- const verified=validateV5(data,{expectedEndpoint,taskId,captures});
+ const verified=validateV52(data,{expectedEndpoint,taskId,captures});
  errors.push(...verified.errors);warnings.push(...verified.warnings);
  metrics.semantic=verified.metrics;
+ report_preview+="\n\n**Native RPC calls with successful responses:** "+verified.metrics.transport_successful_tools+
+  "; **tool PASS with substantive domain Oracle:** "+verified.metrics.semantic_oracle_tools+
+  ". A successful HTTP/MCP transport response alone does NOT verify semantic correctness or qualify as a tool PASS. Independent external truth still requires human adjudication.";
  if(verified.metrics.research_metrics?.length){
   report_preview+="\n\n## Non-scored calibration observations\n\n"+
    "| Criterion | Measured metric | Value | Primary evidence |\n|---|---|---:|---|\n"+
