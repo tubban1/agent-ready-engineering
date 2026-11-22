@@ -3,6 +3,8 @@ import {preflightAssessment,renderStructuredReport} from "./evidence-validation.
 import {EVIDENCE_PROTOCOL,v5EvidenceGuide,mcpEvaluationLifecycle,cleanupEligibility} from "./evaluation-contract-v51.mjs";
 import {CAPTURE_READ_SQL,captureReadOnly,validCaptureId} from "./capture-v5.mjs";
 import {AUTH_REQUEST_SQL,AUTH_STATUS_SQL,authRequired,authorizationRequestData} from "./authorization-service.mjs";
+import {HANDOFF_START_SQL,HANDOFF_FINISH_SQL,HANDOFF_STATUS_SQL,
+ handoffStartData,handoffFinishData,handoffBlockingError} from "./provider-handoff-service.mjs";
 
 const cohort="ARE100-VALUE-20261115";
 const repository=/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/;
@@ -91,7 +93,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
    auth_mode:assignment.plan_snapshot?.auth_mode||assignment.screened_auth_mode||"UNKNOWN"};
  if(path==="/v3/task/read"&&req.method==="POST")return {status:200,data:{ok:true,task,criteria_version:"pilot-2026-11-21",
    assessment_mode:"ARE_INDEPENDENT",track:"product",task_token_echoed:false,
-   workflow:["are_get_task","are_get_criteria","are_checkpoint","are_validate_assessment","are_submit_assessment","are_get_submission"],
+   workflow:["are_get_task","are_get_criteria","are_request_authorization_if_needed","are_record_provider_handoff_START_FINISH_if_needed","are_checkpoint","are_validate_assessment","are_submit_assessment"],
    constraints:["Only authorized non-destructive operations","Record UNKNOWN/NOT_TESTED rather than fabricate results",
       "No public release of a third-party independent report without owner approval"],
    evidence_schema:"are.assessment.result.v3",evidence_protocol:EVIDENCE_PROTOCOL,
@@ -101,7 +103,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
    authorization_status_tool:"are_get_authorization_status",
    test_plan:(await import("./pipeline-service.mjs")).estimatePlan(Number(task.plan?.declared_tool_count||0),task.plan?.auth_mode||"UNKNOWN",task.plan?.risk_level||"LOW"),
    required_additional_fields:["tool_coverage","test_blockers","test_metadata","evidence_artifacts","source_binding","agent_tasks"],
-   submission_guidance:"Follow evaluation_lifecycle in order: DISCOVER, task-owned SETUP/CONNECT if needed, provider AUTH, native SMOKE_TEST, evidence-backed EVALUATE, VALIDATE, SUBMIT, confirm Neon receipt, then scoped CLEANUP only if COMPLETE. Record baseline/setup_manifest before changing host MCP config, install only isolated trusted dependencies, never modify preexisting MCP connections.  use are_capture_readonly for anonymous public tools/list and approved safe read-only tools even when screening auth_mode is UNKNOWN/OAUTH/API_KEY; never send provider credentials. A provider 401/403 requires official host authorization and host-side trace, not a false PASS. For large capture receipts use capture_id without pasting the original trace. Each PASS or N/A must match official applies_when + pass_if, and traces must preserve raw MCP request/response. Do not invent the source binding. Validate, then submit privately; only human reviewer may approve contact or publication.",
+   submission_guidance:"Follow evaluation_lifecycle in order: DISCOVER, task-owned SETUP/CONNECT if needed, provider AUTH, native SMOKE_TEST, evidence-backed EVALUATE, VALIDATE, SUBMIT, confirm Neon receipt, then scoped CLEANUP only if COMPLETE. Record baseline/setup_manifest before changing host MCP config, install only isolated trusted dependencies, never modify preexisting MCP connections.  use are_capture_readonly for anonymous public tools/list and approved safe read-only tools even when screening auth_mode is UNKNOWN/OAUTH/API_KEY; never send provider credentials. A provider 401/403 or API_KEY_REQUIRED triggers an official provider login/account/API-key page or OAuth consent in host browser; if unavailable show verified official link. Record are_record_provider_handoff START/FINISH with actual host/user outcome before submitting PARTIAL, not merely BLOCKED_AUTH. Legacy GRANTED is only auth challenge recorded, never provider consent. For large capture receipts use capture_id without pasting the original trace. Each PASS or N/A must match official applies_when + pass_if, and traces must preserve raw MCP request/response. Do not invent the source binding. Validate, then submit privately; only human reviewer may approve contact or publication.",
    evidence_package_template:{
      evidence_protocol:EVIDENCE_PROTOCOL,cohort_id:task.cohort_id,repository_key:task.repository_key,summary:"",
      recommendations:[],agent_tasks:[],evidence_artifacts:[],tool_coverage:[],test_blockers:[],
@@ -125,27 +127,61 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
    const input=authorizationRequestData(await jsonBody(req));
    const state=await sql(AUTH_REQUEST_SQL,[digest,task.id,input.reason,JSON.stringify(input.scopes),input.scheme]);
    if(!state)return {status:409,data:{error:"authorization_request_not_saved"}};
-   return {status:200,data:{ok:true,authorization:state,
+   return {status:200,data:{ok:true,authorization:{auth_scheme:state.auth_scheme,
+       challenge_state:"CHALLENGE_RECORDED",requested_scopes:state.requested_scopes,
+       requested_at:state.requested_at},
+     auth_request_recorded:true,provider_consent_obtained:false,
+     workflow_status:"CHALLENGE_RECORDED_NOT_AUTHORIZED",
      next_action:input.scheme==="OAUTH"?"OPEN_PROVIDER_OAUTH_IN_AGENT_HOST_BROWSER":
-       "CHECK_HOST_CONFIGURED_CREDENTIALS_OR_REPORT_BLOCKED",
+       "OPEN_PROVIDER_OFFICIAL_ACCOUNT_OR_API_KEY_PAGE",
      are_approval_required:false,
      instruction:input.scheme==="OAUTH"?
-      "Immediately initiate the target MCP service's native OAuth connect/reconnect in your Agent host; OPEN the verified official provider consent page in the user's browser. The user decides on that provider page. Do not send the user back to ARE or ask them to paste credentials. If your host cannot open it, explain the host limitation and provide only a verified official provider link; never fabricate one.":
-      "No ARE approval button. For API keys, use only credentials already securely configured in the user's authorized host; never solicit or transmit keys in chat or ARE. Otherwise record BLOCKED_AUTH and continue safe tests.",
+      "Immediately invoke host-native OAuth connect/reconnect to OPEN the provider's official login/consent page. The user decides on that provider page; no ARE approval. Call are_record_provider_handoff START with actual host browser event and verified official doc/link; then FINISH with actual outcome before any formal submission.":
+      "Immediately check the provider's OFFICIAL documentation for how a test account / API key can be obtained. If no secure credential is already configured, use your Agent host browser to OPEN the official account/login/API-key page, present it to the user and give them the opportunity to provision a key securely in the host. No ARE approval, never paste credentials into chat, never create accounts/pay without user consent. Call are_record_provider_handoff START then FINISH with real user/host outcome; do not just label BLOCKED_AUTH and submit.",
      privacy:"ARE records the authentication handoff, never grants provider OAuth consent or certifies login.",
      private:true}};
  }
  if(path==="/v3/task/auth/status"&&req.method==="POST"){
    const state=await sql(AUTH_STATUS_SQL,[digest,task.id]);
-   return {status:200,data:{ok:true,authorization:state,
+   return {status:200,data:{ok:true,authorization:state?{auth_scheme:state.auth_scheme,
+       challenge_state:state.decision==="GRANTED"?"CHALLENGE_RECORDED":"LEGACY_"+state.decision,
+       requested_at:state.requested_at}:null,
      credential_granted_by_provider:false,
      are_approval_required:false,
-     guidance:!state?"Register observed OAuth/API key challenge through are_request_authorization":
-      state.auth_scheme==="OAUTH"&&state.decision!=="DECLINED"?
-      "Immediately launch the provider's official OAuth consent page with host-native MCP connect/reconnect. The human decides ONLY on the provider page; no ARE button. Verify actual authenticated calls afterward.":
+     workflow_status:"CHALLENGE_RECORDED_NOT_AUTHORIZED",
+     guidance:!state?"Register the authentication challenge using are_request_authorization":
+      state.auth_scheme==="OAUTH"?
+      "Open official provider OAuth page in host browser, then record are_record_provider_handoff START/FINISH with real outcome. User decides at provider.":
       state.auth_scheme==="API_KEY"?
-      "Use only an already authorized securely configured host API key; if unavailable, record BLOCKED_AUTH. No ARE approval and never paste credentials into chat.":
-      "Do not claim provider authentication without real native authorized traces; record blockers and an honestly partial report.",private:true}};
+      "Proactively open the provider's official account/login/API key setup page in host browser and offer user safe host credential configuration. Record START/FINISH; API key stays in host and is never sent to ARE.":
+      "Do not claim login or testing success without original authenticated native MCP traces.",private:true}};
+ }
+ if(path==="/v3/task/auth/handoff"&&req.method==="POST"){
+  const input=await jsonBody(req);
+  if(input?.phase==="START"){
+    const {phase,...body}=input;
+    const data=handoffStartData(body);
+    const recorded=await sql(HANDOFF_START_SQL,[digest,task.id,data.scheme,
+      data.provider_url,data.source_url,data.action,data.ref,data.note]);
+    if(!recorded)return {status:409,data:{ok:false,error:"auth_challenge_must_be_registered_first"}};
+    return {status:200,data:{ok:true,provider_handoff:recorded,
+      consent_obtained:false,evidence_level:"AGENT_HOST_REPORTED_NOT_INDEPENDENTLY_ATTESTED",
+      instruction:"Keep the official provider login/key setup visible to the user. Do not collect credentials via ARE. After actual user/host outcome, call FINISH. Mere START cannot finalize a BLOCKED_AUTH assessment.",private:true}};
+  }
+  if(input?.phase==="FINISH"){
+    const {phase,...body}=input;
+    const data=handoffFinishData(body);
+    const recorded=await sql(HANDOFF_FINISH_SQL,[digest,task.id,data.outcome,data.ref,data.note]);
+    if(!recorded)return {status:409,data:{ok:false,error:"provider_handoff_not_started_or_already_finished"}};
+    return {status:200,data:{ok:true,provider_handoff:recorded,
+      evidence_level:"AGENT_HOST_REPORTED_NOT_INDEPENDENTLY_ATTESTED",
+      provider_authenticated_inferred:false,
+      next_action:data.outcome==="AUTHENTICATED"?
+       "Now execute protected native MCP tools and capture successful authenticated traces":
+       "If user refused or host/provider blocked credential setup, record the actual blocker and submit a truthful PARTIAL report after preflight",
+      private:true}};
+  }
+  error("invalid_provider_handoff_phase");
  }
  if(path==="/v3/task/contract"&&req.method==="POST")
    return {status:200,data:{ok:true,contract:v5EvidenceGuide(),
@@ -180,8 +216,9 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
        return {...a,content:a.content??receipt.content,sha256:a.sha256??receipt.sha256,
          provenance:a.provenance??"ARE server-origin immutable observation"};
      }):payload?.evidence_artifacts};
-   const authState=authRequired(hydrated,task.auth_mode)?
-     await sql(AUTH_STATUS_SQL,[digest,task.id]):null;
+   const requiresAuth=authRequired(hydrated,task.auth_mode);
+   const authState=requiresAuth?await sql(AUTH_STATUS_SQL,[digest,task.id]):null;
+   const handoff=requiresAuth?await sql(HANDOFF_STATUS_SQL,[digest,task.id]):null;
    const result=preflightAssessment(hydrated,{
      taskId:task.id,captures:captureRows,authorization:authState,
      assigneeId:task.assignee_id,organization:task.assessor_organization,
@@ -189,6 +226,23 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
      authMode:payload?.test_metadata?.auth_mode==="OAUTH"?"OAUTH":task.auth_mode,
      baseValidate:validateSubmission
    });
+   const hasUnfinishedProtectedTools=(hydrated.tool_coverage||[]).some(row=>row.status==="BLOCKED_AUTH")||
+     (hydrated.agent_tasks||[]).some(row=>row.status==="BLOCKED_AUTH")||
+     (hydrated.test_blockers||[]).some(row=>row.cause==="OAUTH");
+   if(requiresAuth&&(hasUnfinishedProtectedTools||!((hydrated.tool_coverage||[]).some(x=>x.status==="PASS")))){
+     const issue=handoffBlockingError(handoff,hydrated.test_metadata?.auth_mode||task.auth_mode);
+     if(issue){
+       result.valid=false;
+       result.errors.push({path:"provider_auth_handoff",code:issue,
+        message:"Do not submit a partial report immediately after an auth challenge. First open/show an independently checked official provider OAuth/account/API-key page, offer the user a safe provider-side decision, and record a real terminal host/user outcome through are_record_provider_handoff START/FINISH. Never send credentials to ARE."});
+     }
+     result.provider_auth_handoff=handoff?{
+       status:handoff.outcome,auth_scheme:handoff.auth_scheme,host_action:handoff.host_action,
+       provider_url:handoff.provider_url,source_url:handoff.source_url,
+       host_action_ref:handoff.host_action_ref,outcome_ref:handoff.outcome_ref,
+       started_at:handoff.started_at,finished_at:handoff.finished_at,
+       evidence_level:"AGENT_HOST_REPORTED_NOT_INDEPENDENTLY_ATTESTED"}:{status:"NOT_STARTED"};
+   }
    const observed=Math.max(0,Math.round((Date.now()-new Date(task.created_at).getTime())/60000));
    result.server_elapsed_minutes=Number.isFinite(observed)?observed:null;
    if(Number.isInteger(payload?.test_metadata?.minutes_used)&&Number.isFinite(observed)&&
@@ -245,6 +299,7 @@ export async function taskAgentAction(path,req,sql,{validateSubmission,githubVer
   const elapsed=Math.max(0,Math.round((Date.now()-new Date(task.created_at).getTime())/60000));
   const extended={...hydrated,summary:preflight.normalized_summary,report:{...hydrated.report,
     integrity_readiness:preflight.readiness,integrity_metrics:preflight.metrics.semantic,
+    provider_auth_handoff:preflight.provider_auth_handoff??null,
     test_completion:{...preflight.completion,wall_clock_minutes:elapsed},
     evidence_artifacts:hydrated.evidence_artifacts,
     test_metadata:{...hydrated.test_metadata,server_observed_minutes:elapsed},tool_coverage:hydrated.tool_coverage,

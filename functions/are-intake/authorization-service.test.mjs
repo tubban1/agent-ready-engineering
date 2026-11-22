@@ -5,6 +5,8 @@ import {authorizationRequestData,authRequired,AUTH_REQUEST_SQL,AUTH_STATUS_SQL} 
 import {preflightAssessment} from "./evidence-validation.mjs";
 import {samplePackage} from "./evidence-validation.test.mjs";
 import {taskAgentAction,TASK_READ_SQL,TASK_SUBMIT_SQL} from "./task-service.mjs";
+import {HANDOFF_START_SQL,HANDOFF_FINISH_SQL,HANDOFF_STATUS_SQL,
+ handoffStartData,handoffFinishData,handoffBlockingError} from "./provider-handoff-service.mjs";
 import {makeHandler,validateSubmission} from "./index.mjs";
 import {TASK_CRITERIA} from "./criteria-compact.mjs";
 const sha=x=>createHash("sha256").update(x).digest("hex");
@@ -123,7 +125,8 @@ test("Agent records OAuth challenge and directly receives provider browser hando
  const r=await taskAgentAction("/v3/task/auth/request",post("/v3/task/auth/request",{
   reason:saved.reason,requested_scopes:[],auth_scheme:"OAUTH"},{bearer:secret}),sql,deps);
  assert.equal(r.status,200);
- assert.equal(r.data.authorization.decision,"GRANTED");
+ assert.equal(r.data.authorization.challenge_state,"CHALLENGE_RECORDED");
+ assert.equal(r.data.provider_consent_obtained,false);
  assert.equal(r.data.are_approval_required,false);
  assert.equal(r.data.next_action,"OPEN_PROVIDER_OAUTH_IN_AGENT_HOST_BROWSER");
  assert.match(r.data.instruction,/provider.*page|provider.*consent|provider.*login/i);
@@ -152,11 +155,12 @@ test("Tester and Owner ARE pages have NO redundant OAuth approval controls",asyn
 });
 test("Formal submit refuses unrecorded auth challenge; recorded legacy partial remains honest",async()=>{
  const p=blockedPacket(),writes=[],steps=[];
- let authorization=null;
+ let authorization=null,handoff=null;
  const sql=async(q,args)=>{
   steps.push(q);
   if(q===TASK_READ_SQL)return assignment;
   if(q===AUTH_STATUS_SQL)return authorization;
+  if(q===HANDOFF_STATUS_SQL)return handoff;
   if(q===TASK_SUBMIT_SQL){writes.push(args);return {id:"11111111-3333-4333-8333-333333333333",state:"READY_FOR_REVIEW",repository_key:repo};}
   throw Error("Unknown SQL query");
  };
@@ -165,7 +169,15 @@ test("Formal submit refuses unrecorded auth challenge; recorded legacy partial r
  assert.equal(noConsent.status,422);
  assert.ok(noConsent.data.issues.some(e=>e.code==="auth_handoff_unrecorded"));
  assert.equal(writes.length,0);
- authorization={decision:"PENDING",reason:"Request official protected read permissions",requested_scopes:[]};
+ authorization={decision:"GRANTED",auth_scheme:"OAUTH",reason:"Official protected API",requested_scopes:[]};
+ const blockedBeforeHandoff=await taskAgentAction("/v3/task/submit",post("/v3/task/submit",p,{bearer:secret}),sql,deps);
+ assert.equal(blockedBeforeHandoff.status,422);
+ assert.ok(blockedBeforeHandoff.data.issues.some(x=>x.code==="provider_handoff_not_started"));
+ assert.equal(writes.length,0);
+ handoff={auth_scheme:"OAUTH",host_action:"BROWSER_OPENED",provider_url:"https://provider.example.com/login",
+  source_url:"https://github.com/real/provider/blob/main/README.md",host_action_ref:"host-browser-log-42",
+  outcome:"USER_DECLINED",outcome_ref:"user-declined-event-42",
+  started_at:"2026-11-21T12:28:00Z",finished_at:"2026-11-21T12:29:00Z"};
  const withPending=await taskAgentAction("/v3/task/submit",post("/v3/task/submit",p,{bearer:secret}),sql,deps);
  assert.equal(withPending.status,200,JSON.stringify(withPending.data).slice(0,2400));
  assert.equal(withPending.data.stage,"READY_FOR_REVIEW");
@@ -173,11 +185,13 @@ test("Formal submit refuses unrecorded auth challenge; recorded legacy partial r
  assert.equal(writes.length,1);
  const stored=JSON.parse(writes[0][10]);
  assert.equal(stored.test_completion.status,"PARTIAL");
- assert.equal(stored.test_completion.authorization,"LEGACY_PENDING");
+ assert.equal(stored.test_completion.authorization,"CHALLENGE_RECORDED");
+ assert.equal(stored.provider_auth_handoff?.status,"USER_DECLINED");
  assert.equal(stored.test_completion.tools_executed,0);
  assert.equal(stored.test_completion.total_tools,1);
  assert.equal(stored.test_metadata.duration.kind,"UNMEASURED");
  assert.equal(stored.test_metadata.server_observed_minutes>=0,true);
  assert.equal(stored.test_completion.wall_clock_minutes>=0,true);
  assert.ok(steps.includes(AUTH_STATUS_SQL));
+ assert.ok(steps.includes(HANDOFF_STATUS_SQL));
 });
